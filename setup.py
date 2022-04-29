@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import find_packages, setup
 import pathlib
 
 
@@ -11,7 +11,8 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="text4gcn",
-    packages=["text4gcn"],
+    # packages=["text4gcn"],
+    packages=find_packages("."),
     version="1.0.0",
     keywords=["pypi", "mikes_toolbox", "tutorial"],
     description="Read the latest Real Python tutorials",
@@ -27,11 +28,17 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     include_package_data=True,
-    package_data={'': ['data/*.txt', 'data/*.meta']},
-    install_requires=["scikit-learn", "nltk", "stanfordcorenlp", "gensim", "tabulate", "torch", "matplotlib"],
+    #package_data={'': ['data/*.txt', 'data/*.meta']},
+    install_requires=[
+        "scikit-learn", "nltk", "stanfordcorenlp", "gensim", "tabulate", "torch", "matplotlib"],
     entry_points={
         "console_scripts": [
             "text4gcn=text4gcn.__main__:main",
         ]
     }
+)
+print(
+    "Text4GCN Python library installation finished. Please manually check Stanford CoreNLP"
+    "(https://stanfordnlp.github.io/CoreNLP/) is installed and "
+    "running in your environment."
 )

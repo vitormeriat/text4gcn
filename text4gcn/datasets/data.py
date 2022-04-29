@@ -1,6 +1,4 @@
-#import pkg_resources
 import requests
-#import shutil
 import os
 
 

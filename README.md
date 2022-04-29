@@ -22,19 +22,16 @@ GCN applied in a text classification context.
 
 <ol>
     <li><a href="#abstract">Abstract</a></li>
-    <li><a href="#functionalities">Functionalities</a></li>
     <li><a href="#installation">Installation</a></li>
+    <li><a href="#functionalities">Functionalities</a></li>    
     <li><a href="#examples">Examples</a></li>
     <ul>
         <li><a href="#installation">Get Sample Data</a></li>
         <li><a href="#datasets-description">Text Pipeline</a></li>
         <li><a href="#datasets-description">Builder Adjacency</a></li>
     </ul>
-    <li><a href="#get-started">Get started</a></li>
-    <li><a href="#train">Train</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#citation">Citation</a></li>
     <li><a href="#references">References</a></li>
 </ol>
 
@@ -44,13 +41,19 @@ GCN applied in a text classification context.
 
 This project aims to exam the text classification problem with novel approaches Graph Convolutional Networks and Graph Attention Networks using Deep Learning algorithms and Natural Language Processing Techniques.
 
+
+<div style="margin-bottom:30px; margin-top:30px" align="center">
+  <img width="70%" src="./docs/imgs/text-graph.png">
+  <p style="margin-top:5px">Text graph</p>
+</div>
+
 <p style="margin-bottom:20px; margin-top:40px" align="right">(<a href="#top">back to top</a>)</p>
 
 ---
 
 ## Installation
 
-Text4GCN is available at PyPI:
+Text4GCN is available at `PyPI`:
 
 ```python
 pip install text4gcn
@@ -62,12 +65,10 @@ pip install text4gcn
 
 ## Functionalities
 
-* **Search**: We provide methods for time series query search and segmentation
-* **Weights**: The relative contribution of each point of the query to the overall distance can be expressed using a user-defined weight vector. 
-* **Visualization**: We provide visualizations to present the results of the
-segmentation and query search
-* **Unit tested**: we provide unit tests for each feature
-* **Easily extended**: adding new distances is easy, and we encourage you to contribute with your custom distances or search methods
+* **Datasets**: ... 
+* **Preprocess**: ... 
+* **Build Adjacency**: ... 
+* **Models**: ... 
 
 <p style="margin-bottom:20px; margin-top:40px" align="right">(<a href="#top">back to top</a>)</p>
 
@@ -75,7 +76,7 @@ segmentation and query search
 
 ## Examples
 
-The code below segments a 10 s electrocardiography record:
+... 
 
 ### Get data 
 
@@ -151,22 +152,6 @@ freq.build()
 
 ---
 
-## Train
-
-
-### **Available Text Model Representations:**
-
-| MODEL| COMMAND | DESCRIPTION |
-| --- | --- | --- |
-| Frequency | `frequency` | TF-IDF / PMI |
-| Syntactic Dependency Tree | `syntactic_dependency` | --- |
-| LIWC | `linguistic_inquiry` | LIWC |
-| Semantic | `semantic` | Word2Vec / Doc2Vec |
-| Meaningful Term Weights | `graph` | TW-IDF  / PMI |
-
-<p style="margin-bottom:20px; margin-top:40px" align="right">(<a href="#top">back to top</a>)</p>
-
----
 
 ## Contributing
 
