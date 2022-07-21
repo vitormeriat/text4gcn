@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="70%" src="./docs/imgs/logo.svg">
+  <img width="70%" src="https://meriatblog.blob.core.windows.net/public/text4gcn/imgs/logo.svg">
   <h1 style="margin-bottom:40px; margin-top:20px">Text for GCN</h1>
 </div>
 
@@ -7,7 +7,6 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation Status](https://readthedocs.org/projects/text4gcn/badge/?version=latest)](https://text4gcn.readthedocs.io/en/latest/?badge=latest)
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/text4gcn)
 ![PyPI](https://img.shields.io/pypi/v/text4gcn)
 [![Python 3.8](https://upload.wikimedia.org/wikipedia/commons/a/a5/Blue_Python_3.8_Shield_Badge.svg)](https://www.python.org/)
 [![Documentation Status](https://readthedocs.org/projects/nsdpy/badge/?version=latest)](https://nsdpy.readthedocs.io/en/latest/?badge=latest)
@@ -42,7 +41,7 @@ This project aims to exam the text classification problem with novel approaches 
 
 
 <div style="margin-bottom:30px; margin-top:30px" align="center">
-  <img width="70%" src="./docs/imgs/text-graph.png">
+  <img width="70%" src="https://meriatblog.blob.core.windows.net/public/text4gcn/imgs/text-graph.png">
   <p style="margin-top:5px">Text graph</p>
 </div>
 
@@ -86,9 +85,9 @@ from text4gcn.datasets import data
 data.list()
 
 # Download sample data for a specific folder
-data.R8('my_folder').load()
-data.R52('my_folder').load()
-data.AG_NEWS('my_folder').load()
+data.R8(path=path)
+data.R52(path=path)
+data.AG_NEWS(path=path)
 ```
 
 **Available Datasets:**

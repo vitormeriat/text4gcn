@@ -1,14 +1,12 @@
-#from gowpy.feature_extraction.gow import TwidfVectorizer
-#from utils.common import flatten_nested_iterables
-import itertools
-#import utils as utl
-from scipy.spatial.distance import cosine
 from typing import List, Dict, Tuple, Iterable, Any
+from scipy.spatial.distance import cosine
 from collections import Counter
+from tqdm import tqdm
 from math import log
 import numpy as np
+import itertools
 import pickle
-from tqdm import tqdm
+
 
 def flatten_nested_iterables(iterables_of_iterables: Iterable[Iterable[Any]]) -> Iterable[Any]:
     return [item for sublist in iterables_of_iterables for item in sublist]
@@ -42,7 +40,7 @@ def extract_windows(docs_of_words: List[List[str]], window_size: int) -> List[Li
             windows.append(doc_words)
         else:
             windows.extend(
-                doc_words[j : j + window_size]
+                doc_words[j: j + window_size]
                 for j in range(doc_len - window_size + 1)
             )
 
@@ -124,7 +122,7 @@ def extract_cosine_similarity_word_weights(vocab: List[str], train_size: int,
     #pbar = tqdm(len_vocab)
 
     for (i, word_i), (j, word_j) in tqdm(itertools.product(enumerate(vocab), enumerate(vocab))):
-        #pbar.update(1)
+        # pbar.update(1)
         if word_i in word_vectors and word_j in word_vectors:
             vector_i = np.array(word_vectors[word_i])
             vector_j = np.array(word_vectors[word_j])
@@ -134,7 +132,7 @@ def extract_cosine_similarity_word_weights(vocab: List[str], train_size: int,
                 weight_rows.append(train_size + i)
                 weight_cols.append(train_size + j)
                 cos_sim_weights.append(similarity)
-    #pbar.close()
+    # pbar.close()
     return weight_rows, weight_cols, cos_sim_weights
 
 
@@ -182,57 +180,6 @@ def extract_tf_idf_doc_word_weights(
                 adj_weights.append(word_ids_pair_count * doc_word_idf)
                 doc_word_set.add(word)
     return adj_rows, adj_cols, adj_weights
-
-
-# def extract_tw_idf_doc_word_weights(
-#         adj_rows: List[int], adj_cols: List[int], adj_weights: List[float], vocab: List[str], train_size: int,
-#         docs_of_words: List[List[str]], word_to_id: Dict[str, int]) -> Tuple[List[int], List[int], List[float]]:
-#     """Extract Doc-Word weights with graph-based weight"""
-#     #doc_word_ids_pair_to_counts = extract_doc_word_ids_pair_to_counts(docs_of_words, word_to_id)
-#     #word_to_doc_ids = extract_word_to_doc_ids(docs_of_words=docs_of_words)
-#     #word_to_doc_counts = extract_word_to_doc_counts(word_to_doc_ids=word_to_doc_ids)
-
-#     vectorizer = TwidfVectorizer(
-#         # Graph-of-words specificities
-#         directed=True,
-#         window_size=20,
-#         # Token frequency filtering
-#         min_df=0.0,
-#         max_df=1.0,
-#         # Graph-based term weighting approach
-#         term_weighting='degree'
-#     )
-
-#     docs = [' '.join(d) for d in docs_of_words]
-#     vectors = vectorizer.fit_transform(docs)
-#     vectors = vectors.toarray()
-#     print(len(vectors))
-
-#     top_words = vectorizer.get_feature_names()
-#     top_words = np.array(top_words)
-#     print(len(top_words))
-
-#     vocab_len = len(vocab)
-#     #num_docs = len(docs_of_words)
-#     for doc_id, vector in enumerate(vectors):
-#         # for vector in vectors:
-#         doc_word_set = set()
-#         for word_id, twidf in enumerate(vector):
-#             if twidf > 0:
-#                 word = top_words[word_id]
-#                 #word_id = word_to_id[word]
-
-#                 if word not in doc_word_set:
-#                     adj_rows.append(doc_id if doc_id <
-#                                     train_size else doc_id + vocab_len)
-#                     adj_cols.append(train_size + word_id)
-#                     adj_weights.append(twidf)
-#                     doc_word_set.add(word)
-#                 break
-
-#     return adj_rows, adj_cols, adj_weights
-
-# =======================================================================================
 
 
 def build_word_doc_list(docs_of_words):

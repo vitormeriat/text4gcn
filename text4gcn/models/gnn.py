@@ -20,6 +20,7 @@ import argparse
 # # parser.add_argument('--checkpoint_dir', type=str, default='checkpoints', help='Directory to save checkpoints')
 # # args = parser.parse_args()
 
+
 class GNN():
     """
         The graph2seq model consists the following components: 1) node embedding 2) graph embedding 3) decoding. # noqa
@@ -29,7 +30,7 @@ class GNN():
             2) gnn_ + parameter_name (eg: ``gnn_direction_option``)
             3) dec_ + parameter_name (eg: ``dec_max_decoder_step``)
         Considering neatness, we will only present the four hyper-parameters which don't meet regulations.
-    
+
     Examples
     -------
         # Build a vocab model from scratch
@@ -66,28 +67,29 @@ class GNN():
         dataset,
         path,
         log_dir,
+        builder,
+        lr=0.02,
         nhid=200,
+        seed=1234,
         epoches=200,
         dropout=0.5,
         val_ratio=0.1,
-        lr=0.02,
         layer=Layer.GCN,
-        early_stopping=10,
-        seed = 1234
+        early_stopping=10
     ) -> None:
 
+        self.early_stopping = early_stopping
+        self.val_ratio = val_ratio
         self.dataset = dataset
-        self.path = path
-        self.log_dir = log_dir
-        self.nhid = nhid
         self.epoches = epoches
         self.dropout = dropout
-        self.val_ratio = val_ratio
-        self.lr = lr
+        self.log_dir = log_dir
+        self.builder = builder
         self.layer = layer
-        self.early_stopping = early_stopping
         self.seed = seed
-
+        self.nhid = nhid
+        self.path = path
+        self.lr = lr
 
     def config(self):
         print(f"\n{'='*30} MODEL CONFIGURATION\n")
@@ -95,22 +97,22 @@ class GNN():
         parser = argparse.ArgumentParser(description='TextGCN')
         self.args = parser.parse_args()
 
-        self.args.dataset = self.dataset
-        self.args.device = th.device('cuda') if th.cuda.is_available() else th.device('cpu')
-        self.args.seed = np.random.randint(1, 100000)
-        self.args.layer = self.layer
-
-        self.args.nhid = self.nhid
-        self.args.max_epoch = self.epoches
-        self.args.dropout = self.dropout
-        self.args.val_ratio = self.val_ratio
         self.args.early_stopping = self.early_stopping
+        self.args.seed = np.random.randint(1, 100000)
+        self.args.val_ratio = self.val_ratio
+        self.args.max_epoch = self.epoches
+        self.args.dataset = self.dataset
+        self.args.dropout = self.dropout
+        self.args.log_dir = self.log_dir
+        self.args.layer = self.layer
+        self.args.nhid = self.nhid
         self.args.lr = self.lr
-        
+        self.args.device = th.device(
+            'cuda') if th.cuda.is_available() else th.device('cpu')
+
         print(f'{self.args}\n')
 
     def fit(self):
-
         self.config()
 
         predata = LoadData(path=self.path, dataset=self.dataset).load_corpus()
@@ -118,7 +120,13 @@ class GNN():
         if self.layer == Layer.GCN:
             model = GCN
         else:
-            raise TypeError("Invalide Layer. In this version only the GCN layer is valid!")
+            raise TypeError(
+                "Invalide Layer. In this version only the GCN layer is valid!")
 
-        framework = TextGCNTrainer(model=model, args=self.args, pre_data=predata)
+        framework = TextGCNTrainer(
+            model=model,
+            args=self.args,
+            pre_data=predata
+        )
+
         framework.fit()

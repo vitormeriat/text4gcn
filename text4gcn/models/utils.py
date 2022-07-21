@@ -10,9 +10,10 @@ import time
 
 class LoadData:
 
-    def __init__(self, path, dataset):
+    def __init__(self, path, dataset, builder):
         self.path = path
         self.dataset = dataset
+        self.builder = builder
 
     def parse_index_file(self, filename):
         """Parse index file."""
@@ -43,19 +44,13 @@ class LoadData:
         :param dataset_str: Dataset name
         :return: All data input files loaded (as well the training/test data).
         """
-        #"""Loads all data input files (as well the training/test data)."""
 
         node_feature_names = ['x', 'y', 'tx', 'ty', 'allx', 'ally']
         node_features = []
         for node_feature_name in node_feature_names:
-            with open(f"{self.path}/{self.dataset}.node_features/ind.{self.dataset}.{node_feature_name}", 'rb') as f:
+            with open(f"{self.path}/{self.dataset}.node_features/ind.{self.builder}.{self.dataset}.{node_feature_name}", 'rb') as f:
                 node_features.append(pkl.load(f, encoding='latin1'))
-                # if sys.version_info > (3, 0):
-                #     node_features.append(pkl.load(f, encoding='latin1'))
-                # else:
-                #     node_features.append(pkl.load(f))
 
-        # with open(f"{adjacency_dir}ind.{data_name}.adj", 'rb') as f:
         with open(f"{self.path}/{self.dataset}.adjacency/ind.{self.dataset}.adj", 'rb') as f:
             adj = pkl.load(f, encoding='latin1')
 
@@ -74,28 +69,16 @@ class LoadData:
             ["allx", str(allx.shape)],
             ["ally", str(ally.shape)],
             ["adj", str(adj.shape)],
-
             ["Features", str(features.shape)],
             ["Labels", str(labels.shape)],
         ], ["Data", "Shape"]))
-
-        # print(x.shape, y.shape, tx.shape, ty.shape, allx.shape, ally.shape)
-        # features = sp.vstack((allx, tx))
-        # labels = np.vstack((ally, ty))
-        # print(f"shape of features: {features.shape}, shape of labels: {labels.shape}")
-        #print(f"shape of features: {features.shape}, shape of labels: {labels.shape}")
 
         train_idx_orig = self.parse_index_file(
             f"{self.path}/{self.dataset}.shuffled/{self.dataset}.train")
 
         train_size = len(train_idx_orig)
-        print(f"\nShow load train_size: {train_size}")
-
         val_size = train_size - x.shape[0]
-        print(f"Show load dev_size: {val_size}")
-
         test_size = tx.shape[0]
-        print(f"Show load test_size: {test_size}")
 
         # This part of the index corresponds to the value after vstack
         idx_train = range(len(y))

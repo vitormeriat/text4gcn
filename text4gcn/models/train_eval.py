@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from tabulate import tabulate
 from ..models.utils import *
 from sklearn import metrics
 import scipy.sparse as sp
@@ -7,72 +8,17 @@ import numpy as np
 import torch as th
 
 
-class EarlyStopping:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
-
-    def __init__(self, patience=7, verbose=False, delta=0):
-        """
-        Args:
-            patience (int): How long to wait after last time validation loss improved.
-                            Default: 7
-            verbose (bool): If True, prints a message for each validation loss improvement.
-                            Default: False
-            delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
-        """
-        self.patience = patience
-        self.verbose = verbose
-        self.counter = 0
-        self.best_score = None
-        self.early_stop = False
-        self.val_loss_min = np.Inf
-        self.delta = delta
-        self.model_path = "./model.pt"
-
-    def __call__(self, val_loss, model=None):
-
-        score = -val_loss
-
-        if self.best_score is None:
-            self.best_score = score
-            # self.save_checkpoint(val_loss, model)
-        elif score < self.best_score + self.delta:
-            self.counter += 1
-            if self.verbose:
-                print(
-                    f'EarlyStopping counter: {self.counter} out of {self.patience}')
-            if self.counter >= self.patience:
-                self.early_stop = True
-                return True
-        else:
-            self.best_score = score
-            # self.save_checkpoint(val_loss, model)
-            self.counter = 0
-
-    def save_checkpoint(self, val_loss, model):
-        '''Saves model when validation loss decrease.'''
-        if self.verbose:
-            print(
-                f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        th.save(model.state_dict(), self.model_path)
-        self.val_loss_min = val_loss
-
-    def load_model(self):
-        return th.load(self.model_path)
-
-
 class TextGCNTrainer:
     def __init__(self, model, args, pre_data):
         self.args = args
         self.model = model
         self.device = args.device
-
         self.max_epoch = self.args.max_epoch
-
+        self.nhid = self.args.nhid
         self.dataset = args.dataset
         self.predata = pre_data
-        #self.earlystopping = EarlyStopping(args.early_stopping)
         self.earlystopping = args.early_stopping
+        self.log_dir = args.log_dir
 
     def fit(self):
         # Extract data
@@ -81,19 +27,23 @@ class TextGCNTrainer:
         self.convert_tensor()
 
         self.model = self.model(
-            input_dim=self.features.shape[0], support=self.support, num_classes=self.y_train.shape[1])
-
-        print(f"\n{self.model.parameters}")
+            input_dim=self.features.shape[0], output_dim=self.nhid, support=self.support, num_classes=self.y_train.shape[1]
+        ).to(self.device)
 
         # Loss and optimizer
         self.criterion = th.nn.CrossEntropyLoss()
         self.optimizer = th.optim.Adam(
             self.model.parameters(), lr=self.args.lr)
 
+        print("\nModel structure:\n\n", self.model, "\n")
+        for name, param in self.model.named_parameters():
+            print(f"Layer: {name} | Size: {param.size()}")
+
         self.train_model()
 
     def prepare_data(self):
         adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = self.predata
+
         # featureless
         self.features = sp.identity(features.shape[0])
         # feature of nodes
@@ -101,8 +51,6 @@ class TextGCNTrainer:
         # adjacency matrix
         self.adj = adj
         self.support = [preprocess_adj(adj)]
-
-        print(f"Num of class: {y_train.shape[1]}")
 
         self.train_mask = train_mask
         self.val_mask = val_mask
@@ -114,6 +62,13 @@ class TextGCNTrainer:
         self.test_size = test_size
 
     def convert_tensor(self):
+
+        print("\nData statistics\n")
+        print(tabulate([
+            ["Edges", "Classes", "Train samples", "Val samples", "Test samples"],
+            [self.features.shape[0], self.y_train.shape[1], self.train_mask.sum(), self.val_mask.sum(), self.test_mask.sum()]],
+            headers="firstrow"))
+
         self.features = th.from_numpy(self.features).float().to(self.device)
         self.y_train = th.from_numpy(self.y_train).float().to(self.device)
         self.y_val = th.from_numpy(self.y_val).float().to(self.device)
@@ -147,6 +102,42 @@ class TextGCNTrainer:
 
         return loss.numpy(), acc, pred.numpy(), labels.numpy(), (time() - t_test)
 
+    def show_metrics(self, test_labels, test_pred):
+        """ Calucate evaluation metrics for precision, recall, and f1.
+
+        Arguments
+        ---------
+            y_pred: ndarry, the predicted result list
+            y_true: ndarray, the ground truth label list
+
+        Returns
+        -------
+            precision: float, precision value
+            recall: float, recall value
+            f1: float, f1 measure value
+        """
+        print("\nTest Precision, Recall and F1-Score...")
+        print(metrics.classification_report(test_labels, test_pred, digits=4))
+        print("\nMacro average Test Precision, Recall and F1-Score...")
+        print(metrics.precision_recall_fscore_support(
+            test_labels, test_pred, average='macro'))
+        print("\nMicro average Test Precision, Recall and F1-Score...")
+        print(metrics.precision_recall_fscore_support(
+            test_labels, test_pred, average='micro'))
+        print("\nWeighted average Test Precision, Recall and F1-Score...")
+        print(metrics.precision_recall_fscore_support(
+            test_labels, test_pred, average='weighted'))
+        print("\nConfusion Matrix...")
+        print(metrics.confusion_matrix(test_labels, test_pred))
+        print("\nF1-Score...")
+        print(metrics.f1_score(test_labels, test_pred, average="macro"))
+        print("\nPrecision-Score...")
+        print(metrics.precision_score(test_labels, test_pred, average="macro"))
+        print("\nRecall-Score...")
+        print(metrics.recall_score(test_labels, test_pred, average="macro"))
+        print("\nAccuracy-Score...")
+        print(metrics.accuracy_score(test_labels, test_pred))
+
     def test(self, t1):
         # Testing
         test_loss, test_acc, pred, labels, test_duration = self.evaluate_model(
@@ -163,16 +154,25 @@ class TextGCNTrainer:
 
         elapsed = time() - t1
 
-        print("\nTest Precision, Recall and F1-Score...")
-        print(metrics.classification_report(test_labels, test_pred, digits=4))
-        print("\nMacro average Test Precision, Recall and F1-Score...")
-        print(metrics.precision_recall_fscore_support(
-            test_labels, test_pred, average='macro'))
-        print("\nMicro average Test Precision, Recall and F1-Score...")
-        print(metrics.precision_recall_fscore_support(
-            test_labels, test_pred, average='micro'))
-        print("\nConfusion Matrix...")
-        print(metrics.confusion_matrix(test_labels, test_pred))
+        # print("\nTest Precision, Recall and F1-Score...")
+        # print(metrics.classification_report(test_labels, test_pred, digits=4))
+        # print("\nMacro average Test Precision, Recall and F1-Score...")
+        # print(metrics.precision_recall_fscore_support(test_labels, test_pred, average='macro'))
+        # print("\nMicro average Test Precision, Recall and F1-Score...")
+        # print(metrics.precision_recall_fscore_support(test_labels, test_pred, average='micro'))
+        # print("\nWeighted average Test Precision, Recall and F1-Score...")
+        # print(metrics.precision_recall_fscore_support(test_labels, test_pred, average='weighted'))
+        # print("\nConfusion Matrix...")
+        # print(metrics.confusion_matrix(test_labels, test_pred))
+        # print("\nF1-Score...")
+        # print(metrics.f1_score(test_labels, test_pred, average="macro"))
+        # print("\nPrecision-Score...")
+        # print(metrics.precision_score(test_labels, test_pred, average="macro"))
+        # print("\nRecall-Score...")
+        # print(metrics.recall_score(test_labels, test_pred, average="macro"))
+        # print("\nAccuracy-Score...")
+        # print(metrics.accuracy_score(test_labels, test_pred))
+        self.show_metrics(test_labels, test_pred)
 
         # doc and word embeddings
         tmp = self.model.layer1.embedding.numpy()
@@ -187,14 +187,32 @@ class TextGCNTrainer:
         print("\nElapsed time is %f seconds." % elapsed)
 
     def saveModel(self):
-        path = "./NetModel.pth"
+        path = f"{self.log_dir}/NetModel.pth"
         th.save(self.model.state_dict(), path)
 
+    def plot_accuracy(self, train_acc_hist, eval_acc_hist, train_loss_hist, eval_loss_hist):
+        epochs = range(1, len(train_acc_hist) + 1)
+        plt.figure(figsize=(16, 10))
+        plt.plot(epochs, train_acc_hist, 'b', label='Training acc')
+        plt.plot(epochs, eval_acc_hist, 'r', label='Validation acc')
+        plt.title('Training and validation accuracy')
+        plt.legend()
+        plt.savefig(f'{self.log_dir}/metrics-acc.png', dpi=250)
+
+        plt.figure()
+        plt.figure(figsize=(16, 10))
+        plt.plot(epochs, train_loss_hist, 'b', label='Training loss')
+        plt.plot(epochs, eval_loss_hist, 'r', label='Validation loss')
+        plt.title('Training and validation loss')
+        plt.legend()
+        plt.savefig(f'{self.log_dir}/metrics-loss.png', dpi=250)
+
     def train_model(self):
+
         t1 = time()
 
         th.manual_seed(self.args.seed)
-        print(f"\n{'∎'*20} Torch Seed: {th.seed()}") #"∎"
+        print(f"\n{'∎'*20} Torch Seed: {th.seed()}")  # "∎"
 
         train_loss_hist = []
         eval_loss_hist = []
@@ -238,14 +256,10 @@ class TextGCNTrainer:
                 epoch + 1, loss, acc, val_loss, val_acc, time() - epoch_start_time))
 
             if epoch > self.earlystopping and val_losses[-1] > np.mean(val_losses[-(self.earlystopping + 1):-1]):
-                #print("Early stopping...")
                 print(
                     f'Early stopping... Validation loss decreased ({val_loss:.6f}).  Saving model ...')
-                #th.save(model.state_dict(), self.model_path)
                 self.saveModel()
                 break
-            # if self.earlystopping(loss):
-            #     break
 
             train_loss_hist.append(float(loss))
             train_acc_hist.append(float(acc))
@@ -255,22 +269,22 @@ class TextGCNTrainer:
         print('\nCompleted training batch', epoch+1, 'Training Loss is: %.4f' %
               loss, 'Validation Loss is: %.4f' % val_loss, 'Accuracy is %.4f' % (acc))
 
-        epochs = range(1, len(train_acc_hist) + 1)
-        plt.figure(figsize=(16, 10))
-        plt.plot(epochs, train_acc_hist, 'b', label='Training acc')
-        plt.plot(epochs, eval_acc_hist, 'r', label='Validation acc')
-        plt.title('Training and validation accuracy')
-        plt.legend()
-        plt.savefig('metrics-acc.png', dpi=250)
+        # epochs = range(1, len(train_acc_hist) + 1)
+        # plt.figure(figsize=(16, 10))
+        # plt.plot(epochs, train_acc_hist, 'b', label='Training acc')
+        # plt.plot(epochs, eval_acc_hist, 'r', label='Validation acc')
+        # plt.title('Training and validation accuracy')
+        # plt.legend()
+        # plt.savefig(f'{self.log_dir}/metrics-acc.png', dpi=250)
 
-        plt.figure()
-        plt.figure(figsize=(16, 10))
-        plt.plot(epochs, train_loss_hist, 'b', label='Training loss')
-        plt.plot(epochs, eval_loss_hist, 'r', label='Validation loss')
-        plt.title('Training and validation loss')
-        plt.legend()
-        # plt.show()
-        plt.savefig('metrics-loss.png', dpi=250)
+        # plt.figure()
+        # plt.figure(figsize=(16, 10))
+        # plt.plot(epochs, train_loss_hist, 'b', label='Training loss')
+        # plt.plot(epochs, eval_loss_hist, 'r', label='Validation loss')
+        # plt.title('Training and validation loss')
+        # plt.legend()
+        # plt.savefig(f'{self.log_dir}/metrics-loss.png', dpi=250)
+        self.plot_accuracy(train_acc_hist, eval_acc_hist, train_loss_hist, eval_loss_hist)
 
         print("\nOptimization Finished!")
 

@@ -1,16 +1,17 @@
 from typing import List, Dict, MutableMapping, Tuple, Union
-#from preprocessors.configs import PreProcessingConfigs
-#from utils.file_ops import check_paths, create_dir
 from collections import OrderedDict
 from scipy.sparse import csr_matrix
-#from utils.logger import PrintLog
-#from utils.common import check_data_set
-from time import time
-from math import ceil
+from ..modules import logger
 import pickle as pkl
 import numpy as np
 
-from ..modules import logger
+
+#from preprocessors.configs import PreProcessingConfigs
+#from utils.file_ops import check_paths, create_dir
+#from utils.common import check_data_set
+#from utils.logger import PrintLog
+#from time import time
+#from math import ceil
 
 
 # word -> word-vector, words are ordered with respect to vocabulary

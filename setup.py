@@ -13,7 +13,7 @@ setup(
     name="text4gcn",
     # packages=["text4gcn"],
     packages=find_packages("."),
-    version="1.0.0",
+    version="1.0.1",
     keywords=["pypi", "mikes_toolbox", "tutorial"],
     description="Read the latest Real Python tutorials",
     long_description=README,
@@ -24,13 +24,20 @@ setup(
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
+        #"Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
     ],
     include_package_data=True,
     #package_data={'': ['data/*.txt', 'data/*.meta']},
     install_requires=[
-        "scikit-learn", "nltk", "stanfordcorenlp", "gensim", "tabulate", "torch", "matplotlib"],
+        "scikit-learn==1.0.2", 
+        "nltk==3.7", 
+        "stanfordcorenlp==3.9.1.1", 
+        "gensim==4.1.2", 
+        "tabulate==0.8.9", 
+        "torch==1.11.0", 
+        "matplotlib==3.5.1"
+    ],
     entry_points={
         "console_scripts": [
             "text4gcn=text4gcn.__main__:main",

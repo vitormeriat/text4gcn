@@ -55,13 +55,13 @@ def R8(path: str):
     :rtype: (int, str)
     """
     ds = Datasets(
-        file_url="https://meriatdatasets.blob.core.windows.net/public/text4gcn/R8.txt",
+        file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R8.txt",
         file_name="R8.txt",
         path=path)
     ds.download()
 
     ds = Datasets(
-        file_url="https://meriatdatasets.blob.core.windows.net/public/text4gcn/R8.meta",
+        file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R8.meta",
         file_name="R8.meta",
         path=path)
     ds.download()
@@ -69,13 +69,13 @@ def R8(path: str):
 
 def R52(path: str):
     ds = Datasets(
-        file_url="https://meriatdatasets.blob.core.windows.net/public/text4gcn/R52.txt",
+        file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R52.txt",
         file_name="R52.txt",
         path=path)
     ds.download()
 
     ds = Datasets(
-        file_url="https://meriatdatasets.blob.core.windows.net/public/text4gcn/R52.meta",
+        file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R52.meta",
         file_name="R52.meta",
         path=path)
     ds.download()
@@ -83,14 +83,13 @@ def R52(path: str):
 
 def AG_NEWS(path: str):
     ds = Datasets(
-        file_url="https://meriatdatasets.blob.core.windows.net/public/text4gcn/20AG_NEWS.txt",
+        file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/20AG_NEWS.txt",
         file_name="20AG_NEWS.txt",
         path=path)
     ds.download()
 
     ds = Datasets(
-        file_url="https://meriatdatasets.blob.core.windows.net/public/text4gcn/20AG_NEWS.meta",
+        file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/20AG_NEWS.meta",
         file_name="20AG_NEWS.meta",
         path=path)
     ds.download()
-

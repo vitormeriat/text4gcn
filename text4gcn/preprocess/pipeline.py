@@ -37,16 +37,19 @@ class TextPipeline():
         dataset_path: str,
         language: str
     ):
-
-        self.dataset_name = dataset_name
-        self.rare_count = rare_count
-        self.dataset_path = dataset_path
-        self.language = language
-        self.logger = logger.PrintLog()
         self.flop = flop.FileOps(logger=self.logger)
+        self.dataset_name = dataset_name
+        self.dataset_path = dataset_path
+        self.logger = logger.PrintLog()
+        self.rare_count = rare_count
+        self.language = language
 
     def save_history(self, hist):
-        self.flop.create_dir(dir_path=f'{self.dataset_path}/log', overwrite=False)
+        self.flop.create_dir(
+            dir_path=f'{self.dataset_path}/log',
+            overwrite=False
+        )
+
         with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'w') as my_file:
             my_file.writelines(hist)
 
@@ -86,10 +89,13 @@ class TextPipeline():
         word_counts = clean.extract_word_counts(docs_of_words=docs_of_words)
 
         stop_words = clean.retrieve_stop_words(language=self.language)
-        
+
         # TODO: IF
         docs_of_words = clean.remove_stop_words(
-            docs_of_words, stop_words=stop_words)
+            docs_of_words,
+            stop_words=stop_words
+        )
+
         # TODO: IF
         docs_of_words = clean.remove_rare_words(
             docs_of_words,
@@ -111,7 +117,6 @@ class TextPipeline():
 
         self.logger.info(f"Rare-Count = <{self.rare_count}>")
 
-
     @Process.log("SHUFFLED DATA: Corpus documents shuffled.")
     def shuffle_data(self):
 
@@ -129,10 +134,13 @@ class TextPipeline():
 
         # Create dirs if not exist
         self.flop.create_dir(
-            dir_path=f"{self.dataset_path}/{self.dataset_name}.shuffled/", overwrite=False)
+            dir_path=f"{self.dataset_path}/{self.dataset_name}.shuffled/",
+            overwrite=False
+        )
 
         all_doc_meta_list, train_doc_meta_list, test_doc_meta_list = self.flop.load_corpus_meta(
-            corpus_meta_path=ds_corpus_meta)
+            corpus_meta_path=ds_corpus_meta
+        )
 
         cleaned_doc_lines = [line.strip() for line in open(ds_corpus, 'r')]
 
@@ -181,7 +189,6 @@ class TextPipeline():
             file_mode='w'
         )
 
-
     @Process.log("PREPARED WORDS: Vocabulary & word-vectors extracted.")
     def prepare_words(self):
 
@@ -203,25 +210,30 @@ class TextPipeline():
 
         # Build vocabulary
         docs_of_words_generator = (line.split() for line in open(ds_corpus))
+
         vocabulary = wdprc.extract_vocabulary(
-            docs_of_words=docs_of_words_generator)
-        
+            docs_of_words=docs_of_words_generator
+        )
+
         self.flop.write_iterable_to_file(
             an_iterable=vocabulary,
             file_path=ds_corpus_vocabulary,
             file_mode='w'
         )
 
-        # Extract word definitions
+        # # Extract word definitions
         word_definitions = wdprc.extract_word_definitions(
-            vocabulary=vocabulary)
+            vocabulary=vocabulary
+        )
 
-        # Extract & Dump word vectors
+        # # Extract & Dump word vectors
         word_vectors = wdprc.extract_tf_idf_word_vectors(
-            word_definitions=word_definitions, max_features=1000)
+            word_definitions=word_definitions, max_features=1000
+        )
 
         word_to_word_vectors_dict = wdprc.word_to_vectors(
-            vocabulary, word_vectors)
+            vocabulary, word_vectors
+        )
 
         self.flop.write_picke(
             word_to_word_vectors_dict,
@@ -257,6 +269,7 @@ class TextPipeline():
 
         nfeatures = NodeFeatures(logger=self.logger)
 
+        # =============================================================== TESTE
         # # Extract word_vectors and word_embedding_dimension
         # if use_predefined_word_vectors:
         #     #ds_corpus_word_vectors = cfg.corpus_shuffled_word_vectors_dir + ds_name + '.word_vectors'
@@ -265,7 +278,10 @@ class TextPipeline():
         #     word_vectors, word_emb_dim = nfeatures.load_word_to_word_vectors(
         #         path=ds_corpus_word_vectors)
         # else:
-        #     word_vectors, word_emb_dim = OrderedDict(), 300  # todo: parametrize
+        #     word_vectors, word_emb_dim = OrderedDict(), 300
+        # ===============================================================
+
+        # TODO: parametrize
         word_vectors, word_emb_dim = OrderedDict(), 300
 
         # Extract Vocabulary
@@ -279,6 +295,7 @@ class TextPipeline():
         docs_of_words = [line.split() for line in open(file=ds_corpus)]
 
         # Extract mean document word vectors and one hot labels of train-set
+        # The feature vectors of the training instances as scipy.sparse.csr.csr_matrix object;
         x = nfeatures.compute_x(
             docs_of_words,
             adjusted_train_size,
@@ -286,13 +303,15 @@ class TextPipeline():
             w_vectors=word_vectors
         )
 
+        # Extract mean document word vectors and one hot labels of test-set
+        # The one-hot labels of the labeled training instances as numpy.ndarray object;
         y = nfeatures.compute_y(
             doc_meta_list,
             train_size=adjusted_train_size,
             doc_labels=doc_labels
         )
 
-        # Extract mean document word vectors and one hot labels of test-set
+        # The feature vectors of the test instances as scipy.sparse.csr.csr_matrix object;
         tx = nfeatures.compute_tx(
             docs_of_words,
             test_size,
@@ -301,6 +320,7 @@ class TextPipeline():
             w_vectors=word_vectors
         )
 
+        # The one-hot labels of the test instances as numpy.ndarray object;
         ty = nfeatures.compute_ty(
             doc_meta_list,
             test_size=test_size,
@@ -309,6 +329,8 @@ class TextPipeline():
         )
 
         # Extract doc_features + word_features
+        # The feature vectors of both labeled and unlabeled training instances (a
+        # superset of ind.dataset_str.x) as scipy.sparse.csr.csr_matrix object;
         allx = nfeatures.compute_allx(
             docs_of_words,
             real_train_size,
@@ -317,6 +339,7 @@ class TextPipeline():
             emb_dim=word_emb_dim
         )
 
+        # The labels for instances in ind.dataset_str.allx as numpy.ndarray object;
         ally = nfeatures.compute_ally(
             doc_meta_list,
             real_train_size,
