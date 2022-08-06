@@ -1,7 +1,8 @@
 from typing import List, Dict, MutableMapping, Tuple, Union
 from collections import OrderedDict
 from scipy.sparse import csr_matrix
-from ..modules import logger
+#from ..modules import logger
+from text4gcn.modules import logger
 import pickle as pkl
 import numpy as np
 

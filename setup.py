@@ -21,12 +21,12 @@ if __name__ == "__main__":
     README = (HERE / "README.md").read_text()
 
     install_requirement = [
-        "gensim",
-        "matplotlib",
+        "gensim >=4.1.2",
         "nltk >= 3.5",
         "scikit-learn >= 0.23.2",
         "stanfordcorenlp",
-        "tabulate",
+        "tabulate >=0.8.9",
+        "matplotlib >= 3.1.1",
         "torch",
         # "gensim==4.1.2",
         # "matplotlib==3.5.1",
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             ),
         ),
         # Important for updates
-        version="1.0.2",
+        version="1.0.4",
         # Should match your chosen license
         license="MIT",
         description="A library for building text graphs for the application of Graph Neural Networks (GNN), in the context of text classification in natural language processing",
@@ -75,11 +75,11 @@ if __name__ == "__main__":
         include_package_data=True,
         install_requires=install_requirement,
         platforms=os_tag[platform.system()],
-        entry_points={
-            "console_scripts": [
-                "text4gcn=text4gcn.__main__:main",
-            ]
-        },
+        # entry_points={
+        #     "console_scripts": [
+        #         "text4gcn=text4gcn.__main__:main",
+        #     ]
+        # },
     )
     print(
         "Text4GCN Python library installation finished. Please manually check Stanford CoreNLP"

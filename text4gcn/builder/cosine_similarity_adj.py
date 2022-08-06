@@ -1,8 +1,8 @@
-from ..modules import file_ops as flop
-from ..modules import logger as logger
-from ..modules.logger import Process
+from text4gcn.modules import file_ops as flop
+from text4gcn.modules import logger as logger
+from text4gcn.modules.logger import Process
 from scipy.sparse import csr_matrix
-from ..modules import adjacency as adj
+from text4gcn.modules import adjacency as adj
 import pickle
 
 

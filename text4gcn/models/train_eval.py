@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from tabulate import tabulate
-from ..models.utils import *
+# from ..models.utils import *
+from text4gcn.models.utils import *
 from sklearn import metrics
 import scipy.sparse as sp
 from time import time
@@ -27,7 +28,10 @@ class TextGCNTrainer:
         self.convert_tensor()
 
         self.model = self.model(
-            input_dim=self.features.shape[0], output_dim=self.nhid, support=self.support, num_classes=self.y_train.shape[1]
+            input_dim=self.features.shape[0], 
+            output_dim=self.nhid, 
+            support=self.support, 
+            num_classes=self.y_train.shape[1]
         ).to(self.device)
 
         # Loss and optimizer
@@ -187,7 +191,9 @@ class TextGCNTrainer:
         print("\nElapsed time is %f seconds." % elapsed)
 
     def saveModel(self):
-        path = f"{self.log_dir}/NetModel.pth"
+        name = unique_name()
+        #path = f"{self.log_dir}/NetModel.pth"
+        path = f"{self.log_dir}/{unique_name()}.pth"
         th.save(self.model.state_dict(), path)
 
     def plot_accuracy(self, train_acc_hist, eval_acc_hist, train_loss_hist, eval_loss_hist):

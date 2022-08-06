@@ -1,5 +1,6 @@
 from typing import Any, Iterable, List, Tuple
-from ..modules import logger
+#from ..modules import logger
+from text4gcn.modules import logger
 from os.path import exists
 from shutil import rmtree
 from os import makedirs

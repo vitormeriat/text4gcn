@@ -1,8 +1,8 @@
 from stanfordcorenlp import StanfordCoreNLP
-from ..modules import file_ops as flop
-from ..modules import logger as logger
-from ..modules.word_processor import *
-from ..modules.logger import Process
+from text4gcn.modules import file_ops as flop
+from text4gcn.modules import logger as logger
+from text4gcn.modules.word_processor import *
+from text4gcn.modules.logger import Process
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
 from math import log

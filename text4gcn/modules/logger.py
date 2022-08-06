@@ -1,4 +1,5 @@
-from ..modules import clean_data as clean
+#from ..modules import clean_data as clean
+from text4gcn.modules import clean_data as clean
 import datetime
 import time
 

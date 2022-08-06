@@ -1,7 +1,7 @@
-from ..modules.textvec.liwc import Liwc
-from ..modules import file_ops as flop
-from ..modules import logger as logger
-from ..modules.word_processor import *
+from text4gcn.modules.textvec.liwc import Liwc
+from text4gcn.modules import file_ops as flop
+from text4gcn.modules import logger as logger
+from text4gcn.modules.word_processor import *
 from nltk.corpus import stopwords
 import scipy.sparse as sp
 from math import log

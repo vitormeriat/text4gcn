@@ -1,5 +1,6 @@
 #import modules.clean_data as cldt
-from ..modules import clean_data as clean
+#from ..modules import clean_data as clean
+from text4gcn.modules import clean_data as clean
 import time
 
 

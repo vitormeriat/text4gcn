@@ -1,9 +1,19 @@
-from ..modules.node_features import NodeFeatures
-from ..modules import word_processor as wdprc
-from ..modules import clean_data as clean
-from ..modules import file_ops as flop
-from ..modules import logger as logger
-from ..modules.logger import Process
+# from ..modules.node_features import NodeFeatures
+# from ..modules import word_processor as wdprc
+# from ..modules import clean_data as clean
+# from ..modules import file_ops as flop
+# from ..modules import logger as logger
+# from ..modules.logger import Process
+# from collections import OrderedDict
+# from math import ceil
+# import random
+
+from text4gcn.modules.node_features import NodeFeatures
+from text4gcn.modules import word_processor as wdprc
+from text4gcn.modules import clean_data as clean
+from text4gcn.modules import file_ops as flop
+from text4gcn.modules import logger as logger
+from text4gcn.modules.logger import Process
 from collections import OrderedDict
 from math import ceil
 import random
@@ -37,10 +47,10 @@ class TextPipeline():
         dataset_path: str,
         language: str
     ):
+        self.logger = logger.PrintLog()
         self.flop = flop.FileOps(logger=self.logger)
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
-        self.logger = logger.PrintLog()
         self.rare_count = rare_count
         self.language = language
 

@@ -1,7 +1,7 @@
-from ..models.train_eval import TextGCNTrainer
-from ..models.utils import LoadData
-from ..models.layers import Layer
-from ..models.model import GCN
+from text4gcn.models.train_eval import TextGCNTrainer
+from text4gcn.models.utils import LoadData
+from text4gcn.models.layers import Layer
+from text4gcn.models.model import GCN
 import numpy as np
 import torch as th
 import argparse
@@ -115,7 +115,10 @@ class GNN():
     def fit(self):
         self.config()
 
-        predata = LoadData(path=self.path, dataset=self.dataset).load_corpus()
+        predata = LoadData(
+            path=self.path,
+            dataset=self.dataset,
+            builder=self.builder).load_corpus()
 
         if self.layer == Layer.GCN:
             model = GCN

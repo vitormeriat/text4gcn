@@ -68,6 +68,17 @@ def R8(path: str):
 
 
 def R52(path: str):
+    """R52 Dataset
+    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+    Number of lines per split:
+        - train: 25000
+        - test: 25000
+    Args:
+        root: Directory where the datasets are saved. Default: os.path.expanduser('~/.torchtext/cache')
+        split: split or splits to be returned. Can be a string or tuple of strings. Default: (`train`, `test`)
+    :returns: DataPipe that yields tuple of label (1 to 2) and text containing the movie review
+    :rtype: (int, str)
+    """
     ds = Datasets(
         file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R52.txt",
         file_name="R52.txt",
@@ -82,6 +93,17 @@ def R52(path: str):
 
 
 def AG_NEWS(path: str):
+    """AG_NEWS Dataset
+    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+    Number of lines per split:
+        - train: 25000
+        - test: 25000
+    Args:
+        root: Directory where the datasets are saved. Default: os.path.expanduser('~/.torchtext/cache')
+        split: split or splits to be returned. Can be a string or tuple of strings. Default: (`train`, `test`)
+    :returns: DataPipe that yields tuple of label (1 to 2) and text containing the movie review
+    :rtype: (int, str)
+    """
     ds = Datasets(
         file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/20AG_NEWS.txt",
         file_name="20AG_NEWS.txt",

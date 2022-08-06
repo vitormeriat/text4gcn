@@ -1,7 +1,7 @@
-from ..modules.textvec.word_features import train_word2vec
-from ..modules import adjacency as adjcy
-from ..modules import logger as logger
-from ..modules import file_ops as flop
+from text4gcn.modules.textvec.word_features import train_word2vec
+from text4gcn.modules import adjacency as adjcy
+from text4gcn.modules import logger as logger
+from text4gcn.modules import file_ops as flop
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
 import pickle

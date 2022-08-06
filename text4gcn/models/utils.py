@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from tabulate import tabulate
 import scipy.sparse as sp
 import pickle as pkl
@@ -48,10 +48,11 @@ class LoadData:
         node_feature_names = ['x', 'y', 'tx', 'ty', 'allx', 'ally']
         node_features = []
         for node_feature_name in node_feature_names:
-            with open(f"{self.path}/{self.dataset}.node_features/ind.{self.builder}.{self.dataset}.{node_feature_name}", 'rb') as f:
+            # with open(f"{self.path}/{self.dataset}.node_features/ind.{self.builder}.{self.dataset}.{node_feature_name}", 'rb') as f:
+            with open(f"{self.path}/{self.dataset}.node_features/ind.{self.dataset}.{node_feature_name}", 'rb') as f:
                 node_features.append(pkl.load(f, encoding='latin1'))
 
-        with open(f"{self.path}/{self.dataset}.adjacency/ind.{self.dataset}.adj", 'rb') as f:
+        with open(f"{self.path}/{self.dataset}.adjacency/ind.{self.builder}.{self.dataset}.adj", 'rb') as f:
             adj = pkl.load(f, encoding='latin1')
 
         x, y, tx, ty, allx, ally = tuple(node_features)
@@ -102,6 +103,10 @@ class LoadData:
         adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
 
         return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size
+
+
+def unique_name():
+    return datetime.utcnow().strftime('%Y%m%d-%H%M%S%f')[:-3]
 
 
 def get_train_test(target_fn):
