@@ -11,7 +11,11 @@ class MyBdistWheel(_bdist_wheel):
 
 
 if __name__ == "__main__":
-    os_tag = {"Windows": "win_amd64", "Darwin": "macosx_x86_64", "Linux": "manylinux1_x86_64"}
+    os_tag = {
+        "Windows": "win_amd64",
+        "Darwin": "macosx_x86_64",
+        "Linux": "manylinux1_x86_64"
+    }
 
     # The directory containing this file
     # Reads the content of your README.md into a variable to be used in the setup below
@@ -21,22 +25,14 @@ if __name__ == "__main__":
     README = (HERE / "README.md").read_text()
 
     install_requirement = [
-        "gensim >=4.1.2",
+        "gensim >= 4.1.2",
         "nltk >= 3.5",
         "scikit-learn >= 0.23.2",
-        "stanfordcorenlp",
-        "tabulate >=0.8.9",
+        "stanfordcorenlp >= 3.9.1.1",
+        "tabulate >= 0.8.9",
         "matplotlib >= 3.1.1",
-        "torch",
-        # "gensim==4.1.2",
-        # "matplotlib==3.5.1",
-        # "nltk==3.7",
-        # "scikit-learn==1.0.2",
-        # "stanfordcorenlp==3.9.1.1",
-        # "tabulate==0.8.9",
-        # "torch==1.11.0",
+        "torch >= 1.11.0",
     ]
-
 
     # This call to setup() does all the work
     setup(
@@ -52,6 +48,7 @@ if __name__ == "__main__":
                 "examples.*",
                 "examples",
                 "tests",
+                "test.py",
             ),
         ),
         # Important for updates
@@ -65,7 +62,7 @@ if __name__ == "__main__":
         long_description_content_type="text/markdown",
         url="https://github.com/vitormeriat/text4gcn",
         keywords=["tgcn", "gcn", "gnn", "nlp",
-                "text_classification", "text_graph"],
+                  "text_classification", "text_graph"],
         classifiers=[
             "License :: OSI Approved :: MIT License",
             #"Programming Language :: Python :: 3",
