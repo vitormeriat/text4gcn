@@ -52,7 +52,7 @@ if __name__ == "__main__":
             ),
         ),
         # Important for updates
-        version="1.0.4",
+        version="1.0.0",
         # Should match your chosen license
         license="MIT",
         description="A library for building text graphs for the application of Graph Neural Networks (GNN), in the context of text classification in natural language processing",
