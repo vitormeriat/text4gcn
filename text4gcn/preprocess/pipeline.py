@@ -1,13 +1,3 @@
-# from ..modules.node_features import NodeFeatures
-# from ..modules import word_processor as wdprc
-# from ..modules import clean_data as clean
-# from ..modules import file_ops as flop
-# from ..modules import logger as logger
-# from ..modules.logger import Process
-# from collections import OrderedDict
-# from math import ceil
-# import random
-
 from text4gcn.modules.node_features import NodeFeatures
 from text4gcn.modules import word_processor as wdprc
 from text4gcn.modules import clean_data as clean
@@ -20,24 +10,28 @@ import random
 
 
 class TextPipeline():
-    """
-    A class to represent a person.
+    r"""
+    Create a folder structure to store the files representing the 
+    processed text and the node resources to be used to create the 
+    text graph.
 
     ...
 
     Attributes
     ----------
-    name : str
-        first name of the person
-    surname : str
-        family name of the person
-    age : int
-        age of the person
+    dataset_name : str
+        name of the dataset
+    rare_count : int
+        sets a value to consider a `rare` term
+    dataset_path : str
+        path to files
+    language : str
+        `language` to retrieve stop words
 
     Methods
     -------
-    info(additional=""):
-        Prints the person's name and age.
+    execute(additional=""):
+        Run the pipeline
     """
 
     def __init__(
@@ -62,22 +56,6 @@ class TextPipeline():
 
         with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'w') as my_file:
             my_file.writelines(hist)
-
-    def execute(self):
-        self.logger.info(clean.create_title("NLTK Configuration"))
-        clean.config_nltk()
-        self.logger.info()
-
-        self.clean_data()
-        self.shuffle_data()
-        self.prepare_words()
-        self.build_node_features(
-            validation_ratio=0.10,
-            use_predefined_word_vectors=False
-        )
-
-        hist = self.logger.log_history()
-        self.save_history(hist)
 
     @Process.log("CLEANED DATA: Removed rare & stop-words.")
     def clean_data(self):
@@ -139,8 +117,8 @@ class TextPipeline():
         ds_corpus_shuffled_meta = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.meta"
 
         # Checkers
-        #check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
-        #check_paths(ds_corpus_meta, corpus_cleaned)
+        # check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
+        # check_paths(ds_corpus_meta, corpus_cleaned)
 
         # Create dirs if not exist
         self.flop.create_dir(
@@ -205,13 +183,13 @@ class TextPipeline():
         ds_corpus = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.txt"
 
         # Checkers
-        #check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
+        # check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
         # check_paths(ds_corpus)
         self.flop.check_paths(self.dataset_path)
 
         # Create output directories
-        #create_dir(dir_path=cfg.corpus_shuffled_vocab_dir, overwrite=False)
-        #create_dir(dir_path=cfg.corpus_shuffled_word_vectors_dir, overwrite=False)
+        # create_dir(dir_path=cfg.corpus_shuffled_vocab_dir, overwrite=False)
+        # create_dir(dir_path=cfg.corpus_shuffled_word_vectors_dir, overwrite=False)
 
         ds_corpus_vocabulary = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.vocab"
         ds_corpus_word_vectors = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.word_vectors"
@@ -376,3 +354,20 @@ class TextPipeline():
         self.logger.info(f"x.shape={x.shape}, y.shape={y.shape}")
         self.logger.info(f"tx.shape={tx.shape}, ty.shape={ty.shape}")
         self.logger.info(f"allx.shape={allx.shape}, ally.shape={ally.shape}")
+
+    def execute(self):
+        """Runs the text processing pipeline"""
+        self.logger.info(clean.create_title("NLTK Configuration"))
+        clean.config_nltk()
+        self.logger.info()
+
+        self.clean_data()
+        self.shuffle_data()
+        self.prepare_words()
+        self.build_node_features(
+            validation_ratio=0.10,
+            use_predefined_word_vectors=False
+        )
+
+        hist = self.logger.log_history()
+        self.save_history(hist)

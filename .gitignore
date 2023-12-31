@@ -103,6 +103,19 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-.vscode/
 examples/
 LIWC2007_English100131.dic
+
+# Rope project settings
+.ropeproject
+.DS_Store
+**/.DS_Store
+
+# jekyll
+docs/_site/
+docs/.jekyll-metadata
+docs/.jekyll-cache
+site
+
+# vscode
+.vscode

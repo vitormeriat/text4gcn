@@ -18,6 +18,12 @@ class Datasets():
 
         #file_path = f'{os.getcwd()}/{path}'
         absp = os.path.abspath(self.path)
+
+        # checking if the directory demo_folder exist or not. 
+        if not os.path.exists(absp): 
+            # if the demo_folder directory is not present then create it. 
+            os.makedirs(absp) 
+
         file_path = f'{absp}/{self.file_name}'
 
         # send a HTTP request to the server and save
@@ -43,16 +49,32 @@ class Datasets():
 
 
 def R8(path: str):
-    """R8 Dataset
-    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+    """`R8` Dataset
+    
     Number of lines per split:
         - train: 25000
         - test: 25000
-    Args:
-        root: Directory where the datasets are saved. Default: os.path.expanduser('~/.torchtext/cache')
-        split: split or splits to be returned. Can be a string or tuple of strings. Default: (`train`, `test`)
-    :returns: DataPipe that yields tuple of label (1 to 2) and text containing the movie review
-    :rtype: (int, str)
+    
+    ...
+
+    See Also
+    --------
+    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+
+    Parameters
+    ----------
+    path: 
+        Directory where the datasets are saved.
+
+    Example
+    -------
+        >>> from text4gcn.datasets import data
+        >>> data.R8(path='~/.data/R8')
+
+    Returns
+    -------
+    rtype: (int, str)
+        DataPipe that yields tuple of label (1 to 2) and text containing the movie review
     """
     ds = Datasets(
         file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R8.txt",
@@ -68,16 +90,31 @@ def R8(path: str):
 
 
 def R52(path: str):
-    """R52 Dataset
-    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+    """`R52` Dataset
+    
     Number of lines per split:
         - train: 25000
         - test: 25000
-    Args:
-        root: Directory where the datasets are saved. Default: os.path.expanduser('~/.torchtext/cache')
-        split: split or splits to be returned. Can be a string or tuple of strings. Default: (`train`, `test`)
-    :returns: DataPipe that yields tuple of label (1 to 2) and text containing the movie review
-    :rtype: (int, str)
+    
+    ...
+
+    See Also
+    --------
+    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+
+    Parameters
+    ----------
+        path: Directory where the datasets are saved. 
+    
+    Example
+    -------
+        >>> from text4gcn.datasets import data
+        >>> data.R52(path='~/.data/R52')
+    
+    Returns
+    -------
+    rtype: (int, str)
+        DataPipe that yields tuple of label (1 to 2) and text containing the movie review
     """
     ds = Datasets(
         file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/R52.txt",
@@ -93,16 +130,31 @@ def R52(path: str):
 
 
 def AG_NEWS(path: str):
-    """AG_NEWS Dataset
-    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+    """`AG_NEWS` Dataset
+    
     Number of lines per split:
         - train: 25000
         - test: 25000
-    Args:
-        root: Directory where the datasets are saved. Default: os.path.expanduser('~/.torchtext/cache')
-        split: split or splits to be returned. Can be a string or tuple of strings. Default: (`train`, `test`)
-    :returns: DataPipe that yields tuple of label (1 to 2) and text containing the movie review
-    :rtype: (int, str)
+    
+    ...
+
+    See Also
+    --------
+    For additional details refer to http://ai.stanford.edu/~amaas/data/sentiment/
+
+    Parameters
+    ----------
+        path: Directory where the datasets are saved. 
+    
+    Example
+    -------
+        >>> from text4gcn.datasets import data
+        >>> data.AG_NEWS(path='~/.data/AG_NEWS')
+    
+    Returns
+    -------
+    rtype: (int, str)
+        DataPipe that yields tuple of label (1 to 2) and text containing the movie review
     """
     ds = Datasets(
         file_url="https://meriatblog.blob.core.windows.net/public/text4gcn/20AG_NEWS.txt",

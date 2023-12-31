@@ -1,9 +1,9 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import List, Iterable, Tuple
 from collections import OrderedDict
-import numpy as np
 import pickle as pkl
 from math import log
+import numpy as np
 
 
 def word_to_vectors(vocabulary, word_vectors):
@@ -24,18 +24,19 @@ def extract_tf_idf_word_vectors(word_definitions: List[str], max_features: int) 
 
 def extract_word_definitions(vocabulary: List[str]) -> List[str]:
     from nltk.corpus import wordnet
-    #from nltk import download
-    #temporary_nltk_folder = 'venv/nltk_data/'
-    #download(info_or_id='wordnet', download_dir=temporary_nltk_folder)
-    #download(info_or_id='wordnet')
-    #download(info_or_id='omw-1.4')
+    # from nltk import download
+    # temporary_nltk_folder = 'venv/nltk_data/'
+    # download(info_or_id='wordnet', download_dir=temporary_nltk_folder)
+    # download(info_or_id='wordnet')
+    # download(info_or_id='omw-1.4')
 
     merged_definitions_of_words = []
     for word in vocabulary:
         syn_sets_of_word = wordnet.synsets(word.strip())
         word_definitions = [syn_set.definition()
                             for syn_set in syn_sets_of_word]
-        merged_definitions_of_word = ' '.join(word_definitions) if word_definitions else '<PAD>'
+        merged_definitions_of_word = ' '.join(
+            word_definitions) if word_definitions else '<PAD>'
 
         merged_definitions_of_words.append(merged_definitions_of_word)
     # rmtree(temporary_nltk_folder)
@@ -59,11 +60,13 @@ def build_word_doc_list(docs_of_words):
             appeared.add(word)
     return word_doc_list
 
+
 def define_word_doc_freq(docs_of_words):
     word_doc_list = build_word_doc_list(docs_of_words)
     return {
         word: len(doc_list) for word, doc_list in word_doc_list.items()
     }
+
 
 def build_word_window_freq(docs_of_words):
     word_window_freq = {}
@@ -79,6 +82,7 @@ def build_word_window_freq(docs_of_words):
             appeared.add(window[i])
     return word_window_freq
 
+
 def relation_pair_statitcs(rela_pair_count_str):
     max_count1 = 0.0
     min_count1 = 0.0
@@ -93,6 +97,7 @@ def relation_pair_statitcs(rela_pair_count_str):
     count_mean1 = np.mean(count1)
     count_std1 = np.std(count1, ddof=1)
     return min_count1, max_count1, count_mean1, count_std1
+
 
 def get_weight_tfidf(docs_of_words, word_id_map, doc_word_freq, train_size, vocab_size, word_doc_freq, vocab, row, col):
     weight_tfidf = []
@@ -114,6 +119,7 @@ def get_weight_tfidf(docs_of_words, word_id_map, doc_word_freq, train_size, voca
             weight_tfidf.append(freq * idf)
             doc_word_set.add(word)
     return weight_tfidf
+
 
 def get_doc_word_freq(docs_of_words, word_id_map):
     doc_word_freq = {}

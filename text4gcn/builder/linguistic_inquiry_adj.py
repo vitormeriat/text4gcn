@@ -135,10 +135,10 @@ class LiwcAdjacency():
         ds_corpus_test_idx = f'{corpus_path}.shuffled/{self.dataset_name}.test'
 
         # checkers
-        #check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
-        #check_paths(ds_corpus, ds_corpus_vocabulary, ds_corpus_train_idx, ds_corpus_test_idx)
+        # check_data_set(data_set_name=ds_name, all_data_set_names=cfg.data_sets)
+        # check_paths(ds_corpus, ds_corpus_vocabulary, ds_corpus_train_idx, ds_corpus_test_idx)
 
-        #create_dir(dir_path=cfg.corpus_shuffled_adjacency_dir + "/linguistic_inquiry", overwrite=False)
+        # create_dir(dir_path=cfg.corpus_shuffled_adjacency_dir + "/linguistic_inquiry", overwrite=False)
         self.flop.create_dir(
             dir_path=f'{corpus_path}.adjacency', overwrite=False)
 

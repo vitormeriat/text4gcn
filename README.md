@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="70%" src="https://meriatblog.blob.core.windows.net/public/text4gcn/imgs/logo.svg">
+  <img width="70%" src="imgs/logo.svg">
   <h1 style="margin-bottom:40px; margin-top:20px">Text for GCN</h1>
   <p>GCN applied in a text classification context.</p>
 </div>
@@ -8,7 +8,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![PyPI](https://img.shields.io/pypi/v/text4gcn)
-[![Python 3.8](https://upload.wikimedia.org/wikipedia/commons/a/a5/Blue_Python_3.8_Shield_Badge.svg)](https://www.python.org/)
+[![Python 3.10](https://img.shields.io/badge/python-3.10-blue)](https://www.python.org/)
 [![Documentation Status](https://readthedocs.org/projects/nltk/badge/?version=latest)](https://nltk.readthedocs.io/en/latest/?badge=latest)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/master/notebooks/text4gcn.ipynb)
 
@@ -43,7 +43,7 @@ This project aims to exam the text classification problem with novel approaches 
 The main contribution of this work is to provide a flexible framework, capable of performing `syntactic` and `semantic` filters that make text graphs smaller and more representative. This framework offers an alternative and powerful tool for the study of `Convolutional Graph Networks` applied in the text classification task.
 
 <div style="margin-bottom:30px; margin-top:30px" align="center">
-  <img width="70%" src="https://meriatblog.blob.core.windows.net/public/text4gcn/imgs/text-graph.png">
+  <img width="70%" src="imgs/text-graph.png">
   <p style="margin-top:5px">Text graph</p>
 </div>
 
