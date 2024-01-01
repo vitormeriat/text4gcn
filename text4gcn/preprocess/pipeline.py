@@ -10,7 +10,7 @@ import random
 
 
 class TextPipeline():
-    r"""
+    """
     Create a folder structure to store the files representing the 
     processed text and the node resources to be used to create the 
     text graph.

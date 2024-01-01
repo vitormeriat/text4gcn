@@ -51,7 +51,7 @@ permalink: /
 
 ## Why Text4GCN?
 
-**Graph4NLP** is an easy-to-use library for R&D at the intersection of **Deep Learning on Graphs** and **Natural Language Processing** (i.e., DLG4NLP). It provides both **full implementations** of state-of-the-art models for data scientists and also **flexible interfaces** to build customized models for researchers and developers with whole-pipeline support. Built upon highly-optimized runtime libraries including [DGL](https://github.com/dmlc/dgl) , **Graph4NLP** has both high running efficiency and great extensibility. The architecture of **Graph4NLP** is shown in the following figure, where boxes with dashed lines represents the features under development.
+**Text4GCN** is an easy-to-use library for R&D at the intersection of **Deep Learning on Graphs** and **Natural Language Processing** (i.e., DLG4NLP). It provides both **full implementations** of state-of-the-art models for data scientists and also **flexible interfaces** to build customized models for researchers and developers with whole-pipeline support. Built upon highly-optimized runtime libraries including [DGL](https://github.com/dmlc/dgl) , **Text4GCN** has both high running efficiency and great extensibility. The architecture of **Text4GCN** is shown in the following figure, where boxes with dashed lines represents the features under development.
 
 This library has the following key features:
 

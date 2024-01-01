@@ -20,13 +20,8 @@ class FrequencyAdjacency():
         with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a') as my_file:
             my_file.writelines(hist)
 
-    def build(self):
-        self.builds()
-        hist = self.logger.log_history()
-        self.save_history(hist)
-
     @Process.log("EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix.")
-    def builds(self):
+    def _build(self):
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}"
         ds_corpus = f'{corpus_path}.shuffled/{self.dataset_name}.txt'
@@ -34,7 +29,7 @@ class FrequencyAdjacency():
         ds_corpus_train_idx = f'{corpus_path}.shuffled/{self.dataset_name}.train'
         ds_corpus_test_idx = f'{corpus_path}.shuffled/{self.dataset_name}.test'
 
-        self.flop.create_dir(dir_path=f'{corpus_path}.adjacency', 
+        self.flop.create_dir(dir_path=f'{corpus_path}.adjacency',
                              overwrite=False)
 
         docs_of_words = [line.split() for line in open(file=ds_corpus)]
@@ -71,3 +66,8 @@ class FrequencyAdjacency():
         # Dump Adjacency Matrix
         with open(f"{corpus_path}.adjacency/ind.frequency.{self.dataset_name}.adj", 'wb') as f:
             pickle.dump(adjacency_matrix, f)
+
+    def build(self):
+        self._build()
+        hist = self.logger.log_history()
+        self.save_history(hist)

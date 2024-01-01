@@ -34,7 +34,7 @@ class Datasets():
             # to a new file in binary mode.
             f.write(r.content)
 
-    def download_big(self):
+    def download_big_files(self):
         r = requests.get(self.file_url, stream=True)
 
         absp = os.path.abspath(self.path)

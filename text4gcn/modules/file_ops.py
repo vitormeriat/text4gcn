@@ -1,5 +1,5 @@
 from typing import Any, Iterable, List, Tuple
-#from ..modules import logger
+# from ..modules import logger
 from text4gcn.modules import logger
 from os.path import exists
 from shutil import rmtree
@@ -11,13 +11,59 @@ class FileOps():
     def __init__(self, logger: logger.PrintLog):
         self.logger = logger
 
+    def get_lines_info(self, file_path):
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+            return len(lines)
+
+    def validate_input_meta_columns(self, file_path):
+        lines = [line.strip() for line in open(file_path, 'r').readlines()]
+
+        validate_lines = True
+        if len(lines) > 0:
+            for i, l in enumerate(lines):
+                if len(l.split('\t')) != 3 and i < len(lines):
+                    return False
+            if validate_lines:
+                return True
+        return False
+
+    def validate_input_files_lines(self, path_txt: str, path_meta: str):
+        num_lines_file1 = self.get_lines_info(path_txt)
+        num_lines_file2 = self.get_lines_info(path_meta)
+        return num_lines_file1, num_lines_file2
+
+    def validate_files(self, path_txt: str, path_meta: str):
+        meta_validation = self.validate_input_meta_columns(path_meta)
+
+        n_lines_f1, n_lines_f2 = self.validate_input_files_lines(
+            path_txt, path_meta)
+
+        message = "[FILES VALIDATION]"
+        status = True
+
+        if meta_validation:
+            message += " - [meta] Validated file"
+        else:
+            status = False
+            message += " - [meta] The meta file does not correspond to standard"
+            
+
+        if n_lines_f1 == n_lines_f2:
+            message += " - [corpus] Validated file"
+        else:
+            status = False
+            message += " - [corpus] Files do not have the same count of lines"
+
+        return message, status
+
     def create_dir(self, dir_path: str, overwrite: bool) -> None:
         if exists(dir_path):
             if overwrite:
                 rmtree(dir_path)
                 makedirs(dir_path)
             else:
-                #print('[WARN] directory:%r already exists, not overwritten.' % dir_path)
+                # print('[WARN] directory:%r already exists, not overwritten.' % dir_path)
                 self.logger.warning(
                     'Directory:%r already exists, not overwritten.' % dir_path)
         else:

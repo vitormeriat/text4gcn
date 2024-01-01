@@ -16,6 +16,8 @@ data.R8(path=path)
 # data.R52(path=path)
 # data.AG_NEWS(path=path)
 
+
+
 pipe = TextPipeline(
     dataset_name="R8",
     rare_count=5,
@@ -24,6 +26,15 @@ pipe = TextPipeline(
 pipe.execute()
 
 
+
+from text4gcn.builder import FrequencyAdjacency
+
+adj = FrequencyAdjacency(
+    dataset_name="R8",
+    dataset_path=path
+)
+
+adj.build()
 
 
 
