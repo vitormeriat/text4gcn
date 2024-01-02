@@ -7,14 +7,31 @@ import pickle
 
 
 class FrequencyAdjacency():
+    """
+    Creates an heterogenous `doc-word` adjacency matrix based on TF-IDF. 
 
-    def __init__(self, dataset_name, dataset_path):
+    ...
+
+    Attributes
+    ----------
+    dataset_name : str
+        name of the dataset
+    dataset_path : str
+        path to files
+
+    Methods
+    -------
+    build():
+        Builds the adjacency matrix
+    """
+
+    def __init__(self, dataset_name: str, dataset_path: str):
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.logger = logger.PrintLog()
         self.flop = flop.FileOps(logger=self.logger)
 
-    def save_history(self, hist):
+    def _save_history(self, hist):
         self.flop.create_dir(
             dir_path=f'{self.dataset_path}/log', overwrite=False)
         with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a') as my_file:
@@ -42,18 +59,25 @@ class FrequencyAdjacency():
         # Real test-size.
         test_size = len(open(ds_corpus_test_idx).readlines())
 
-        windows_of_words = adj.extract_windows(
-            docs_of_words=docs_of_words, window_size=20)
+        windows_of_words = adj.extract_windows(docs_of_words=docs_of_words, 
+                                               window_size=20)
 
         self.logger.info("Calculating PMI")
         # Extract word-word weights
-        rows, cols, weights = adj.extract_pmi_word_weights(
-            windows_of_words, word_to_id, vocab, train_size)
+        rows, cols, weights = adj.extract_pmi_word_weights(windows_of_words, 
+                                                           word_to_id, 
+                                                           vocab, 
+                                                           train_size)
 
         self.logger.info("Calculating TF-IDF")
         # Extract word-doc weights
-        rows, cols, weights = adj.extract_tf_idf_doc_word_weights(
-            rows, cols, weights, vocab, train_size, docs_of_words, word_to_id)
+        rows, cols, weights = adj.extract_tf_idf_doc_word_weights(rows, 
+                                                                  cols, 
+                                                                  weights, 
+                                                                  vocab, 
+                                                                  train_size, 
+                                                                  docs_of_words, 
+                                                                  word_to_id)
 
         adjacency_len = train_size + len(vocab) + test_size
 
@@ -68,6 +92,7 @@ class FrequencyAdjacency():
             pickle.dump(adjacency_matrix, f)
 
     def build(self):
+        """Builds the adjacency matrix"""
         self._build()
         hist = self.logger.log_history()
-        self.save_history(hist)
+        self._save_history(hist)

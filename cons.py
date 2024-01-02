@@ -26,7 +26,13 @@ pipe = TextPipeline(
 pipe.execute()
 
 
-
+"""
+To create the graph and its adjacency matrix, we use the builder module to import a specific 
+model. Each model has a parameterization due to the text representation used in the RWF 
+filter. In the example below we create two adjacency matrices. The first uses the 
+EmbeddingAdjacency model and the second the DependencyParsingAdjacency model. For the 
+EmbeddingAdjacency model based on Word2Vec, we inform the parameters for the training.
+"""
 from text4gcn.builder import FrequencyAdjacency
 
 adj = FrequencyAdjacency(
@@ -35,6 +41,10 @@ adj = FrequencyAdjacency(
 )
 
 adj.build()
+
+
+
+
 
 
 
