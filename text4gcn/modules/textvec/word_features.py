@@ -23,8 +23,12 @@ def train_word2vec(
 
     # Convert to TaggedDocument and train
     print('[INFO] Training Word2Vec...')
-    model = Word2Vec(document_list, vector_size=embedding_dimension,
-                     window=5, workers=4, sg=training_regime, min_count=1)
+    model = Word2Vec(document_list, 
+                     vector_size=embedding_dimension,
+                     window=5, 
+                     workers=4, 
+                     sg=training_regime, 
+                     min_count=1)
 
     if save_dir is not None:
         model.save(os.path.join(save_dir, 'word2vec.model'))

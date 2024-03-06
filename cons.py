@@ -1,29 +1,36 @@
-from rich.console import Console
-from rich.markdown import Markdown
-from rich import print
-
 from text4gcn.preprocess import TextPipeline
 from text4gcn.models import Layer as layer
-from text4gcn.models import Builder as bd
 from text4gcn.datasets import data
+import text4gcn.builder as builder
 from text4gcn.models import GNN
-from text4gcn.builder import *
+
+from text4gcn.models import Builder as bd
+
+PIPE = False
+TRAIN = False
+TFIDF = True
+WORD2VEC = True
+COSIM = False
+BUILDER = True
 
 
-path = "examples"
+builder.list_avaiable_methods()
 
-data.R8(path=path)
-# data.R52(path=path)
-# data.AG_NEWS(path=path)
+data.list()
 
 
+if PIPE:
 
-pipe = TextPipeline(
-    dataset_name="R8",
-    rare_count=5,
-    dataset_path=path,
-    language="english")
-pipe.execute()
+    data.R8(path="examples")
+    # data.R52(path=path)
+    # data.AG_NEWS(path=path)
+
+    pipe = TextPipeline(
+        dataset_name="R8",
+        dataset_path="examples",
+        rare_count=5,
+        language="english")
+    pipe.execute()
 
 
 """
@@ -33,71 +40,52 @@ filter. In the example below we create two adjacency matrices. The first uses th
 EmbeddingAdjacency model and the second the DependencyParsingAdjacency model. For the 
 EmbeddingAdjacency model based on Word2Vec, we inform the parameters for the training.
 """
-from text4gcn.builder import FrequencyAdjacency
 
-adj = FrequencyAdjacency(
-    dataset_name="R8",
-    dataset_path=path
-)
-
-adj.build()
+frequency = builder.Frequency(dataset_name="R8", dataset_path="examples")
+syntactic = builder.Syntactic(dataset_name="R8", dataset_path="examples")
+semantic = builder.Semantic(dataset_name="R8", dataset_path="examples")
 
 
+if TFIDF:
+    adj = frequency.tfidf(window_size=20,
+                          output_path=None)
 
+if WORD2VEC:
+    adj_w2v = semantic.word2vec(training_algorithm=1,
+                                embedding_dimension=300,
+                                num_epochs=20,
+                                threshold=0.96,
+                                language="english",
+                                output_path=None)
 
+if COSIM:
+    adj_csim = semantic.cosine_similarity(threshold=0.9,
+                                          output_path=None)
 
+    adj = semantic.bert()
+    adj = semantic.llm()
 
+if BUILDER:
+    adj = syntactic.constituency_parsing()
 
-MARKDOWN = """
-# Text4GCN
+    # export CLASSPATH=$CLASSPATH:/path/to/stanford-corenlp-4.5.6/*:
+    adj = syntactic.dependency_parsing(core_nlp_path="/home/vitormeriat/bin/stanford-corenlp-4.5.6",
+                                       language="english")
 
-Every move is gold. You need plenty of time to ponder about a move. **EVERY MOVE MUST FOLLOW** a **`Chess Principle`**! If it does not, then this move is crap! Don’t become a wood pusher in chess.
+if TRAIN:
+    gnn = GNN(
+        dataset="R8",           # Dataset to train
+        path="examples",        # Dataset path
+        log_dir="examples/log", # Log path
+        layer=layer.GCN,        # Layer Type
+        epoches=200,            # Number of traing epoches
+        dropout=0.5,            # Dropout rate
+        val_ratio=0.1,          # Train data used to validation
+        early_stopping=10,      # Stop early technique
+        lr=00.2,                # Initial learing rate
+        nhid=200,               # Dimensions of hidden layers
+        builder=bd.Word2Vec
+    )
 
-Choose a dataset:
+    gnn.fit()
 
-01. R8
-02. R52
-03. AG_NEWS
-"""
-
-console = Console()
-md = Markdown(MARKDOWN)
-console.print(md)
-
-
-expl01 = """ 
-## 1. d5 Chess Principle: Control the Center.
-> **(d4 d5 White moves)**
-
-Black has answered `d4` with `d5` to control the squares `e4` and `c4` and to stop the white center pawn to advance further gaining center space.
-"""
-
-expl02 = """ 
-## 2. h6 Chess Principle: Earning a FREE MOVE while attacking the INSTABLE BISHOP to make a LUFTLOCH.
-[Bg5 h6] Black EARNS the free move (2..h6), where you don't lose a development tempi as you attack the INSTABLE BISHOP, which must retreat, losing a tempi for White.
-
-The move h6 is useful as it controls **g5** and enables the follow up move **g5** later on, followed by the development of the inactive bishop to g7. In other words Black gains a tempi. One tempi = one move. The move h6 is NOT very effective but it is FREE! This is the point. It does not cost you anything, a tempi, I mean, but h6 is a nice little practical move, that improves your chances a little bit! It puts some spice into the game as it enables g5 AND if the bishop goes to h4 then it is cut off from the queenside! It can not come for help to the queenside when the house is on fire.
-"""
-
-explanations = [expl01, expl02]
-
-boards = [
-    ['d4', 'd5'],
-    ['d4', 'd5', 'Bg5', 'h6'],
-]
-
-print("\n[yellow]Select a option[/yellow] ([bold]use the number[/bold]):")
-
-input_message = "\tPick an number:"
-user_input = input(input_message)
-
-
-console.print()
-
-explain = explanations[int(user_input)-1]
-
-expl = Markdown(explain)
-console.print(expl)
-
-
-print("\n[bold yellow]Board :lemon:[/bold yellow]\n")

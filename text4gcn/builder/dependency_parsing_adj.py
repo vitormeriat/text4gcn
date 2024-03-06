@@ -5,13 +5,15 @@ from text4gcn.modules.word_processor import *
 from text4gcn.modules.logger import Process
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
+from tqdm import tqdm
 from math import log
 import pickle
 
 
 class DependencyParsingAdjacency():
 
-    def __init__(self, dataset_name, dataset_path, core_nlp_path):
+    def __init__(self, dataset_name, dataset_path, core_nlp_path, language: str='english'):
+        self.language = language
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.core_nlp_path = core_nlp_path
@@ -19,12 +21,12 @@ class DependencyParsingAdjacency():
         self.flop = flop.FileOps(logger=self.logger)
 
     def build_relation_pair(self, docs_of_words):
-        stop_words = set(stopwords.words('english'))
+        stop_words = set(stopwords.words(self.language))
         nlp = StanfordCoreNLP(self.core_nlp_path, lang='en')
 
         errors = 0
         rela_pair_count_str = {}
-        for docs_of_word in docs_of_words:
+        for docs_of_word in tqdm(docs_of_words):
             words = docs_of_word
             sentence = ' '.join(words)
 
@@ -138,6 +140,12 @@ class DependencyParsingAdjacency():
 
         return row, col, weight, weight_tfidf
 
+    def _save_history(self, hist):
+        self.flop.create_dir(
+            dir_path=f'{self.dataset_path}/log', overwrite=False)
+        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a') as my_file:
+            my_file.writelines(hist)
+
     @Process.log("EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix.")
     def build(self):
 
@@ -195,5 +203,8 @@ class DependencyParsingAdjacency():
         # =============================================================
 
         # Dump Adjacency Matrix
-        with open(f"{corpus_path}.adjacency/ind.dependency.{self.dataset_name}.adj", 'wb') as f:
+        with open(f"{corpus_path}.adjacency/ind.dependency.parsing.{self.dataset_name}.adj", 'wb') as f:
             pickle.dump(adj, f)
+
+        hist = self.logger.log_history()
+        self._save_history(hist)

@@ -96,8 +96,8 @@ class EmbeddingAdjacency():
         #check_paths(ds_corpus, ds_corpus_vocabulary, ds_corpus_train_idx, ds_corpus_test_idx)
 
         #create_dir(dir_path=cfg.corpus_shuffled_adjacency_dir + "/semantic", overwrite=False)
-        self.flop.create_dir(
-            dir_path=f'{corpus_path}.adjacency', overwrite=False)
+        self.flop.create_dir(dir_path=f'{corpus_path}.adjacency', 
+                             overwrite=False)
 
         docs_of_words = [line.split() for line in open(file=ds_corpus)]
         # Extract Vocabulary.

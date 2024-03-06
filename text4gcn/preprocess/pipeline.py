@@ -37,9 +37,9 @@ class TextPipeline():
     def __init__(
         self,
         dataset_name: str,
-        rare_count: int,
         dataset_path: str,
-        language: str
+        rare_count: int = 5,
+        language: str = "english"
     ):
         self.logger = logger.PrintLog()
         self.flop = flop.FileOps(logger=self.logger)

@@ -108,8 +108,10 @@ def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict
     return weight_rows, weight_cols, pmi_weights
 
 
-def extract_cosine_similarity_word_weights(vocab: List[str], train_size: int,
-                                           word_vec_path: str) -> Tuple[List[int], List[int], List[float]]:
+def extract_cosine_similarity_word_weights(vocab: List[str], 
+                                           train_size: int,
+                                           word_vec_path: str, 
+                                           threshold: float) -> Tuple[List[int], List[int], List[float]]:
     """Calculate Cosine Similarity of Word Vectors as weights"""
     word_vectors = pickle.load(
         file=open(word_vec_path, 'rb'))  # type: Dict[str,List[float]]
@@ -118,21 +120,26 @@ def extract_cosine_similarity_word_weights(vocab: List[str], train_size: int,
     weight_cols = []  # type: List[int]
     cos_sim_weights = []  # type: List[float]
 
-    #len_vocab = len(vocab)
-    #pbar = tqdm(len_vocab)
+    len_vocab = len(vocab)
+    pbar = tqdm(total=len_vocab)
+    i_temp = None
 
-    for (i, word_i), (j, word_j) in tqdm(itertools.product(enumerate(vocab), enumerate(vocab))):
-        # pbar.update(1)
+    # for (i, word_i), (j, word_j) in tqdm(itertools.product(enumerate(vocab), enumerate(vocab))):
+    for (i, word_i), (j, word_j) in itertools.product(enumerate(vocab), enumerate(vocab)):
+        if i != i_temp: 
+            pbar.update(1)
+        i_temp = i
+        # print(f"{i} - {word_i} - {j} - {word_j}", end='\r')
         if word_i in word_vectors and word_j in word_vectors:
             vector_i = np.array(word_vectors[word_i])
             vector_j = np.array(word_vectors[word_j])
             similarity = 1.0 - cosine(vector_i, vector_j)
-            if similarity > 0.9:
+            if similarity > threshold:
                 #print(word_i, word_j, similarity)
                 weight_rows.append(train_size + i)
                 weight_cols.append(train_size + j)
                 cos_sim_weights.append(similarity)
-    # pbar.close()
+    pbar.close()
     return weight_rows, weight_cols, cos_sim_weights
 
 
@@ -152,11 +159,9 @@ def extract_tf_idf_doc_word_weights(
         adj_rows: List[int], adj_cols: List[int], adj_weights: List[float], vocab: List[str], train_size: int,
         docs_of_words: List[List[str]], word_to_id: Dict[str, int]) -> Tuple[List[int], List[int], List[float]]:
     """Extract Doc-Word weights with TF-IDF"""
-    doc_word_ids_pair_to_counts = extract_doc_word_ids_pair_to_counts(
-        docs_of_words, word_to_id)
+    doc_word_ids_pair_to_counts = extract_doc_word_ids_pair_to_counts(docs_of_words, word_to_id)
     word_to_doc_ids = extract_word_to_doc_ids(docs_of_words=docs_of_words)
-    word_to_doc_counts = extract_word_to_doc_counts(
-        word_to_doc_ids=word_to_doc_ids)
+    word_to_doc_counts = extract_word_to_doc_counts(word_to_doc_ids=word_to_doc_ids)
 
     vocab_len = len(vocab)
     num_docs = len(docs_of_words)
@@ -168,15 +173,10 @@ def extract_tf_idf_doc_word_weights(
             # se a palavra ainda não foi calculada...
             if word not in doc_word_set:
                 word_id = word_to_id[word]
-                word_ids_pair_count = doc_word_ids_pair_to_counts[str(
-                    doc_id) + ',' + str(word_id)]
-
-                adj_rows.append(doc_id if doc_id <
-                                train_size else doc_id + vocab_len)
+                word_ids_pair_count = doc_word_ids_pair_to_counts[str(doc_id) + ',' + str(word_id)]
+                adj_rows.append(doc_id if doc_id < train_size else doc_id + vocab_len)
                 adj_cols.append(train_size + word_id)
-
-                doc_word_idf = log(
-                    1.0 * num_docs / word_to_doc_counts[vocab[word_id]])
+                doc_word_idf = log(1.0 * num_docs / word_to_doc_counts[vocab[word_id]])
                 adj_weights.append(word_ids_pair_count * doc_word_idf)
                 doc_word_set.add(word)
     return adj_rows, adj_cols, adj_weights

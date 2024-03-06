@@ -8,9 +8,10 @@ import pickle
 
 class CosineSimilarityAdjacency():
 
-    def __init__(self, dataset_name, dataset_path):
+    def __init__(self, dataset_name: str, dataset_path: str, threshold: float = 0.9, output_path: str = None):
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
+        self.threshold = threshold
         self.logger = logger.PrintLog()
         self.flop = flop.FileOps(logger=self.logger)
 
@@ -39,9 +40,10 @@ class CosineSimilarityAdjacency():
 
         # As an alternative, use cosine similarity of word vectors as weights:
         ds_corpus_word_vectors = f'{corpus_path}.shuffled/{self.dataset_name}.word_vectors'
-        rows, cols, weights = adj.extract_cosine_similarity_word_weights(vocab,
-                                                                         train_size,
-                                                                         ds_corpus_word_vectors)
+        rows, cols, weights = adj.extract_cosine_similarity_word_weights(vocab=vocab,
+                                                                         train_size=train_size,
+                                                                         word_vec_path=ds_corpus_word_vectors,
+                                                                         threshold=self.threshold)
 
         self.logger.info("Calculating TF-IDF")
         # Extract word-doc weights
@@ -62,5 +64,5 @@ class CosineSimilarityAdjacency():
                                       shape=(adjacency_len, adjacency_len))
 
         # Dump Adjacency Matrix
-        with open(f"{corpus_path}.adjacency/ind.cosine.{self.dataset_name}.adj", 'wb') as f:
+        with open(f"{corpus_path}.adjacency/ind.cosine.similarity.{self.dataset_name}.adj", 'wb') as f:
             pickle.dump(adjacency_matrix, f)
