@@ -11,9 +11,19 @@ from .pipeline import Frequency, Semantic, Syntactic
 from rich.markdown import Markdown
 from rich.console import Console
 
+from enum import Enum
 
-MARKDOWN = """
-# Text4GCN
+
+Liwc = 'liwc'
+CosineSimilarity = 'cosine.similarity'
+DependencyParsing = 'dependency.parsing'
+ConstituencyParsing = 'constituency.parsing'
+Word2Vec = 'embedding.word2vec'
+Tfidf = 'frequency.tfidf'
+
+
+_MARKDOWN_ADJ = """
+# Text4GCN - ADJACENCY
 
 Methods available in the Adjacency Matrix **`Builder`** 
 
@@ -29,9 +39,44 @@ Methods available in the Adjacency Matrix **`Builder`**
   - builder.Frequency().tfidf()
 """
 
+_MARKDOWN_BLD = """
+# Text4GCN - BUILDERS
 
-def list_avaiable_methods():
+List of Builders **`Builder`** 
+
+01. Semantic
+  - LLM
+  - BERT
+  - Word2Vec
+  - CosineSimilarity
+02. Syntactic
+  - ConstituencyParsing
+  - DependencyParsing
+  - Liwc
+03. Frequency
+  - Tfidf
+"""
+
+
+def list_avaiable_ajacency_methods():
     """List of Methods available in the Adjacency Matrix `Builder` 
     """
     console = Console()
-    console.print(Markdown(MARKDOWN))
+    console.print(Markdown(_MARKDOWN_ADJ))
+
+def list_avaiable_builders():
+    """List of Methods available in the Adjacency Matrix `Builder` 
+    """
+    console = Console()
+    console.print(Markdown(_MARKDOWN_BLD))
+
+
+class Builder(str, Enum):
+    Liwc = 'liwc'
+    # Frequency = 'frequency'
+    # Embedding = 'embedding'
+    CosineSimilarity = 'cosine.similarity'
+    DependencyParsing = 'dependency.parsing'
+    ConstituencyParsing = 'constituency.parsing'
+    Word2Vec = 'embedding.word2vec'
+    Tfidf = 'frequency.tfidf'

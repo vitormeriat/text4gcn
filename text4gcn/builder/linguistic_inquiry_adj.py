@@ -6,6 +6,7 @@ from nltk.corpus import stopwords
 import scipy.sparse as sp
 from math import log
 import pickle as pkl
+from tqdm import tqdm
 
 
 class LiwcAdjacency():
@@ -23,7 +24,7 @@ class LiwcAdjacency():
 
         errors = 0
         rela_pair_count_str = {}
-        for docs_of_word in docs_of_words:
+        for docs_of_word in tqdm(docs_of_words):
             res = []
             try:
                 for word in docs_of_word:

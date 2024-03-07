@@ -1,13 +1,8 @@
-# https://www.topcoder.com/thrive/articles/syntactic-analysis-by-nlp
-# https://www.geeksforgeeks.org/constituency-parsing-and-dependency-parsing/
-# https://www.upgrad.com/blog/dependency-parsing-in-nlp/
-
-# from enum import Enum
-
 from text4gcn.builder.cosine_similarity_adj import CosineSimilarityAdjacency
 from text4gcn.builder.dependency_parsing_adj import DependencyParsingAdjacency
 from text4gcn.builder.word2vec_adj import Word2VecAdjacency
 from text4gcn.builder.frequency_adj import FrequencyAdjacency
+from text4gcn.builder.linguistic_inquiry_adj import LiwcAdjacency
 
 
 class Adjacency():
@@ -16,10 +11,9 @@ class Adjacency():
         self.dataset_path = dataset_path
 
 
-class Frequency():
+class Frequency(Adjacency):
     def __init__(self, dataset_name: str, dataset_path: str) -> None:
-        self.dataset_name = dataset_name
-        self.dataset_path = dataset_path
+        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
     def tfidf(self, window_size: int = 20, output_path: str = None) -> bool:
         adj = FrequencyAdjacency(dataset_name=self.dataset_name,
@@ -34,6 +28,11 @@ class Syntactic(Adjacency):
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
     def dependency_parsing(self, core_nlp_path: str, language: str = "english") -> bool:
+        """
+        Working in Progress
+        ----------
+
+        """
         adj = DependencyParsingAdjacency(dataset_name=self.dataset_name,
                                          dataset_path=self.dataset_path,
                                          core_nlp_path=core_nlp_path,
@@ -48,13 +47,16 @@ class Syntactic(Adjacency):
         """
         pass
 
-    def linguistic_inquiry(self) -> bool:
+    def linguistic_inquiry(self, liwc_path: str) -> bool:
         """
         Working in Progress
         ----------
 
         """
-        pass
+        adj = LiwcAdjacency(dataset_name=self.dataset_name,
+                            dataset_path=self.dataset_path,
+                            liwc_path=liwc_path)
+        return adj.build()
 
 
 # class TrainingW2V(Enum):
