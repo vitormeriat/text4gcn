@@ -6,13 +6,16 @@ from text4gcn.models import GNN
 
 # from text4gcn.models import Builder as bd
 
+
 PIPE = False
 TRAIN = False
-TFIDF = True
-WORD2VEC = True
+TFIDF = False
+WORD2VEC = False
 COSIM = False
-BUILDER = True
-LWIC = True
+BUILDER = False
+LWIC = False
+BERT = True
+LLM = False
 
 
 builder.list_avaiable_ajacency_methods()
@@ -52,7 +55,7 @@ semantic = builder.Semantic(dataset_name="R8", dataset_path="examples")
 
 if LWIC:
     adj = syntactic.linguistic_inquiry(
-    liwc_path="/home/vitormeriat/bin/LIWC2007_English100131.dic")
+        liwc_path="/home/vitormeriat/bin/LIWC2007_English100131.dic")
 
 if TFIDF:
     adj = frequency.tfidf(window_size=20,
@@ -70,7 +73,11 @@ if COSIM:
     adj_csim = semantic.cosine_similarity(threshold=0.9,
                                           output_path=None)
 
-    adj = semantic.bert()
+if BERT:
+    adj = semantic.bert(language="english",
+                        threshold=0.95)
+
+if LLM:
     adj = semantic.llm()
 
 if BUILDER:

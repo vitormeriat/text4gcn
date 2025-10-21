@@ -1,19 +1,20 @@
-# from .frequency_adj import FrequencyAdjacency
-# from .embedding_adj import EmbeddingAdjacency
-# from .linguistic_inquiry_adj import LiwcAdjacency
-# from .cosine_similarity_adj import CosineSimilarityAdjacency
-# from .dependency_parsing_adj import DependencyParsingAdjacency
-# from .constituency_parsing_adj import ConstituencyParsingAdjacency
-# from .word2vec_adj import Word2VecAdjacency
+"""
+Builder module for Text4GCN.
 
-from .pipeline import Frequency, Semantic, Syntactic
+This module provides classes and functions for building adjacency matrices
+from text data using various methods including semantic, syntactic, and
+frequency-based approaches.
+"""
+
+from enum import Enum
+from typing import List
 
 from rich.markdown import Markdown
 from rich.console import Console
 
-from enum import Enum
+from .pipeline import Frequency, Semantic, Syntactic
 
-
+# Legacy constants for backward compatibility
 Liwc = 'liwc'
 CosineSimilarity = 'cosine.similarity'
 DependencyParsing = 'dependency.parsing'
@@ -21,7 +22,7 @@ ConstituencyParsing = 'constituency.parsing'
 Word2Vec = 'embedding.word2vec'
 Tfidf = 'frequency.tfidf'
 
-
+# Documentation strings
 _MARKDOWN_ADJ = """
 # Text4GCN - ADJACENCY
 
@@ -58,25 +59,42 @@ List of Builders **`Builder`**
 """
 
 
-def list_avaiable_ajacency_methods():
-    """List of Methods available in the Adjacency Matrix `Builder` 
-    """
+def list_available_adjacency_methods() -> None:
+    """List of Methods available in the Adjacency Matrix `Builder`."""
     console = Console()
     console.print(Markdown(_MARKDOWN_ADJ))
 
-def list_avaiable_builders():
-    """List of Methods available in the Adjacency Matrix `Builder` 
-    """
+
+def list_available_builders() -> None:
+    """List of Methods available in the Adjacency Matrix `Builder`."""
     console = Console()
     console.print(Markdown(_MARKDOWN_BLD))
 
 
 class Builder(str, Enum):
+    """Enumeration of available builder types."""
+    
     Liwc = 'liwc'
-    # Frequency = 'frequency'
-    # Embedding = 'embedding'
     CosineSimilarity = 'cosine.similarity'
     DependencyParsing = 'dependency.parsing'
     ConstituencyParsing = 'constituency.parsing'
     Word2Vec = 'embedding.word2vec'
     Tfidf = 'frequency.tfidf'
+
+
+# Public API
+__all__ = [
+    "Frequency",
+    "Semantic", 
+    "Syntactic",
+    "Builder",
+    "list_available_adjacency_methods",
+    "list_available_builders",
+    # Legacy constants
+    "Liwc",
+    "CosineSimilarity", 
+    "DependencyParsing",
+    "ConstituencyParsing",
+    "Word2Vec",
+    "Tfidf",
+]

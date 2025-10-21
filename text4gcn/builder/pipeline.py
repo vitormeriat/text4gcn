@@ -3,6 +3,8 @@ from text4gcn.builder.dependency_parsing_adj import DependencyParsingAdjacency
 from text4gcn.builder.word2vec_adj import Word2VecAdjacency
 from text4gcn.builder.frequency_adj import FrequencyAdjacency
 from text4gcn.builder.linguistic_inquiry_adj import LiwcAdjacency
+from text4gcn.builder.bert_adj import BERTAdjacency
+
 
 
 class Adjacency():
@@ -111,13 +113,19 @@ class Semantic(Adjacency):
                                 output_path=output_path)
         return adj.build()
 
-    def bert(self) -> bool:
+    def bert(self, 
+             language: str = "english",
+             threshold: float = 0.95) -> bool:
         """
         Working in Progress
         ----------
 
         """
-        pass
+        adj = BERTAdjacency(dataset_name=self.dataset_name, 
+                            dataset_path=self.dataset_path, 
+                            language=language, 
+                            threshold=threshold)
+        return adj.build()
 
     def llm(self) -> bool:
         """

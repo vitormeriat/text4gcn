@@ -2,9 +2,11 @@ from text4gcn.models.train_eval import TextGCNTrainer
 from text4gcn.models.utils import LoadData
 from text4gcn.models.layers import Layer
 from text4gcn.models.model import GCN
+from text4gcn.utils.device import get_device_manager, check_pytorch_installation
 import numpy as np
 import torch as th
 import argparse
+import warnings
 
 # # parser = argparse.ArgumentParser(description='TextGCN')
 # # #parser.add_argument('--dataset', type=str, default='citeseer', help='Dataset to train')
@@ -75,7 +77,8 @@ class GNN():
         dropout=0.5,
         val_ratio=0.1,
         layer=Layer.GCN,
-        early_stopping=10
+        early_stopping=10,
+        device=None
     ) -> None:
 
         self.early_stopping = early_stopping
@@ -90,6 +93,26 @@ class GNN():
         self.nhid = nhid
         self.path = path
         self.lr = lr
+        
+        # Initialize device manager
+        self.device_manager = get_device_manager(device)
+        self.device = self.device_manager.device
+        
+        # Check PyTorch installation and provide recommendations
+        pytorch_info = check_pytorch_installation()
+        if not pytorch_info["torch_available"]:
+            raise ImportError(
+                "PyTorch is not installed. Please install PyTorch using:\n"
+                "pip install text4gcn[cpu]  # for CPU version\n"
+                "pip install text4gcn[gpu]  # for GPU version"
+            )
+        
+        # Log device information
+        device_info = self.device_manager.get_device_info()
+        print(f"Using device: {self.device}")
+        if self.device_manager.is_cuda:
+            print(f"GPU: {self.device_manager.get_device_info()['gpu_name']}")
+            print(f"GPU Memory: {self.device_manager.get_device_info()['gpu_memory_gb']:.1f} GB")
 
     def config(self):
         print(f"\n{'='*30} MODEL CONFIGURATION\n")
@@ -107,8 +130,7 @@ class GNN():
         self.args.layer = self.layer
         self.args.nhid = self.nhid
         self.args.lr = self.lr
-        self.args.device = th.device(
-            'cuda') if th.cuda.is_available() else th.device('cpu')
+        self.args.device = self.device
 
         print(f'{self.args}\n')
 

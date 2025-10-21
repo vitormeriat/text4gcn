@@ -5,6 +5,7 @@ from text4gcn.modules import file_ops as flop
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
 import pickle
+from tqdm import tqdm
 
 
 class Word2VecAdjacency():
@@ -42,7 +43,7 @@ class Word2VecAdjacency():
 
         errors = 0
         rela_pair_count_str = {}
-        for docs_of_word in docs_of_words:
+        for docs_of_word in tqdm(docs_of_words):
             docs_of_word_len = len(docs_of_word)
             for i in range(docs_of_word_len):
                 if i+1 == docs_of_word_len:

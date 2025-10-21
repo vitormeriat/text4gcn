@@ -1,15 +1,17 @@
 <div align="center">
   <img width="70%" src="imgs/logo.svg">
-  <h1 style="margin-bottom:40px; margin-top:20px">Text for GCN</h1>
-  <p>GCN applied in a text classification context.</p>
+  <h1 style="margin-bottom:40px; margin-top:20px">Text4GCN</h1>
+  <p>A Python framework for text classification using Graph Neural Networks</p>
 </div>
 
 -----------------
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![PyPI](https://img.shields.io/pypi/v/text4gcn)
-[![Python 3.10](https://img.shields.io/badge/python-3.10-blue)](https://www.python.org/)
-[![Documentation Status](https://readthedocs.org/projects/nltk/badge/?version=latest)](https://nltk.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/text4gcn.svg)](https://badge.fury.io/py/text4gcn)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/vitormeriat/text4gcn/workflows/CI/badge.svg)](https://github.com/vitormeriat/text4gcn/actions)
+[![codecov](https://codecov.io/gh/vitormeriat/text4gcn/branch/main/graph/badge.svg)](https://codecov.io/gh/vitormeriat/text4gcn)
+[![Documentation Status](https://readthedocs.org/projects/text4gcn/badge/?version=latest)](https://text4gcn.readthedocs.io/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/master/notebooks/text4gcn.ipynb)
 
 <div id="top"></div>
@@ -34,13 +36,24 @@
 
 <div style="margin-bottom:60px"></div>
 
-## Abstract
+## About
 
-**`Text4GCN`** is an open-source python framework that simplifies the generation of text-based graph data to be applied as input to graph neural network architectures. Text4GCN's core is the ability to build memory-optimized text graphs, using different text representations to create their relationships and define the weights used for edges.
+**Text4GCN** is an open-source Python framework that simplifies the generation of text-based graph data for Graph Neural Network (GNN) architectures. The framework's core strength lies in its ability to build memory-optimized text graphs using different text representations to create relationships and define edge weights.
 
-This project aims to exam the text classification problem with novel approaches Graph Convolutional Networks and Graph Attention Networks using Deep Learning algorithms and Natural Language Processing Techniques.
+### Key Features
 
-The main contribution of this work is to provide a flexible framework, capable of performing `syntactic` and `semantic` filters that make text graphs smaller and more representative. This framework offers an alternative and powerful tool for the study of `Convolutional Graph Networks` applied in the text classification task.
+- 🚀 **Easy-to-use API**: Simple and intuitive interface for researchers and practitioners
+- 📊 **Multiple Dataset Support**: Built-in support for popular text classification datasets (R8, R52, 20NG, etc.)
+- 🔧 **Flexible Graph Building**: Various methods for constructing text graphs (semantic, syntactic, frequency-based)
+- 🧠 **GNN Models**: Pre-implemented Graph Neural Network architectures (GCN, GAT)
+- ⚡ **Memory Optimized**: Efficient graph construction for large-scale text datasets
+- 🔬 **Research Ready**: Designed for both research and production use
+
+### Why Text4GCN?
+
+This project addresses the text classification problem using novel approaches with Graph Convolutional Networks and Graph Attention Networks, combining Deep Learning algorithms with Natural Language Processing techniques.
+
+The main contribution is providing a flexible framework capable of performing `syntactic` and `semantic` filtering that makes text graphs smaller and more representative. This framework offers an alternative and powerful tool for studying Graph Convolutional Networks in text classification tasks.
 
 <div style="margin-bottom:30px; margin-top:30px" align="center">
   <img width="70%" src="imgs/text-graph.png">
@@ -51,13 +64,130 @@ The main contribution of this work is to provide a flexible framework, capable o
 
 ## Installation
 
-**`Text4GCN`** is available at `PyPI`:
+### From PyPI (Recommended)
 
-```python
-pip install text4gcn
+Text4GCN supports both CPU and GPU (CUDA) versions of PyTorch. Choose the installation that matches your system:
+
+#### CPU Version (Default)
+```bash
+pip install text4gcn[cpu]
 ```
 
-Also, **`Text4GCN`** can be cloned directly from GitHub (https://github.com/vitormeriat/text4gcn) and run as a Python script.
+#### GPU Version (CUDA)
+```bash
+pip install text4gcn[gpu]
+```
+
+#### Auto-detect Installation
+```bash
+# Install without PyTorch first
+pip install text4gcn
+
+# Then install PyTorch based on your system
+# For CPU:
+pip install torch
+
+# For GPU (CUDA 12.1):
+pip install torch --index-url https://download.pytorch.org/whl/cu121
+```
+
+### From Source
+
+```bash
+git clone https://github.com/vitormeriat/text4gcn.git
+cd text4gcn
+
+# For CPU version
+pip install -e .[cpu]
+
+# For GPU version  
+pip install -e .[gpu]
+```
+
+### Development Installation
+
+```bash
+git clone https://github.com/vitormeriat/text4gcn.git
+cd text4gcn
+
+# Install with development dependencies
+poetry install
+
+# Or install specific PyTorch version
+poetry install --extras "gpu"  # for GPU version
+poetry install --extras "cpu"  # for CPU version
+```
+
+### PyTorch Version Compatibility
+
+| Text4GCN Version | PyTorch CPU | PyTorch GPU (CUDA) |
+|------------------|-------------|-------------------|
+| 2.0.0+           | 2.1.2+      | 2.1.2+ (CUDA 12.1) |
+
+### Device Detection
+
+Text4GCN automatically detects the best available device:
+
+```python
+import text4gcn
+
+# Check PyTorch installation
+info = text4gcn.utils.check_pytorch_installation()
+print(info)
+
+# Get device recommendations
+recommendation = text4gcn.utils.recommend_installation()
+print(recommendation)
+```
+
+## Quick Start
+
+```python
+import text4gcn
+
+# 1. Check PyTorch installation and device
+info = text4gcn.utils.check_pytorch_installation()
+print(f"PyTorch available: {info['torch_available']}")
+print(f"CUDA available: {info['cuda_available']}")
+
+# 2. Load a dataset
+data = text4gcn.datasets.R8(path="./data")
+
+# 3. Build a text graph using frequency-based approach
+builder = text4gcn.builder.Frequency()
+adjacency = builder.tfidf(dataset_name="R8", dataset_path="./data")
+
+# 4. Train a GCN model (auto-detects best device)
+model = text4gcn.models.GNN(
+    dataset="R8",
+    path="./data",
+    log_dir="./logs",
+    builder=text4gcn.builder.Builder.Tfidf,
+    layer=text4gcn.models.Layer.GCN,
+    epochs=200,
+    dropout=0.5,
+    device=None  # Auto-detect device, or specify "cpu" or "cuda"
+)
+model.fit()
+```
+
+### Device Management
+
+```python
+# Manual device selection
+model = text4gcn.models.GNN(
+    dataset="R8",
+    path="./data",
+    log_dir="./logs", 
+    builder=text4gcn.builder.Builder.Tfidf,
+    device="cuda"  # Force GPU usage
+)
+
+# Get device information
+device_manager = text4gcn.utils.get_device_manager()
+print(f"Using device: {device_manager.device}")
+print(f"Device info: {device_manager.get_device_info()}")
+```
 
 ---
 
