@@ -8,7 +8,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/text4gcn.svg)](https://badge.fury.io/py/text4gcn)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10-3.13](https://img.shields.io/badge/python-3.10%7C3.11%7C3.12%7C3.13-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/vitormeriat/text4gcn/workflows/CI/badge.svg)](https://github.com/vitormeriat/text4gcn/actions)
 [![codecov](https://codecov.io/gh/vitormeriat/text4gcn/branch/main/graph/badge.svg)](https://codecov.io/gh/vitormeriat/text4gcn)
 [![Documentation Status](https://readthedocs.org/projects/text4gcn/badge/?version=latest)](https://text4gcn.readthedocs.io/)
@@ -63,6 +63,49 @@ The main contribution is providing a flexible framework capable of performing `s
 ---
 
 ## Installation
+
+### Python Version Support
+
+Text4GCN supports Python 3.10, 3.11, 3.12, and 3.13. We recommend using Python 3.11 or 3.12 for the best compatibility.
+
+#### Quick Setup with Different Python Versions
+
+```bash
+# Using pyenv (recommended for managing multiple Python versions)
+pyenv install 3.11.0
+pyenv local 3.11.0
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install Text4GCN
+pip install text4gcn[cpu]
+```
+
+#### Automated Setup Script
+
+We provide a convenient setup script for different Python versions:
+
+```bash
+# Setup with Python 3.11 (default)
+python setup_venv.py
+
+# Setup with specific Python version
+python setup_venv.py 3.12
+python setup_venv.py 3.13
+
+# Activate the environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+#### Testing Compatibility
+
+To test Text4GCN with multiple Python versions:
+
+```bash
+python test_python_versions.py
+```
 
 ### From PyPI (Recommended)
 
