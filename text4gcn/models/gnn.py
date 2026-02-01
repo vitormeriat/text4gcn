@@ -73,7 +73,7 @@ class GNN():
         lr=0.02,
         nhid=200,
         seed=1234,
-        epoches=200,
+        epochs=200,
         dropout=0.5,
         val_ratio=0.1,
         layer=Layer.GCN,
@@ -84,7 +84,7 @@ class GNN():
         self.early_stopping = early_stopping
         self.val_ratio = val_ratio
         self.dataset = dataset
-        self.epoches = epoches
+        self.epochs = epochs
         self.dropout = dropout
         self.log_dir = log_dir
         self.builder = builder
@@ -123,7 +123,7 @@ class GNN():
         self.args.early_stopping = self.early_stopping
         self.args.seed = np.random.randint(1, 100000)
         self.args.val_ratio = self.val_ratio
-        self.args.max_epoch = self.epoches
+        self.args.max_epoch = self.epochs
         self.args.dataset = self.dataset
         self.args.dropout = self.dropout
         self.args.log_dir = self.log_dir

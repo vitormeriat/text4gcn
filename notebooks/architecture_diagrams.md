@@ -198,12 +198,12 @@ graph LR
 ```mermaid
 flowchart TD
     Start([Início]) --> LoadData[Carregar Dataset]
-    LoadData --> TextPipeline[TextPipeline.execute()]
+    LoadData --> TextPipeline["TextPipeline.execute()"]
     
-    TextPipeline --> CleanData[clean_data()]
-    CleanData --> RemoveStopWords[remove_stop_words()]
-    RemoveStopWords --> RemoveRareWords[remove_rare_words()]
-    RemoveRareWords --> ShuffleData[shuffle_data()]
+    TextPipeline --> CleanData["clean_data()"]
+    CleanData --> RemoveStopWords["remove_stop_words()"]
+    RemoveStopWords --> RemoveRareWords["remove_rare_words()"]
+    RemoveRareWords --> ShuffleData["shuffle_data()"]
     
     ShuffleData --> ChooseBuilder{Escolher Builder}
     
@@ -221,7 +221,7 @@ flowchart TD
     
     FrequencyBuilder --> TFIDFMethod[TF-IDF Method]
     
-    BERTMethod --> BuildAdjacency[build_adjacency_matrix()]
+    BERTMethod --> BuildAdjacency["build_adjacency_matrix()"]
     Word2VecMethod --> BuildAdjacency
     CosineMethod --> BuildAdjacency
     DependencyMethod --> BuildAdjacency
@@ -230,12 +230,12 @@ flowchart TD
     TFIDFMethod --> BuildAdjacency
     
     BuildAdjacency --> CreateGNN[GNN Model Creation]
-    CreateGNN --> LoadData[LoadData.load_corpus()]
-    LoadData --> PrepareData[prepare_data()]
-    PrepareData --> ConvertTensor[convert_tensor()]
-    ConvertTensor --> TrainModel[train_model()]
+    CreateGNN --> LoadData["LoadData.load_corpus()"]
+    LoadData --> PrepareData["prepare_data()"]
+    PrepareData --> ConvertTensor["convert_tensor()"]
+    ConvertTensor --> TrainModel["train_model()"]
     
-    TrainModel --> EvaluateModel[evaluate_model()]
+    TrainModel --> EvaluateModel["evaluate_model()"]
     EvaluateModel --> End([Fim])
 ```
 

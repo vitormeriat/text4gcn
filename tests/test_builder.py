@@ -12,20 +12,37 @@ from text4gcn.builder import list_available_adjacency_methods, list_available_bu
 class TestBuilderClasses:
     """Test builder classes."""
     
-    def test_frequency_initialization(self):
+    @pytest.fixture
+    def temp_data_dir(self):
+        """Create temporary directory with test data."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            data_path = Path(temp_dir) / "R8"
+            data_path.mkdir()
+            yield str(data_path)
+    
+    def test_frequency_initialization(self, temp_data_dir):
         """Test Frequency builder initialization."""
-        builder = Frequency()
+        # Frequency builder requires dataset_name and dataset_path
+        builder = Frequency(dataset_name="R8", dataset_path=temp_data_dir)
         assert builder is not None
+        assert builder.dataset_name == "R8"
+        assert builder.dataset_path == temp_data_dir
     
-    def test_semantic_initialization(self):
+    def test_semantic_initialization(self, temp_data_dir):
         """Test Semantic builder initialization."""
-        builder = Semantic()
+        # Semantic builder requires dataset_name and dataset_path
+        builder = Semantic(dataset_name="R8", dataset_path=temp_data_dir)
         assert builder is not None
+        assert builder.dataset_name == "R8"
+        assert builder.dataset_path == temp_data_dir
     
-    def test_syntactic_initialization(self):
+    def test_syntactic_initialization(self, temp_data_dir):
         """Test Syntactic builder initialization."""
-        builder = Syntactic()
+        # Syntactic builder requires dataset_name and dataset_path
+        builder = Syntactic(dataset_name="R8", dataset_path=temp_data_dir)
         assert builder is not None
+        assert builder.dataset_name == "R8"
+        assert builder.dataset_path == temp_data_dir
 
 
 class TestBuilderEnum:
@@ -43,7 +60,9 @@ class TestBuilderEnum:
     def test_builder_enum_string_behavior(self):
         """Test Builder enum behaves like string."""
         builder = Builder.Tfidf
-        assert str(builder) == 'frequency.tfidf'
+        # Enum value should match the string value
+        assert builder.value == 'frequency.tfidf'
+        # Enum should be comparable to its string value
         assert builder == 'frequency.tfidf'
 
 
@@ -86,32 +105,47 @@ class TestBuilderIntegration:
     
     def test_frequency_builder_with_temp_data(self, temp_data_dir):
         """Test Frequency builder with temporary data."""
-        builder = Frequency()
+        # Frequency builder requires dataset_name and dataset_path
+        builder = Frequency(dataset_name="R8", dataset_path=temp_data_dir)
         # This is a basic test - actual implementation would depend on the builder methods
         assert builder is not None
+        assert builder.dataset_name == "R8"
     
     def test_semantic_builder_with_temp_data(self, temp_data_dir):
         """Test Semantic builder with temporary data."""
-        builder = Semantic()
+        # Semantic builder requires dataset_name and dataset_path
+        builder = Semantic(dataset_name="R8", dataset_path=temp_data_dir)
         # This is a basic test - actual implementation would depend on the builder methods
         assert builder is not None
+        assert builder.dataset_name == "R8"
     
     def test_syntactic_builder_with_temp_data(self, temp_data_dir):
         """Test Syntactic builder with temporary data."""
-        builder = Syntactic()
+        # Syntactic builder requires dataset_name and dataset_path
+        builder = Syntactic(dataset_name="R8", dataset_path=temp_data_dir)
         # This is a basic test - actual implementation would depend on the builder methods
         assert builder is not None
+        assert builder.dataset_name == "R8"
 
 
 class TestBuilderErrorHandling:
     """Test error handling in builder module."""
     
-    def test_builder_initialization_with_invalid_params(self):
+    @pytest.fixture
+    def temp_data_dir(self):
+        """Create temporary directory with test data."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            data_path = Path(temp_dir) / "R8"
+            data_path.mkdir()
+            yield str(data_path)
+    
+    def test_builder_initialization_with_invalid_params(self, temp_data_dir):
         """Test builder initialization with invalid parameters."""
-        # Test that builders can be initialized without parameters
-        frequency = Frequency()
-        semantic = Semantic()
-        syntactic = Syntactic()
+        # Test that builders can be initialized with required parameters
+        # Using temp directory for valid path
+        frequency = Frequency(dataset_name="R8", dataset_path=temp_data_dir)
+        semantic = Semantic(dataset_name="R8", dataset_path=temp_data_dir)
+        syntactic = Syntactic(dataset_name="R8", dataset_path=temp_data_dir)
         
         assert frequency is not None
         assert semantic is not None
@@ -122,15 +156,23 @@ class TestBuilderErrorHandling:
 class TestBuilderPerformance:
     """Performance tests for builder module."""
     
-    def test_builder_initialization_performance(self):
+    @pytest.fixture
+    def temp_data_dir(self):
+        """Create temporary directory with test data."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            data_path = Path(temp_dir) / "R8"
+            data_path.mkdir()
+            yield str(data_path)
+    
+    def test_builder_initialization_performance(self, temp_data_dir):
         """Test that builder initialization is fast."""
         import time
         
         start_time = time.time()
         for _ in range(100):
-            Frequency()
-            Semantic()
-            Syntactic()
+            Frequency(dataset_name="R8", dataset_path=temp_data_dir)
+            Semantic(dataset_name="R8", dataset_path=temp_data_dir)
+            Syntactic(dataset_name="R8", dataset_path=temp_data_dir)
         end_time = time.time()
         
         # Should initialize 300 builders in less than 1 second

@@ -51,28 +51,33 @@ class TestEndToEndWorkflow:
         """Test builder workflow."""
         data_path = complete_test_environment['data_path']
         
-        # Test frequency builder
-        freq_builder = builder.Frequency()
+        # Test frequency builder - requires dataset_name and dataset_path
+        freq_builder = builder.Frequency(dataset_name="R8", dataset_path=data_path)
         assert freq_builder is not None
+        assert freq_builder.dataset_name == "R8"
         
-        # Test semantic builder
-        sem_builder = builder.Semantic()
+        # Test semantic builder - requires dataset_name and dataset_path
+        sem_builder = builder.Semantic(dataset_name="R8", dataset_path=data_path)
         assert sem_builder is not None
+        assert sem_builder.dataset_name == "R8"
         
-        # Test syntactic builder
-        syn_builder = builder.Syntactic()
+        # Test syntactic builder - requires dataset_name and dataset_path
+        syn_builder = builder.Syntactic(dataset_name="R8", dataset_path=data_path)
         assert syn_builder is not None
+        assert syn_builder.dataset_name == "R8"
     
     def test_model_initialization(self, complete_test_environment):
         """Test model initialization in complete environment."""
         data_path = complete_test_environment['data_path']
+        syn_builder = builder.Syntactic(dataset_name="R8", dataset_path=data_path)
         
         # Test GNN model initialization
         model = models.GNN(
             dataset="R8",
             path=data_path,
             epochs=1,
-            dropout=0.5
+            dropout=0.5, 
+            builder=syn_builder
         )
         assert model is not None
     
