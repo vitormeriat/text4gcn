@@ -91,7 +91,7 @@ class TextGCNTrainer:
             criterion=criterion,
             optimizer=optimizer,
             device=self.device,
-            max_epochs=self.config.epoches,
+            max_epochs=self.config.epochs,
             early_stopping=self.config.early_stopping,
             log_dir=self.config.log_dir
         )

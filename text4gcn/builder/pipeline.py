@@ -61,11 +61,6 @@ class Syntactic(Adjacency):
         return adj.build()
 
 
-# class TrainingW2V(Enum):
-#     CBOW = 1
-#     SKIP_GRAM = 2
-
-
 class Semantic(Adjacency):
     def __init__(self, dataset_name: str, dataset_path: str) -> None:
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)

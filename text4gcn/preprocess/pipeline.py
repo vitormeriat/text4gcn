@@ -78,13 +78,11 @@ class TextPipeline():
 
         stop_words = clean.retrieve_stop_words(language=self.language)
 
-        # TODO: IF
         docs_of_words = clean.remove_stop_words(
             docs_of_words,
             stop_words=stop_words
         )
 
-        # TODO: IF
         docs_of_words = clean.remove_rare_words(
             docs_of_words,
             word_counts=word_counts,
@@ -257,19 +255,6 @@ class TextPipeline():
 
         nfeatures = NodeFeatures(logger=self.logger)
 
-        # =============================================================== TESTE
-        # # Extract word_vectors and word_embedding_dimension
-        # if use_predefined_word_vectors:
-        #     #ds_corpus_word_vectors = cfg.corpus_shuffled_word_vectors_dir + ds_name + '.word_vectors'
-        #     ds_corpus_word_vectors = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.word_vectors"
-        #     # ds_corpus_word_vectors =  'glove.6B.300d.txt'  # Alternatively, you can use GLOVE word-embeddings
-        #     word_vectors, word_emb_dim = nfeatures.load_word_to_word_vectors(
-        #         path=ds_corpus_word_vectors)
-        # else:
-        #     word_vectors, word_emb_dim = OrderedDict(), 300
-        # ===============================================================
-
-        # TODO: parametrize
         word_vectors, word_emb_dim = OrderedDict(), 300
 
         # Extract Vocabulary
@@ -355,8 +340,16 @@ class TextPipeline():
         self.logger.info(f"tx.shape={tx.shape}, ty.shape={ty.shape}")
         self.logger.info(f"allx.shape={allx.shape}, ally.shape={ally.shape}")
 
-    def execute(self):
-        """Runs the text processing pipeline"""
+    def execute(self, validation_ratio: float = 0.10, use_predefined_word_vectors: bool = False) -> None:
+        """Run the full preprocessing pipeline.
+
+        Parameters
+        ----------
+        validation_ratio : float
+            Fraction of training data reserved for validation. Default ``0.10``.
+        use_predefined_word_vectors : bool
+            Reserved for future use. Default ``False``.
+        """
         self.logger.info(clean.create_title("NLTK Configuration"))
         clean.config_nltk()
         self.logger.info()
@@ -365,8 +358,8 @@ class TextPipeline():
         self.shuffle_data()
         self.prepare_words()
         self.build_node_features(
-            validation_ratio=0.10,
-            use_predefined_word_vectors=False
+            validation_ratio=validation_ratio,
+            use_predefined_word_vectors=use_predefined_word_vectors,
         )
 
         hist = self.logger.log_history()

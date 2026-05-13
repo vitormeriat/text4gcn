@@ -10,10 +10,11 @@ import time
 
 class LoadData:
 
-    def __init__(self, path, dataset, builder):
+    def __init__(self, path, dataset, builder, refinement_config=None):
         self.path = path
         self.dataset = dataset
         self.builder = builder
+        self.refinement_config = refinement_config
 
     def parse_index_file(self, filename):
         """Parse index file."""
@@ -23,7 +24,7 @@ class LoadData:
         """Create mask."""
         mask = np.zeros(row_length)
         mask[idx] = 1
-        return np.array(mask, dtype=np.bool)
+        return np.array(mask, dtype=bool)
 
     def load_corpus(self):
         """
@@ -102,7 +103,20 @@ class LoadData:
         # Convert asymmetric adjacency matrix to symmetric adjacency matrix
         adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
 
-        return adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size
+        result = (adj, features, y_train, y_val, y_test,
+                  train_mask, val_mask, test_mask, train_size, test_size)
+
+        if self.refinement_config is not None:
+            from text4gcn.graph import apply_refinement
+            result, _ = apply_refinement(
+                result,
+                self.refinement_config,
+                dataset_path=self.path,
+                dataset_name=self.dataset,
+                return_metadata=False,
+            )
+
+        return result
 
 
 def unique_name():
