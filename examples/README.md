@@ -1,199 +1,188 @@
 # Text4GCN Examples
 
-This directory contains examples and utilities for testing Text4GCN with synthetic data.
+This directory contains runnable examples and test utilities for Text4GCN.
 
-## 📁 Files Overview
+---
 
-### Data Generation
-- `synthetic_data_generator.py` - Generate synthetic text data in Text4GCN format
-- `test_textpipeline_synthetic.py` - Test TextPipeline with synthetic data
-- `run_synthetic_test.py` - Quick test script
-- `synthetic_data_demo.ipynb` - Jupyter notebook demonstration
+## Quick start
 
-### Device Management
-- `device_management.py` - Device management examples and utilities
-
-## 🚀 Quick Start
-
-### 1. Generate Synthetic Data
-
-```bash
-# Generate a single dataset
-python synthetic_data_generator.py --dataset-name SyntheticR8 --num-documents 1000
-
-# Generate multiple datasets
-python synthetic_data_generator.py --multiple
-
-# Generate large dataset for performance testing
-python synthetic_data_generator.py --dataset-name SyntheticLarge --num-documents 5000
-```
-
-### 2. Test TextPipeline
-
-```bash
-# Run the complete test
-python run_synthetic_test.py
-
-# Or run the detailed test
-python test_textpipeline_synthetic.py
-```
-
-### 3. Jupyter Notebook
-
-```bash
-# Start Jupyter and open the notebook
-jupyter notebook synthetic_data_demo.ipynb
-```
-
-## 📊 Synthetic Data Format
-
-The synthetic data generator creates files in the same format as benchmark datasets:
-
-### Input Files
-- `{dataset_name}.txt` - Text documents (one per line)
-- `{dataset_name}.meta` - Metadata (id, split, label)
-
-### Output Files (after TextPipeline)
-- `{dataset_name}.cleaned/` - Cleaned text data
-- `{dataset_name}.shuffled/` - Shuffled data with train/test splits
-- `{dataset_name}.node_features/` - Node features (x, y, tx, ty, allx, ally)
-- `log/` - Processing logs
-
-## 🧪 Testing Categories
-
-The synthetic data includes 5 categories:
-- **Technology**: computer, software, programming, etc.
-- **Science**: research, experiment, analysis, etc.
-- **Business**: company, market, revenue, etc.
-- **Sports**: team, player, game, etc.
-- **Health**: medical, treatment, patient, etc.
-
-## 📝 Example Usage
+The full pipeline has three sequential steps. Each step writes files to disk
+that the next step reads.
 
 ```python
-from text4gcn.preprocess import TextPipeline
-
-# Create pipeline
-pipe = TextPipeline(
-    dataset_name="SyntheticR8",
-    rare_count=5,
-    dataset_path="synthetic_data",
-    language="english"
-)
-
-# Execute preprocessing
-pipe.execute()
-
-# Use with builders
+from text4gcn import GNN, TextPipeline, Builder
 from text4gcn.builder import Frequency
-builder = Frequency()
-adjacency = builder.tfidf(
-    dataset_name="SyntheticR8",
-    dataset_path="synthetic_data"
-)
 
-# Use with models
-from text4gcn.models import GNN, Layer, Builder
-model = GNN(
-    dataset="SyntheticR8",
-    path="synthetic_data",
-    log_dir="logs",
+# Step 1 — preprocess raw text into node features
+TextPipeline(
+    dataset_name="R8",
+    dataset_path="data/",
+    rare_count=5,
+    language="english",
+).execute()
+
+# Step 2 — build the word-document adjacency matrix
+Frequency(dataset_name="R8", dataset_path="data/").tfidf(window_size=20)
+
+# Step 3 — train the GCN and inspect results
+result = GNN(
+    dataset_name="R8",
+    dataset_path="data/",
+    log_dir="logs/",
     builder=Builder.Tfidf,
-    layer=Layer.GCN,
-    epochs=50
+    epochs=200,
+    lr=0.02,
+    nhid=200,
+    dropout=0.5,
+).fit()
+
+print(f"Test accuracy: {result.test_accuracy:.4f}")
+print(f"Test loss:     {result.test_loss:.5f}")
+print(f"Epochs run:    {result.epochs_trained}")
+print(f"Model saved:   {result.model_path}")
+```
+
+**Minimum viable usage** — defaults to TF-IDF builder, CPU device, current
+directory for logs:
+
+```python
+from text4gcn import GNN
+
+result = GNN(dataset_name="R8", dataset_path="data/").fit()
+print(result)
+```
+
+---
+
+## Graph refinement
+
+Filter low-quality nodes and weak edges before training to get a cleaner
+graph without rerunning preprocessing:
+
+```python
+from text4gcn import GNN, Builder, RefinementConfig
+
+result = GNN(
+    dataset_name="R8",
+    dataset_path="data/",
+    log_dir="logs/",
+    builder=Builder.Tfidf,
+    refinement_config=RefinementConfig(
+        min_doc_freq=2,           # drop words appearing in < 2 docs
+        min_word_degree=1.0,      # drop words with very low connectivity
+        edge_weight_threshold=0.1, # drop weak edges
+        keep_docs=True,           # always preserve all document nodes
+        build_metadata=True,      # attach node-type info to refined graph
+    ),
+).fit()
+
+print(result)
+```
+
+---
+
+## Choosing an adjacency builder
+
+```python
+from text4gcn.builder import Frequency, Semantic, Syntactic
+
+# TF-IDF (PMI) — fast, good general baseline
+Frequency(dataset_name="R8", dataset_path="data/").tfidf(window_size=20)
+
+# Word2Vec cosine similarity
+Semantic(dataset_name="R8", dataset_path="data/").word2vec(
+    training_algorithm=1,      # 1 = CBOW, 2 = Skip-Gram
+    embedding_dimension=300,
+    num_epochs=20,
+    threshold=0.95,
 )
-model.fit()
+
+# BERT sentence similarity
+Semantic(dataset_name="R8", dataset_path="data/").bert(
+    language="english",
+    threshold=0.95,
+)
+
+# Cosine similarity on TF-IDF vectors
+Semantic(dataset_name="R8", dataset_path="data/").cosine_similarity(threshold=0.9)
 ```
 
-## 🔧 Command Line Options
+Pass the matching `Builder` enum value to `GNN`:
 
-### Synthetic Data Generator
+| Builder class method | Builder enum value |
+|---|---|
+| `Frequency.tfidf()` | `Builder.Tfidf` |
+| `Semantic.word2vec()` | `Builder.Word2Vec` |
+| `Semantic.cosine_similarity()` | `Builder.CosineSimilarity` |
+| `Syntactic.dependency_parsing()` | `Builder.DependencyParsing` |
+| `Syntactic.linguistic_inquiry()` | `Builder.Liwc` |
+
+---
+
+## Synthetic data for development / testing
+
+Generate synthetic datasets in the same format as benchmark datasets:
 
 ```bash
-python synthetic_data_generator.py --help
-```
-
-Options:
-- `--dataset-name`: Name of the dataset (default: SyntheticR8)
-- `--num-documents`: Number of documents (default: 1000)
-- `--train-ratio`: Ratio of train documents (default: 0.8)
-- `--output-dir`: Output directory (default: synthetic_data)
-- `--multiple`: Generate multiple datasets
-
-### Examples
-
-```bash
-# Small dataset for quick testing
-python synthetic_data_generator.py --dataset-name SyntheticSmall --num-documents 100
-
-# Large dataset for performance testing
-python synthetic_data_generator.py --dataset-name SyntheticLarge --num-documents 5000
+# Small dataset for quick smoke tests
+python synthetic_data_generator.py --dataset-name SyntheticR8 --num-documents 500
 
 # Custom train/test split
-python synthetic_data_generator.py --dataset-name SyntheticCustom --num-documents 2000 --train-ratio 0.7
+python synthetic_data_generator.py --dataset-name SyntheticR8 --num-documents 2000 --train-ratio 0.7
 ```
 
-## 📈 Performance Testing
-
-Use synthetic data to test Text4GCN performance:
+Run the full pipeline on synthetic data:
 
 ```bash
-# Generate large dataset
-python synthetic_data_generator.py --dataset-name PerformanceTest --num-documents 10000
-
-# Test with different configurations
-python test_textpipeline_synthetic.py
+python run_synthetic_test.py
 ```
 
-## 🐛 Troubleshooting
+---
 
-### Common Issues
+## Expected file layout
 
-1. **Import Errors**
-   ```bash
-   # Make sure you're in the examples directory
-   cd examples
-   python synthetic_data_generator.py
-   ```
+After preprocessing and building, the dataset directory should look like:
 
-2. **Missing Dependencies**
-   ```bash
-   # Install Text4GCN with dependencies
-   pip install text4gcn[cpu]  # or text4gcn[gpu]
-   ```
-
-3. **File Permission Errors**
-   ```bash
-   # Check directory permissions
-   ls -la synthetic_data/
-   ```
-
-### Debug Mode
-
-```python
-# Enable debug logging
-import logging
-logging.basicConfig(level=logging.DEBUG)
-
-# Run with verbose output
-python test_textpipeline_synthetic.py
+```
+data/
+  R8.txt                          ← raw documents, one per line
+  R8.meta                         ← tab-separated: id  split  label
+  R8.cleaned/
+    R8.txt                        ← stop-word / rare-word filtered
+  R8.shuffled/
+    R8.txt  R8.meta  R8.train  R8.test  R8.vocab  R8.word_vectors
+  R8.node_features/
+    ind.R8.x  ind.R8.y  ind.R8.tx  ind.R8.ty  ind.R8.allx  ind.R8.ally
+  R8.adjacency/
+    ind.frequency.tfidf.R8.adj    ← adjacency matrix (pickle)
+  log/
+    R8_dataset.txt                ← pipeline run log
 ```
 
-## 📚 Additional Resources
+---
 
-- [Text4GCN Documentation](../README.md)
-- [Device Management Guide](../PYTORCH_DEVICE_MANAGEMENT.md)
-- [Contributing Guide](../CONTRIBUTING.md)
+## Files overview
 
-## 🤝 Contributing
+| File | Description |
+|---|---|
+| `synthetic_data_generator.py` | Generate synthetic text datasets |
+| `run_synthetic_test.py` | Quick end-to-end test with synthetic data |
+| `test_textpipeline_synthetic.py` | Detailed pipeline test |
+| `simple_synthetic_test.py` | Minimal smoke test |
+| `graph_refinement_example.py` | Node filtering and edge pruning demo |
+| `device_management.py` | CPU/GPU device selection examples |
+| `cons.py` | Full pipeline reference script |
 
-To add new examples:
+---
 
-1. Create your example file
-2. Add documentation to this README
-3. Test with synthetic data
-4. Submit a pull request
+## Troubleshooting
 
-## 📄 License
+**`FileNotFoundError: Node feature files not found`**
+— You skipped `TextPipeline.execute()`. Run Step 1 first.
 
-Same as Text4GCN project - MIT License.
+**`FileNotFoundError: Adjacency files not found`**
+— You skipped the builder step. Run `Frequency(...).tfidf()` (or another
+builder) after preprocessing.
+
+**`ModuleNotFoundError`**
+— Make sure Text4GCN is installed: `pip install text4gcn[cpu]` (or `[gpu]`).

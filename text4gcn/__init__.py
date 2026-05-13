@@ -5,9 +5,16 @@ Quick start::
 
     from text4gcn import GNN, TextPipeline, Builder
 
-    TextPipeline(dataset_name="20ng", dataset_path="data/").execute()
+    # Step 1 — preprocess raw text
+    TextPipeline(dataset_name="R8", dataset_path="data/").execute()
 
-    GNN(dataset="20ng", path="data/", log_dir="logs/", builder=Builder.Tfidf).fit()
+    # Step 2 — build word-document graph
+    from text4gcn.builder import Frequency
+    Frequency(dataset_name="R8", dataset_path="data/").tfidf()
+
+    # Step 3 — train GCN and inspect results
+    result = GNN(dataset_name="R8", dataset_path="data/").fit()
+    print(result.test_accuracy)
 """
 
 __version__ = "2.0.0"
@@ -15,7 +22,7 @@ __author__ = "Vitor Meriat"
 __email__ = "vitormeriat@gmail.com"
 
 # Public API — import these directly from `text4gcn`
-from .models import GNN, Builder, Layer, TextGCNTrainer
+from .models import GNN, Builder, Layer, TextGCNTrainer, TrainingResult
 from .preprocess import TextPipeline
 from .graph import RefinementConfig, apply_refinement
 
@@ -28,6 +35,7 @@ __all__ = [
     "Builder",
     "Layer",
     "TextGCNTrainer",
+    "TrainingResult",
     "TextPipeline",
     "RefinementConfig",
     "apply_refinement",

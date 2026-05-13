@@ -88,8 +88,8 @@ def demonstrate_model_with_device():
     print("1. Auto-detect device:")
     print("""
     model = text4gcn.models.GNN(
-        dataset="R8",
-        path="./data",
+        dataset_name="R8",
+        dataset_path="./data",
         log_dir="./logs",
         builder=text4gcn.builder.Builder.Tfidf,
         device=None  # Auto-detect
@@ -100,8 +100,8 @@ def demonstrate_model_with_device():
     print("2. Force CPU usage:")
     print("""
     model = text4gcn.models.GNN(
-        dataset="R8",
-        path="./data", 
+        dataset_name="R8",
+        dataset_path="./data", 
         log_dir="./logs",
         builder=text4gcn.builder.Builder.Tfidf,
         device="cpu"  # Force CPU
@@ -113,11 +113,11 @@ def demonstrate_model_with_device():
         print("3. Force GPU usage:")
         print("""
         model = text4gcn.models.GNN(
-            dataset="R8",
-            path="./data",
-            log_dir="./logs", 
+            dataset_name="R8",
+            dataset_path="./data",
+            log_dir="./logs",
             builder=text4gcn.builder.Builder.Tfidf,
-            device="cuda"  # Force GPU
+            device="cuda",  # Force GPU
         )
         """)
     

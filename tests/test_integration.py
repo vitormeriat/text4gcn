@@ -73,11 +73,10 @@ class TestEndToEndWorkflow:
         
         # Test GNN model initialization
         model = models.GNN(
-            dataset="R8",
-            path=data_path,
+            dataset_name="R8",
+            dataset_path=data_path,
             epochs=1,
-            dropout=0.5, 
-            builder=syn_builder
+            dropout=0.5,
         )
         assert model is not None
     
@@ -144,19 +143,17 @@ class TestErrorHandling:
     def test_invalid_dataset_handling(self):
         """Test handling of invalid dataset names."""
         with pytest.raises((AttributeError, ValueError, FileNotFoundError)):
-            # This should fail gracefully
             models.GNN(
-                dataset="InvalidDataset",
-                path="/nonexistent/path"
+                dataset_name="InvalidDataset",
+                dataset_path="/nonexistent/path",
             )
-    
+
     def test_invalid_path_handling(self):
         """Test handling of invalid paths."""
         with pytest.raises((AttributeError, ValueError, FileNotFoundError)):
-            # This should fail gracefully
             models.GNN(
-                dataset="R8",
-                path="/nonexistent/path"
+                dataset_name="R8",
+                dataset_path="/nonexistent/path",
             )
 
 

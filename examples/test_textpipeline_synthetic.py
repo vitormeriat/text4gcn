@@ -137,25 +137,22 @@ pipe.execute()
 # 3. Use with builders
 from text4gcn.builder import Frequency
 
-builder = Frequency()
-adjacency = builder.tfidf(
-    dataset_name="SyntheticR8",
-    dataset_path="synthetic_data"
-)
+builder = Frequency(dataset_name="SyntheticR8", dataset_path="synthetic_data")
+adjacency = builder.tfidf(window_size=20)
 
 # 4. Use with models
-from text4gcn.models import GNN, Layer, Builder
+from text4gcn import GNN, Builder, Layer
 
-model = GNN(
-    dataset="SyntheticR8",
-    path="synthetic_data",
+result = GNN(
+    dataset_name="SyntheticR8",
+    dataset_path="synthetic_data",
     log_dir="logs",
     builder=Builder.Tfidf,
     layer=Layer.GCN,
     epochs=50,
-    dropout=0.5
-)
-model.fit()
+    dropout=0.5,
+).fit()
+print(f"Test accuracy: {result.test_accuracy:.4f}")
     """)
 
 

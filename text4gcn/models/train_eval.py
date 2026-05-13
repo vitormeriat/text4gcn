@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from time import time
+from typing import Dict, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,14 +29,14 @@ def show_metrics(test_labels, test_pred) -> None:
     print(metrics.precision_recall_fscore_support(test_labels, test_pred, average="weighted"))
     print("\nConfusion Matrix...")
     print(metrics.confusion_matrix(test_labels, test_pred))
-    print("\nF1-Score (macro)...", metrics.f1_score(test_labels, test_pred, average="macro"))
-    print("Precision (macro)...", metrics.precision_score(test_labels, test_pred, average="macro"))
-    print("Recall (macro)...", metrics.recall_score(test_labels, test_pred, average="macro"))
-    print("Accuracy...", metrics.accuracy_score(test_labels, test_pred))
+    print("F1-Score (macro)...  ", metrics.f1_score(test_labels, test_pred, average="macro"))
+    print("Precision (macro)... ", metrics.precision_score(test_labels, test_pred, average="macro"))
+    print("Recall (macro)...    ", metrics.recall_score(test_labels, test_pred, average="macro"))
+    print("Accuracy...          ", metrics.accuracy_score(test_labels, test_pred))
 
 
 def plot_training_history(log_dir, train_acc, val_acc, train_loss, val_loss) -> None:
-    """Save accuracy and loss plots to log_dir."""
+    """Save accuracy and loss plots to *log_dir*."""
     epochs = range(1, len(train_acc) + 1)
 
     plt.figure(figsize=(16, 10))
@@ -69,7 +72,15 @@ class TextGCNTrainer:
         self.earlystopping = args.early_stopping
         self.log_dir = args.log_dir
 
-    def fit(self) -> None:
+    def fit(self) -> Dict:
+        """Prepare data, train the model, evaluate on test set.
+
+        Returns
+        -------
+        dict
+            Keys: ``test_accuracy``, ``test_loss``, ``model_path``,
+            ``epochs_trained``.
+        """
         self.prepare_data()
         self.convert_tensor()
 
@@ -87,7 +98,7 @@ class TextGCNTrainer:
         for name, param in self.model.named_parameters():
             print(f"Layer: {name} | Size: {param.size()}")
 
-        self._train()
+        return self._train()
 
     def prepare_data(self) -> None:
         adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask, train_size, test_size = self.predata
@@ -132,7 +143,7 @@ class TextGCNTrainer:
         ).repeat(1, self.y_train.shape[1])
         self.support = [th.Tensor(s) for s in self.support]
 
-    def _evaluate(self, model, criterion, features, labels, mask):
+    def _evaluate(self, model, criterion, features, labels, mask) -> Tuple:
         t = time()
         model.eval()
         with th.no_grad():
@@ -149,7 +160,8 @@ class TextGCNTrainer:
                 acc = 0.0
         return loss.numpy(), acc, pred.numpy(), labels.numpy(), (time() - t)
 
-    def _test(self, t1: float) -> None:
+    def _test(self, t1: float) -> Tuple[float, float]:
+        """Evaluate on the test set, print metrics, return (accuracy, loss)."""
         test_loss, test_acc, pred, labels, test_duration = self._evaluate(
             self.model, self.criterion, self.features, self.y_test, self.test_mask
         )
@@ -179,11 +191,15 @@ class TextGCNTrainer:
         )
         print(f"Elapsed: {time() - t1:.2f}s")
 
-    def _save_model(self) -> None:
+        return float(test_acc), float(test_loss)
+
+    def _save_model(self) -> str:
+        """Save model state dict; return the file path."""
         path = f"{self.log_dir}/{unique_name()}.pth"
         th.save(self.model.state_dict(), path)
+        return path
 
-    def _train(self) -> None:
+    def _train(self) -> Dict:
         t1 = time()
         th.manual_seed(self.args.seed)
         print(f"\n{'∎'*20} Torch Seed: {th.seed()}")
@@ -191,6 +207,8 @@ class TextGCNTrainer:
         train_loss_hist, train_acc_hist = [], []
         eval_loss_hist, eval_acc_hist = [], []
         val_losses = []
+        model_path: Optional[str] = None
+        epoch = 0
 
         for epoch in range(self.max_epoch):
             epoch_start = time()
@@ -224,13 +242,16 @@ class TextGCNTrainer:
                 val_losses[-(self.earlystopping + 1): -1]
             ):
                 print(f"Early stopping at epoch {epoch+1}. Saving model...")
-                self._save_model()
+                model_path = self._save_model()
                 break
 
             train_loss_hist.append(float(loss))
             train_acc_hist.append(float(acc))
             eval_loss_hist.append(float(val_loss))
             eval_acc_hist.append(float(val_acc))
+
+        if model_path is None:
+            model_path = self._save_model()
 
         print(
             f"\nCompleted {epoch+1} epochs — "
@@ -241,4 +262,11 @@ class TextGCNTrainer:
             self.log_dir, train_acc_hist, eval_acc_hist, train_loss_hist, eval_loss_hist
         )
         print("\nOptimization Finished!")
-        self._test(t1)
+
+        test_acc, test_loss = self._test(t1)
+        return {
+            "test_accuracy": test_acc,
+            "test_loss": test_loss,
+            "model_path": model_path,
+            "epochs_trained": epoch + 1,
+        }

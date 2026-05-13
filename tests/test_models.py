@@ -46,32 +46,32 @@ class TestGNNModel:
         """Test GNN model initialization."""
         # Test basic initialization
         model = GNN(
-            dataset="R8",
-            path=temp_data_dir,
+            dataset_name="R8",
+            dataset_path=temp_data_dir,
             layer=Layer.GCN if hasattr(Layer, 'GCN') else None,
             epochs=10,
-            dropout=0.5
+            dropout=0.5,
         )
         assert model is not None
     
     def test_gnn_initialization_with_defaults(self, temp_data_dir):
         """Test GNN model initialization with default parameters."""
         model = GNN(
-            dataset="R8",
-            path=temp_data_dir
+            dataset_name="R8",
+            dataset_path=temp_data_dir,
         )
         assert model is not None
     
     def test_gnn_initialization_with_custom_params(self, temp_data_dir):
         """Test GNN model initialization with custom parameters."""
         model = GNN(
-            dataset="R8",
-            path=temp_data_dir,
+            dataset_name="R8",
+            dataset_path=temp_data_dir,
             layer=Layer.GCN if hasattr(Layer, 'GCN') else None,
             epochs=50,
             dropout=0.3,
             lr=0.01,
-            nhid=128
+            nhid=128,
         )
         assert model is not None
 
@@ -93,16 +93,16 @@ class TestGNNErrorHandling:
         """Test GNN initialization with invalid dataset."""
         with pytest.raises((ValueError, FileNotFoundError, AttributeError)):
             GNN(
-                dataset="InvalidDataset",
-                path="/nonexistent/path"
+                dataset_name="InvalidDataset",
+                dataset_path="/nonexistent/path",
             )
-    
+
     def test_gnn_initialization_with_invalid_path(self):
         """Test GNN initialization with invalid path."""
         with pytest.raises((ValueError, FileNotFoundError, AttributeError)):
             GNN(
-                dataset="R8",
-                path="/nonexistent/path"
+                dataset_name="R8",
+                dataset_path="/nonexistent/path",
             )
 
 
@@ -128,9 +128,9 @@ class TestGNNPerformance:
             start_time = time.time()
             for _ in range(10):
                 GNN(
-                    dataset="R8",
-                    path=str(data_path),
-                    epochs=1
+                    dataset_name="R8",
+                    dataset_path=str(data_path),
+                    epochs=1,
                 )
             end_time = time.time()
             
@@ -168,10 +168,10 @@ class TestGNNIntegration:
     def test_gnn_with_complete_data(self, complete_test_data):
         """Test GNN with complete test data."""
         model = GNN(
-            dataset="R8",
-            path=complete_test_data,
+            dataset_name="R8",
+            dataset_path=complete_test_data,
             epochs=1,
-            dropout=0.5
+            dropout=0.5,
         )
         assert model is not None
         
