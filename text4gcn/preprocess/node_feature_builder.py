@@ -7,7 +7,6 @@ This class is responsible for:
 - Saving node features
 """
 
-from typing import List, Dict, Any, Tuple
 from math import ceil
 from collections import OrderedDict
 from text4gcn.modules.node_features import NodeFeatures

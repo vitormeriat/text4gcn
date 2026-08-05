@@ -2,6 +2,7 @@ from text4gcn.modules import file_ops as flop
 from text4gcn.modules import logger as logger
 from text4gcn.modules import adjacency as adj
 from text4gcn.modules.logger import Process
+from text4gcn.graph.stats import GraphBuildStats, compute_adjacency_stats, report_stats
 from scipy.sparse import csr_matrix
 import pickle
 
@@ -24,7 +25,7 @@ class FrequencyAdjacency():
     Methods
     -------
     build():
-        Builds the adjacency matrix
+        Builds the adjacency matrix and returns :class:`GraphBuildStats`.
     """
 
     def __init__(self, dataset_name: str, dataset_path: str, window_size: int = 20, output_path: str = None):
@@ -42,7 +43,7 @@ class FrequencyAdjacency():
             my_file.writelines(hist)
 
     @Process.log("EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix.")
-    def _build(self):
+    def _build(self) -> GraphBuildStats:
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}"
         ds_corpus = f'{corpus_path}.shuffled/{self.dataset_name}.txt'
@@ -91,12 +92,23 @@ class FrequencyAdjacency():
         adjacency_matrix = csr_matrix((weights, (rows, cols)), 
                                       shape=(adjacency_len, adjacency_len))
 
+        adj_path = f"{corpus_path}.adjacency/ind.frequency.tfidf.{self.dataset_name}.adj"
         # Dump Adjacency Matrix
-        with open(f"{corpus_path}.adjacency/ind.frequency.tfidf.{self.dataset_name}.adj", 'wb') as f:
+        with open(adj_path, 'wb') as f:
             pickle.dump(adjacency_matrix, f)
 
-    def build(self):
-        """Builds the adjacency matrix"""
-        self._build()
+        stats = compute_adjacency_stats(
+            adjacency_matrix,
+            path=adj_path,
+            builder="frequency.tfidf",
+            dataset_name=self.dataset_name,
+        )
+        report_stats(stats, self.logger)
+        return stats
+
+    def build(self) -> GraphBuildStats:
+        """Builds the adjacency matrix and returns edge/memory stats."""
+        stats = self._build()
         hist = self.logger.log_history()
         self._save_history(hist)
+        return stats

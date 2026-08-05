@@ -160,4 +160,5 @@ examples/log/
 *.shuffled/
 *.cleaned/
 *.node_features/
-*.adjacency/
+*.adjacency/docs/_site/
+docs/.jekyll-cache/

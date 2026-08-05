@@ -67,7 +67,7 @@ def main() -> None:
     print("Option B: Manual refinement to inspect stats first")
     print("=" * 60)
 
-    from text4gcn.graph import apply_refinement
+    from text4gcn import apply_refinement
     from text4gcn.models.utils import LoadData  # internal — only for inspection
 
     config = RefinementConfig(

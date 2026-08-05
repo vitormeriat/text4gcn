@@ -1,5 +1,3 @@
-from os.path import isabs
-from os import getcwd
 
 
 class PreProcessingConfig():

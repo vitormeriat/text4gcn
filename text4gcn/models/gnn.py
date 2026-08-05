@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import argparse
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
-
-import numpy as np
 
 from text4gcn.graph import RefinementConfig, apply_refinement
 from text4gcn.models.builder import Builder
@@ -75,7 +74,11 @@ class GNN:
     dropout : float
         Dropout rate. Default ``0.5``.
     val_ratio : float
-        Fraction of training data reserved for validation. Default ``0.1``.
+        **Informational / deprecated for splitting.** The train/val split is
+        fixed when running :meth:`text4gcn.TextPipeline.execute` via
+        ``validation_ratio``. Passing a different value here does **not**
+        rebuild masks; a :class:`DeprecationWarning` is emitted. Default
+        ``0.1`` (matches DCAI 2022 / Yao et al. protocol).
     layer : Layer
         GNN layer type. Default ``Layer.GCN``.
     early_stopping : int
@@ -162,8 +165,34 @@ class GNN:
         self.early_stopping = early_stopping
         self.refinement_config = refinement_config
 
+        dataset_path_obj = Path(dataset_path)
+        if not dataset_path_obj.exists():
+            raise FileNotFoundError(
+                f"dataset_path does not exist: {dataset_path}\n\n"
+                "Create the directory and place corpus files there, then run "
+                "TextPipeline / builders before GNN.fit()."
+            )
+        if not dataset_name or not str(dataset_name).strip():
+            raise ValueError("dataset_name must be a non-empty string.")
+
+        if layer != Layer.GCN:
+            raise TypeError(
+                f"Unsupported layer type '{layer}'. "
+                "Only Layer.GCN is supported in this version."
+            )
+
+        if abs(val_ratio - 0.1) > 1e-9:
+            warnings.warn(
+                "GNN(val_ratio=...) does not rebuild the train/val split. "
+                "Masks are fixed by TextPipeline.execute(validation_ratio=...). "
+                "Pass the desired ratio there (DCAI 2022 / Yao et al. use 0.10).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self.device_manager = get_device_manager(device)
         self.device = self.device_manager.device
+        self.device_manager.set_seed(seed)
 
         device_info = self.device_manager.get_device_info()
         print(f"Using device: {self.device}")
@@ -189,7 +218,6 @@ class GNN:
             )
 
         if not adj_dir.exists():
-            builder_name = getattr(self.builder, "value", str(self.builder))
             raise FileNotFoundError(
                 f"Adjacency files not found at '{adj_dir}'.\n\n"
                 f"Run the graph builder step after preprocessing:\n\n"
@@ -203,7 +231,7 @@ class GNN:
     def _build_args(self) -> argparse.Namespace:
         return argparse.Namespace(
             early_stopping=self.early_stopping,
-            seed=np.random.randint(1, 100_000),
+            seed=self.seed,
             val_ratio=self.val_ratio,
             max_epoch=self.epochs,
             dataset=self.dataset_name,
@@ -251,12 +279,6 @@ class GNN:
             )
             if info and "stats" in info:
                 print("\nGraph refinement stats:", info["stats"])
-
-        if self.layer != Layer.GCN:
-            raise TypeError(
-                f"Unsupported layer type '{self.layer}'. "
-                "Only Layer.GCN is supported in this version."
-            )
 
         result = TextGCNTrainer(model=GCN, args=args, pre_data=predata).fit()
         return TrainingResult(

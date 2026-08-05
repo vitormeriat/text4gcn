@@ -1,4 +1,4 @@
-from stanfordcorenlp import StanfordCoreNLP
+from text4gcn.modules import adjacency as adjcy
 from text4gcn.modules import file_ops as flop
 from text4gcn.modules import logger as logger
 from text4gcn.modules.word_processor import *
@@ -6,8 +6,19 @@ from text4gcn.modules.logger import Process
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
 from tqdm import tqdm
-from math import log
 import pickle
+
+
+def _import_stanford_corenlp():
+    try:
+        from stanfordcorenlp import StanfordCoreNLP
+    except ImportError as exc:
+        raise ImportError(
+            "stanfordcorenlp is required for Syntactic.dependency_parsing().\n"
+            "Install with: pip install text4gcn[syntactic]\n"
+            "Also download the Stanford CoreNLP jars and pass core_nlp_path."
+        ) from exc
+    return StanfordCoreNLP
 
 
 class DependencyParsingAdjacency():
@@ -21,6 +32,7 @@ class DependencyParsingAdjacency():
         self.flop = flop.FileOps(logger=self.logger)
 
     def build_relation_pair(self, docs_of_words):
+        StanfordCoreNLP = _import_stanford_corenlp()
         stop_words = set(stopwords.words(self.language))
         nlp = StanfordCoreNLP(self.core_nlp_path, lang='en')
 
@@ -33,7 +45,7 @@ class DependencyParsingAdjacency():
             try:
                 res = nlp.dependency_parse(sentence)
                 tokenized = nlp.word_tokenize(sentence)
-            except Exception as e:
+            except Exception:
                 #print(f'{sentence} = {e}')
                 errors += 1
                 res = []
@@ -65,40 +77,20 @@ class DependencyParsingAdjacency():
         return rela_pair_count_str
 
     def compute_weights_with_PMI(self, docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col):
-        weight = []
-        errors = 0
-        num_window = len(docs_of_words)
-        for key, count in rela_pair_count_str.items():
-            try:
-                temp = key.split(',')
-                i = temp[0]
-                j = temp[1]
-
-                if i in word_window_freq and j in word_window_freq:
-                    word_freq_i = word_window_freq[i]
-                    word_freq_j = word_window_freq[j]
-                    pmi = log(
-                        1.0
-                        * count
-                        / num_window
-                        / (1.0 * word_freq_i * word_freq_j / num_window ** 2)
-                    )
-                    if pmi <= 0:
-                        continue
-
-                    row.append(train_size + word_id_map[i])
-                    col.append(train_size + word_id_map[j])
-                    if key in rela_pair_count_str:
-                        wei = (rela_pair_count_str[key] -
-                               min_count1) / (max_count1 - min_count1)
-                        wei = (
-                            rela_pair_count_str[key]-count_mean1) / count_std1
-                        weight.append(wei)
-            except:
-                errors += 1
-
-        print(f'[INFO] Error in Compute Weights: {errors}')
-        return weight
+        """Delegate to shared RWF weight helper (DCAI 2022 Eq. 6–8)."""
+        return adjcy.compute_weights_with_PMI(
+            docs_of_words,
+            rela_pair_count_str,
+            word_window_freq,
+            train_size,
+            word_id_map,
+            min_count1,
+            max_count1,
+            count_mean1,
+            count_std1,
+            row,
+            col,
+        )
 
     def compute_weights(self, docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, vocab_size, word_doc_freq, vocab):
         row = []

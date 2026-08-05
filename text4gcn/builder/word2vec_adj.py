@@ -2,6 +2,7 @@ from text4gcn.modules.textvec.word_features import train_word2vec
 from text4gcn.modules import adjacency as adjcy
 from text4gcn.modules import logger as logger
 from text4gcn.modules import file_ops as flop
+from text4gcn.graph.stats import GraphBuildStats, compute_adjacency_stats, report_stats
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
 import pickle
@@ -101,7 +102,7 @@ class Word2VecAdjacency():
         with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a') as my_file:
             my_file.writelines(hist)
     
-    def build(self):
+    def build(self) -> GraphBuildStats:
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}"
         ds_corpus = f'{corpus_path}.shuffled/{self.dataset_name}.txt'
@@ -155,10 +156,19 @@ class Word2VecAdjacency():
 
         adj = csr_matrix((weight, (row, col)), shape=(node_size, node_size))
         # =============================================================
+        adj_path = f"{corpus_path}.adjacency/ind.embedding.word2vec.{self.dataset_name}.adj"
         # Dump Adjacency Matrix
-        with open(f"{corpus_path}.adjacency/ind.embedding.word2vec.{self.dataset_name}.adj", 'wb') as f:
+        with open(adj_path, 'wb') as f:
             pickle.dump(adj, f)
 
-        
+        stats = compute_adjacency_stats(
+            adj,
+            path=adj_path,
+            builder="embedding.word2vec",
+            dataset_name=self.dataset_name,
+        )
+        report_stats(stats, self.logger)
+
         hist = self.logger.log_history()
         self._save_history(hist)
+        return stats

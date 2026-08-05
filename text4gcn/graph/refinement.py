@@ -6,12 +6,12 @@ structure useful for classification. Compatible with existing LoadData
 and trainer flow.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Tuple, Optional, List, Set, Dict, Any
 import numpy as np
 import scipy.sparse as sp
 
-from .metadata import NodeMetadata, build_node_metadata
+from .metadata import NodeMetadata
 
 
 @dataclass
@@ -270,11 +270,11 @@ class GraphRefinement:
         if len(kept_test) == 0:
             raise ValueError("Refinement removed all test document nodes.")
 
-        # Subgraph: adj
-        adj_sub = adj[np.ix_(keep_indices, keep_indices)]
-        if sp.issparse(adj_sub):
-            adj_sub = adj_sub.copy()
-        else:
+        # Subgraph: adj — force CSR so fancy indexing works for all scipy formats
+        if sp.issparse(adj):
+            adj = sp.csr_matrix(adj)
+        adj_sub = adj[np.ix_(keep_indices, keep_indices)].copy()
+        if not sp.issparse(adj_sub):
             adj_sub = sp.csr_matrix(adj_sub)
 
         edges_before = int(adj_sub.nnz)
@@ -286,8 +286,9 @@ class GraphRefinement:
         edges_after = int(adj_sub.nnz)
 
         # Features and labels: keep rows for keep_indices
+        # dia_matrix / coo_matrix are sparse but not reliably subscriptable
         if sp.issparse(features):
-            features_sub = features[keep_indices, :]
+            features_sub = sp.csr_matrix(features)[keep_indices, :]
         else:
             features_sub = np.asarray(features)[keep_indices, :]
 

@@ -9,18 +9,18 @@ from text4gcn.models import GNN, Layer, Builder as ModelBuilder
 
 class TestLayerEnum:
     """Test Layer enum."""
-    
+
     def test_layer_enum_values(self):
         """Test Layer enum has expected values."""
-        # This test assumes Layer enum exists - adjust based on actual implementation
-        assert hasattr(Layer, 'GCN') or hasattr(Layer, 'GAT')
-    
+        assert hasattr(Layer, "GCN")
+        assert not hasattr(Layer, "GAT")
+
     def test_layer_enum_string_behavior(self):
-        """Test Layer enum behaves like string."""
-        # This test assumes Layer enum exists - adjust based on actual implementation
-        if hasattr(Layer, 'GCN'):
-            layer = Layer.GCN
-            assert str(layer) in ['GCN', 'gcn']
+        """Test Layer enum behaves like string (str, Enum)."""
+        layer = Layer.GCN
+        assert layer.value == "GCN"
+        assert layer == "GCN"
+        assert Layer.GCN == Layer("GCN")
 
 
 class TestGNNModel:
@@ -78,6 +78,14 @@ class TestGNNModel:
 
 class TestModelBuilder:
     """Test ModelBuilder enum."""
+
+    def test_builder_value_used_in_load_data_path(self):
+        """Python 3.11+ str(Enum) is 'Builder.Tfidf'; adjacency files use .value."""
+        from text4gcn.models.utils import LoadData
+
+        loader = LoadData(path="data", dataset="R8", builder=ModelBuilder.Tfidf)
+        assert loader.builder == "frequency.tfidf"
+        assert "Builder." not in loader.builder
     
     def test_model_builder_enum_values(self):
         """Test ModelBuilder enum has expected values."""

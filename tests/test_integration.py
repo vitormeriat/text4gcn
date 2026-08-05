@@ -179,19 +179,22 @@ class TestPerformanceIntegration:
     def test_builder_initialization_performance(self):
         """Test builder initialization performance."""
         import time
-        
-        start_time = time.time()
-        
-        # Initialize multiple builders
-        for _ in range(50):
-            builder.Frequency()
-            builder.Semantic()
-            builder.Syntactic()
-        
-        end_time = time.time()
-        
-        # Should initialize 150 builders in less than 1 second
-        assert (end_time - start_time) < 1.0
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            data_path = Path(temp_dir)
+            start_time = time.time()
+
+            for _ in range(50):
+                builder.Frequency(dataset_name="R8", dataset_path=str(data_path))
+                builder.Semantic(dataset_name="R8", dataset_path=str(data_path))
+                builder.Syntactic(dataset_name="R8", dataset_path=str(data_path))
+
+            end_time = time.time()
+
+            # Should initialize 150 builders in less than 1 second
+            assert (end_time - start_time) < 1.0
 
 
 class TestDataValidation:

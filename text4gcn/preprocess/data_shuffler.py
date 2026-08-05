@@ -8,7 +8,7 @@ This class is responsible for:
 """
 
 import random
-from typing import List, Tuple
+from typing import Tuple
 from text4gcn.modules import file_ops as flop
 from text4gcn.modules import logger as logger
 from text4gcn.modules.logger import Process

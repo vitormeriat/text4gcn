@@ -1,0 +1,105 @@
+site_name: Text4GCN
+site_description: A Python framework for text classification using Graph Neural Networks
+site_author: Vitor Meriat
+site_url: https://vitormeriat.github.io/text4gcn/
+repo_url: https://github.com/vitormeriat/text4gcn
+repo_name: vitormeriat/text4gcn
+copyright: Copyright &copy; 2024–2026 Vitor Meriat — MIT License
+
+# Exclude legacy Jekyll / Sphinx trees so MkDocs --strict stays clean
+exclude_docs: |
+  README.md
+  conf.py
+  index.rst
+  _config.yml
+  _pages/**
+  _posts/**
+  _site/**
+  _includes/**
+  _layouts/**
+  assets/gitbook/**
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.path
+    - navigation.top
+    - toc.follow
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+
+plugins:
+  - search:
+      lang: en
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - User Guide:
+    - Understanding Text Graphs: guides/text-graph.md
+    - Choosing a Builder: guides/builders.md
+    - Graph Refinement: guides/refinement.md
+    - Device Management: guides/devices.md
+  - API Reference:
+    - Overview: api/index.md
+    - GNN: api/gnn.md
+    - TextPipeline: api/pipeline.md
+    - Builders: api/builders.md
+    - Graph Refinement: api/refinement.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vitormeriat/text4gcn
+      name: GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/text4gcn/
+      name: PyPI

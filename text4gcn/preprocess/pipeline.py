@@ -27,6 +27,8 @@ class TextPipeline():
         path to files
     language : str
         `language` to retrieve stop words
+    seed : int
+        Random seed for train/test document shuffle (reproducibility).
 
     Methods
     -------
@@ -39,14 +41,28 @@ class TextPipeline():
         dataset_name: str,
         dataset_path: str,
         rare_count: int = 5,
-        language: str = "english"
+        language: str = "english",
+        seed: int = 1234,
     ):
+        from pathlib import Path
+
         self.logger = logger.PrintLog()
         self.flop = flop.FileOps(logger=self.logger)
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.rare_count = rare_count
         self.language = language
+        self.seed = seed
+
+        if not dataset_name or not str(dataset_name).strip():
+            raise ValueError("dataset_name must be a non-empty string.")
+        dataset_path_obj = Path(dataset_path)
+        if not dataset_path_obj.exists():
+            raise FileNotFoundError(
+                f"dataset_path does not exist: {dataset_path}\n\n"
+                "Create the directory and place "
+                f"'{dataset_name}.txt' / '{dataset_name}.meta' before running execute()."
+            )
 
     def save_history(self, hist):
         self.flop.create_dir(
@@ -129,6 +145,8 @@ class TextPipeline():
         )
 
         cleaned_doc_lines = [line.strip() for line in open(ds_corpus, 'r')]
+
+        random.seed(self.seed)
 
         # Shuffle train ids and write to file
         train_doc_meta_ids = [all_doc_meta_list.index(
@@ -340,18 +358,32 @@ class TextPipeline():
         self.logger.info(f"tx.shape={tx.shape}, ty.shape={ty.shape}")
         self.logger.info(f"allx.shape={allx.shape}, ally.shape={ally.shape}")
 
-    def execute(self, validation_ratio: float = 0.10, use_predefined_word_vectors: bool = False) -> None:
+    def execute(
+        self,
+        validation_ratio: float = 0.10,
+        use_predefined_word_vectors: bool = False,
+        seed: int | None = None,
+    ) -> None:
         """Run the full preprocessing pipeline.
 
         Parameters
         ----------
         validation_ratio : float
-            Fraction of training data reserved for validation. Default ``0.10``.
+            Fraction of training data reserved for validation. This is the
+            **only** place the train/val split is defined (DCAI 2022 / Yao et
+            al. use ``0.10``). Default ``0.10``.
         use_predefined_word_vectors : bool
             Reserved for future use. Default ``False``.
+        seed : int or None
+            If provided, overrides :attr:`seed` for this run (document shuffle).
         """
+        if seed is not None:
+            self.seed = seed
+
         self.logger.info(clean.create_title("NLTK Configuration"))
         clean.config_nltk()
+        self.logger.info(f"Random seed (shuffle) = <{self.seed}>")
+        self.logger.info(f"Validation ratio = <{validation_ratio}>")
         self.logger.info()
 
         self.clean_data()

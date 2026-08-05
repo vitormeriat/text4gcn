@@ -1,7 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
-from typing import List, Iterable, Tuple
+from typing import List, Iterable
 from collections import OrderedDict
-import pickle as pkl
 from math import log
 import numpy as np
 
@@ -84,18 +83,17 @@ def build_word_window_freq(docs_of_words):
 
 
 def relation_pair_statitcs(rela_pair_count_str):
-    max_count1 = 0.0
-    min_count1 = 0.0
-    count1 = []
-    for key, value in rela_pair_count_str.items():
-        if rela_pair_count_str[key] > max_count1:
-            max_count1 = rela_pair_count_str[key]
-        if value < min_count1:
-            min_count1 = rela_pair_count_str[key]
-        count1.append(rela_pair_count_str[key])
+    """Return min, max, mean, and sample std of RWF pair occurrence counts."""
+    if not rela_pair_count_str:
+        return 0.0, 0.0, 0.0, 1.0
 
-    count_mean1 = np.mean(count1)
-    count_std1 = np.std(count1, ddof=1)
+    count1 = list(rela_pair_count_str.values())
+    min_count1 = float(min(count1))
+    max_count1 = float(max(count1))
+    count_mean1 = float(np.mean(count1))
+    count_std1 = float(np.std(count1, ddof=1)) if len(count1) > 1 else 1.0
+    if count_std1 == 0.0:
+        count_std1 = 1.0
     return min_count1, max_count1, count_mean1, count_std1
 
 

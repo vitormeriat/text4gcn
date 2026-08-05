@@ -49,14 +49,15 @@ def test_textpipeline_with_synthetic_data():
             dataset_name="SyntheticR8",
             rare_count=5,
             dataset_path="synthetic_data",
-            language="english"
+            language="english",
+            seed=1234,
         )
         
         print("✅ TextPipeline created successfully")
         
         # Execute the pipeline
         print("\n3. Executing TextPipeline...")
-        pipe.execute()
+        pipe.execute(validation_ratio=0.10)
         
         print("✅ TextPipeline executed successfully!")
         
@@ -123,25 +124,23 @@ def demonstrate_usage():
 # 1. Generate synthetic data
 python examples/synthetic_data_generator.py --dataset-name SyntheticR8 --num-documents 1000
 
-# 2. Use with TextPipeline
-from text4gcn.preprocess import TextPipeline
+# 2. Full offline tutorial (pipeline + TF-IDF + short train)
+python examples/end_to_end_synthetic.py --docs 400 --epochs 40
 
-pipe = TextPipeline(
+# 3. Or step by step:
+from text4gcn import GNN, TextPipeline, Builder, Layer
+from text4gcn.builder import Frequency
+
+TextPipeline(
     dataset_name="SyntheticR8",
     rare_count=5,
     dataset_path="synthetic_data",
-    language="english"
-)
-pipe.execute()
+    language="english",
+    seed=1234,
+).execute(validation_ratio=0.10)
 
-# 3. Use with builders
-from text4gcn.builder import Frequency
-
-builder = Frequency(dataset_name="SyntheticR8", dataset_path="synthetic_data")
-adjacency = builder.tfidf(window_size=20)
-
-# 4. Use with models
-from text4gcn import GNN, Builder, Layer
+stats = Frequency(dataset_name="SyntheticR8", dataset_path="synthetic_data").tfidf(window_size=20)
+print(stats)
 
 result = GNN(
     dataset_name="SyntheticR8",
@@ -149,6 +148,7 @@ result = GNN(
     log_dir="logs",
     builder=Builder.Tfidf,
     layer=Layer.GCN,
+    seed=1234,
     epochs=50,
     dropout=0.5,
 ).fit()

@@ -24,7 +24,13 @@ __email__ = "vitormeriat@gmail.com"
 # Public API — import these directly from `text4gcn`
 from .models import GNN, Builder, Layer, TextGCNTrainer, TrainingResult
 from .preprocess import TextPipeline
-from .graph import RefinementConfig, apply_refinement
+from .graph import (
+    RefinementConfig,
+    apply_refinement,
+    GraphBuildStats,
+    compute_adjacency_stats,
+    load_adjacency_stats,
+)
 
 # Submodules kept for power users
 from . import datasets, builder, models, preprocess, modules, utils, graph
@@ -39,6 +45,9 @@ __all__ = [
     "TextPipeline",
     "RefinementConfig",
     "apply_refinement",
+    "GraphBuildStats",
+    "compute_adjacency_stats",
+    "load_adjacency_stats",
     # Submodules
     "datasets",
     "builder",

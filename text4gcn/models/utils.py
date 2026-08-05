@@ -13,7 +13,8 @@ class LoadData:
     def __init__(self, path, dataset, builder, refinement_config=None):
         self.path = path
         self.dataset = dataset
-        self.builder = builder
+        # str(Enum) is "Builder.Tfidf" on Python 3.11+; use .value for file names
+        self.builder = getattr(builder, "value", builder)
         self.refinement_config = refinement_config
 
     def parse_index_file(self, filename):

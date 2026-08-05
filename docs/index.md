@@ -1,63 +1,79 @@
+# Text4GCN
+
+**A Python framework for text classification using Graph Neural Networks.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://badge.fury.io/py/text4gcn.svg)](https://badge.fury.io/py/text4gcn)
+[![Python 3.10-3.13](https://img.shields.io/badge/python-3.10%7C3.11%7C3.12%7C3.13-blue.svg)](https://www.python.org/downloads/)
+
 ---
-layout: home
-title: Text4GCN Documentation
-permalink: /
----
 
-<div align="center">
-  <img width="250" src="assets/logo.svg">
-</div>
+Text4GCN converts a collection of text documents into a **word-document graph** and trains a Graph Convolutional Network (GCN) on it for document classification. The graph captures vocabulary co-occurrence patterns that traditional bag-of-words models miss.
 
-<a name="readme-top"></a>
+!!! info "Scope and limitations"
+    - **Scientific niche:** text-graph construction and TGCN with **Related Word Filter (RWF)** — fewer edges / less memory, accuracy ≈ classic TextGCN (Pereira & de Castro, DCAI 2022). Not a drop-in replacement for fine-tuned transformers on short-text SOTA.
+    - **Transductive learning:** test documents are included in the graph at construction time (same as Yao et al., AAAI 2019). New documents require rebuilding the graph and retraining.
+    - **Default protocol:** dropout 0.5, lr 0.02, hidden 200, early stopping 10, 10% of train as validation via `TextPipeline.execute(validation_ratio=0.10)`.
 
+## How it works
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-    </li>
-    <li>
-      <a href="#clean-code">Clean Code</a>
-      <ul>
-        <li><a href="#none">Naming Things</a></li>
-        <li><a href="#none">Functions</a></li>
-        <li><a href="#none">Objects and Data Structures</a></li>
-        <li><a href="#none">Classes</a></li>
-        <li><a href="#none">SOLID Principles</a></li>
-        <li><a href="#none">Testing</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#none">Code Quality Measurement</a>
-      <ul>
-        <li><a href="#none">1. Code complexity</a></li>
-        <li><a href="#none">2. Code coverage</a></li>
-        <li><a href="#none">3. Bug density</a></li>
-        <li><a href="#none">4. Duplicated code</a></li>
-        <li><a href="#none">5. Code maintainability</a></li>
-        <li><a href="#none">6. Coding standards</a></li>
-        <li><a href="#none">7. Security vulnerabilities</a></li>
-      </ul>
-    </li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+![Pipeline overview](assets/images/pipeline-overview.svg)
 
+The pipeline has three steps: preprocess text → build the graph → train the GCN. Each step writes files to disk so you can resume at any stage.
 
-## Why Text4GCN?
+## Key features
 
-**Text4GCN** is an easy-to-use library for R&D at the intersection of **Deep Learning on Graphs** and **Natural Language Processing** (i.e., DLG4NLP). It provides both **full implementations** of state-of-the-art models for data scientists and also **flexible interfaces** to build customized models for researchers and developers with whole-pipeline support. Built upon highly-optimized runtime libraries including [DGL](https://github.com/dmlc/dgl) , **Text4GCN** has both high running efficiency and great extensibility. The architecture of **Text4GCN** is shown in the following figure, where boxes with dashed lines represents the features under development.
+- **Three adjacency strategies** — frequency (TF-IDF/PMI), semantic (Word2Vec, BERT, cosine similarity), syntactic (dependency parsing, LIWC)
+- **Graph refinement** — filter low-frequency words, prune weak edges, attach node metadata
+- **Automatic device selection** — detects CUDA, falls back to CPU transparently
+- **Structured results** — `GNN.fit()` returns a `TrainingResult` dataclass with accuracy, loss, model path and epoch count
+- **Informative errors** — if a pipeline step is missing, the error shows the exact command to fix it
 
-This library has the following key features:
+## Quick start
 
-1. **Easy-to-use and Flexible:** Provides both full implementations of state-of-the-art models and alsoflexible interfaces to build customized models with whole-pipeline support.
-2. **Rich Set of Learning Resources:** Provide a variety of learning materials including code demos, code documentations, research tutorials and videos, and paper survey.
-3. **High Running Efficiency and Extensibility:** Build upon highly-optimized runtime libraries including DGL and provide highly modularization blocks.
-4. **Comprehensive Code Examples:** Provide a comprehensive collection of NLP applications and the corresponding code examples for quick-start.
+```bash
+pip install text4gcn[cpu]         # CPU
+pip install text4gcn[gpu]         # GPU / CUDA
+pip install text4gcn[syntactic]   # optional: Stanford CoreNLP wrapper (Java jars still required)
+```
 
-Graph4NLP consists of four different layers: 1) Data Layer, 2) Module Layer, 3) Model Layer, and 4) Application Layer, as illustrated in the following figure.
+```python
+from text4gcn import GNN, TextPipeline, Builder, GraphBuildStats
+from text4gcn.builder import Frequency
+
+# Step 1 — preprocess raw text (validation split + shuffle seed live here)
+TextPipeline(dataset_name="R8", dataset_path="data/", seed=1234).execute(
+    validation_ratio=0.10,
+)
+
+# Step 2 — build the word-document graph (returns edge/memory stats)
+stats = Frequency(dataset_name="R8", dataset_path="data/").tfidf()
+print(stats)  # GraphBuildStats: nodes, edges(nnz), density, file size
+
+# Step 3 — train and evaluate
+result = GNN(dataset_name="R8", dataset_path="data/", seed=1234).fit()
+print(f"Test accuracy: {result.test_accuracy:.4f}")
+```
+
+Reproduce DCAI 2022 Tables 2/3 (reference + optional local comparison):
+
+```bash
+python scripts/reproduce_dcai2022.py --reference-only
+python scripts/reproduce_dcai2022.py --data-dir data/ --dataset R8 --builders frequency,semantic
+```
+
+## Benchmark datasets
+
+| Dataset | Docs | Classes | Train | Test | Avg. length |
+|---------|------|---------|-------|------|-------------|
+| R8      | 7,674 | 8 | 5,485 | 2,189 | 65.7 |
+| R52     | 9,100 | 52 | 6,532 | 2,568 | 69.8 |
+| 20NG    | 18,846 | 20 | 11,314 | 7,532 | 221.3 |
+| MR      | 10,662 | 2 | 7,108 | 3,554 | 20.4 |
+| Ohsumed | 7,400 | 23 | 3,357 | 4,043 | 135.8 |
+
+## References
+
+- Pereira & de Castro (2022) — *Natural Language Processing Based on a Text Graph Convolutional Network* (DCAI). See `papers/`.
+- Yao, Mao & Luo (2019) — *Graph Convolutional Networks for Text Classification* (AAAI)
+- Kipf & Welling (2017) — *Semi-supervised Classification with Graph Convolutional Networks*

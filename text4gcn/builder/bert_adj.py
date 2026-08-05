@@ -8,19 +8,30 @@ import pickle
 from tqdm import tqdm
 
 
-from transformers import BertModel, BertTokenizer
-import torch
 from sklearn.metrics.pairwise import cosine_similarity as cos
 import numpy as np
 
+# Lazily loaded — importing text4gcn.builder must not hit HuggingFace.
+_tokenizer = None
+_model = None
 
-# Carregar o tokenizador e o modelo BERT pré-treinado
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
+
+def _get_bert():
+    """Load BERT tokenizer/model on first use (requires transformers + network/cache)."""
+    global _tokenizer, _model
+    if _tokenizer is None or _model is None:
+        import torch  # noqa: F401 — used by get_embeddings
+        from transformers import BertModel, BertTokenizer
+
+        _tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
+        _model = BertModel.from_pretrained("bert-base-uncased")
+    return _tokenizer, _model
 
 
-def get_word_embedding(word: str, model: BertModel, tokenizer: BertTokenizer):
-    inputs = tokenizer(word, return_tensors='pt')
+def get_word_embedding(word: str, model, tokenizer):
+    import torch
+
+    inputs = tokenizer(word, return_tensors="pt")
     with torch.no_grad():
         outputs = model(**inputs)
     # Pegando o primeiro token depois do [CLS]
@@ -28,7 +39,7 @@ def get_word_embedding(word: str, model: BertModel, tokenizer: BertTokenizer):
     return embedding
 
 
-def similarity(vec1: np, vec2: np) -> np.ndarray:
+def similarity(vec1, vec2) -> float:
     vec1 = vec1.reshape(1, -1)
     vec2 = vec2.reshape(1, -1)
     return cos(vec1, vec2)[0][0]
@@ -40,12 +51,15 @@ def get_similarity(word1, word2, model, tokenizer):
     return similarity(embedding1, embedding2)
 
 
-# Função para extrair embeddings em lote
 def get_embeddings(words_batch):
-    inputs = tokenizer(words_batch, return_tensors='pt', padding=True, truncation=True)
+    """Extract CLS embeddings for a batch of words (loads BERT on first call)."""
+    import torch
+
+    tokenizer, model = _get_bert()
+    inputs = tokenizer(words_batch, return_tensors="pt", padding=True, truncation=True)
     with torch.no_grad():
         outputs = model(**inputs)
-    embeddings = outputs.last_hidden_state[:, 0, :]  # Usar os embeddings do token [CLS]
+    embeddings = outputs.last_hidden_state[:, 0, :]
     return embeddings.cpu().numpy()
 
 

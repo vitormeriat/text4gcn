@@ -7,7 +7,6 @@ supporting both CPU and GPU (CUDA) configurations.
 
 import logging
 from typing import Optional, Union
-import warnings
 
 try:
     import torch
@@ -108,7 +107,13 @@ class DeviceManager:
         return tensor_or_model.to(self._device)
     
     def set_seed(self, seed: int = 42) -> None:
-        """Set random seed for reproducibility."""
+        """Set random seeds for ``random``, NumPy, and PyTorch (CPU/CUDA)."""
+        import random
+
+        import numpy as np
+
+        random.seed(seed)
+        np.random.seed(seed)
         torch.manual_seed(seed)
         if self.is_cuda:
             torch.cuda.manual_seed(seed)

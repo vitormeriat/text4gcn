@@ -109,13 +109,14 @@ def test_basic_functionality():
             dataset_name="SyntheticR8",
             rare_count=5,
             dataset_path=data_path,
-            language="english"
+            language="english",
+            seed=1234,
         )
         print("   ✅ TextPipeline created successfully")
         
         # Test pipeline execution
         print("4. Testing TextPipeline execution...")
-        pipe.execute()
+        pipe.execute(validation_ratio=0.10)
         print("   ✅ TextPipeline executed successfully")
         
         # Check output files

@@ -1,1 +1,1 @@
-from .utils import *
+from .utils import flatten_nested_iterables

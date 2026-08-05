@@ -68,7 +68,7 @@ def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_i
                                 f'{word_id_j},{word_id_i}',
                             ]
                         )
-            except:
+            except Exception:
                 pass
 
     return dict(word_ids_pair_to_counts)
@@ -150,7 +150,7 @@ def extract_doc_word_ids_pair_to_counts(docs_of_words: List[List[str]], word_to_
             try:
                 word_id = word_to_id[word]
                 doc_word_freq.update([f'{str(doc_id)},{str(word_id)}'])
-            except:
+            except Exception:
                 pass
     return dict(doc_word_freq)
 
@@ -223,18 +223,17 @@ def build_word_window_freq(docs_of_words):
 
 
 def relation_pair_statitcs(rela_pair_count_str):
-    max_count1 = 0.0
-    min_count1 = 0.0
-    count1 = []
-    for key, value in rela_pair_count_str.items():
-        if rela_pair_count_str[key] > max_count1:
-            max_count1 = rela_pair_count_str[key]
-        if value < min_count1:
-            min_count1 = rela_pair_count_str[key]
-        count1.append(rela_pair_count_str[key])
+    """Return min, max, mean, and sample std of RWF pair occurrence counts."""
+    if not rela_pair_count_str:
+        return 0.0, 0.0, 0.0, 1.0
 
-    count_mean1 = np.mean(count1)
-    count_std1 = np.std(count1, ddof=1)
+    count1 = list(rela_pair_count_str.values())
+    min_count1 = float(min(count1))
+    max_count1 = float(max(count1))
+    count_mean1 = float(np.mean(count1))
+    count_std1 = float(np.std(count1, ddof=1)) if len(count1) > 1 else 1.0
+    if count_std1 == 0.0:
+        count_std1 = 1.0
     return min_count1, max_count1, count_mean1, count_std1
 
 
@@ -274,36 +273,62 @@ def get_weight_tfidf(docs_of_words, word_id_map, doc_word_freq, train_size, voca
     return weight_tfidf
 
 
-def compute_weights_with_PMI(docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col):
+def compute_weights_with_PMI(
+    docs_of_words,
+    rela_pair_count_str,
+    word_window_freq,
+    train_size,
+    word_id_map,
+    min_count1,
+    max_count1,
+    count_mean1,
+    count_std1,
+    row,
+    col,
+):
+    """Build word–word edge weights for RWF builders (DCAI 2022 Eq. 6–8).
+
+    PMI is used only as a gate (``Rdep``: keep edge iff PMI > 0). The stored
+    weight is Max–Min normalisation of the RWF pair count ``O(wi, wj)``, as in
+    Eq. (6) of Pereira & de Castro (DCAI 2022).
+
+    Parameters ``count_mean1`` and ``count_std1`` are kept for call-site
+    compatibility; they are not used for the weight.
+    """
+    del count_mean1, count_std1  # unused; Max–Min uses min/max only
     weight = []
     errors = 0
     num_window = len(docs_of_words)
+    denom = max_count1 - min_count1
+
     for key, count in rela_pair_count_str.items():
         try:
             temp = key.split(',')
             i = temp[0]
             j = temp[1]
 
-            if i in word_window_freq and j in word_window_freq:
-                word_freq_i = word_window_freq[i]
-                word_freq_j = word_window_freq[j]
-                pmi = log(
-                    1.0
-                    * count
-                    / num_window
-                    / (1.0 * word_freq_i * word_freq_j / num_window ** 2)
-                )
-                if pmi <= 0:
-                    continue
+            if i not in word_window_freq or j not in word_window_freq:
+                continue
 
-                row.append(train_size + word_id_map[i])
-                col.append(train_size + word_id_map[j])
-                if key in rela_pair_count_str:
-                    wei = (rela_pair_count_str[key] -
-                           min_count1) / (max_count1 - min_count1)
-                    wei = (rela_pair_count_str[key]-count_mean1) / count_std1
-                    weight.append(wei)
-        except:
+            word_freq_i = word_window_freq[i]
+            word_freq_j = word_window_freq[j]
+            pmi = log(
+                1.0
+                * count
+                / num_window
+                / (1.0 * word_freq_i * word_freq_j / num_window ** 2)
+            )
+            if pmi <= 0:
+                continue
+
+            row.append(train_size + word_id_map[i])
+            col.append(train_size + word_id_map[j])
+            if denom == 0.0:
+                wei = 1.0
+            else:
+                wei = (count - min_count1) / denom
+            weight.append(wei)
+        except Exception:
             errors += 1
 
     print(f'[INFO] Error in Compute Weights: {errors}')

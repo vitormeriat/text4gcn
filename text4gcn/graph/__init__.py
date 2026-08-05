@@ -9,6 +9,7 @@ This package provides:
 
 from .refinement import GraphRefinement, RefinementConfig, apply_refinement
 from .metadata import NodeMetadata, build_node_metadata
+from .stats import GraphBuildStats, compute_adjacency_stats, load_adjacency_stats, report_stats
 
 __all__ = [
     "GraphRefinement",
@@ -16,4 +17,8 @@ __all__ = [
     "apply_refinement",
     "NodeMetadata",
     "build_node_metadata",
+    "GraphBuildStats",
+    "compute_adjacency_stats",
+    "load_adjacency_stats",
+    "report_stats",
 ]

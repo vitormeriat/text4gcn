@@ -139,25 +139,25 @@ class SyntheticDataGenerator:
             documents.append(doc)
             metadata.append(f"{i}\ttest\t{category}")
         
-        # Write files
-        dataset_path = self.output_dir / dataset_name
-        
-        # Write documents
-        with open(f"{dataset_name}.txt", "w", encoding="utf-8") as f:
+        # Write files into output_dir (used as TextPipeline dataset_path)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        txt_path = self.output_dir / f"{dataset_name}.txt"
+        meta_path = self.output_dir / f"{dataset_name}.meta"
+
+        with open(txt_path, "w", encoding="utf-8") as f:
             for doc in documents:
                 f.write(doc + "\n")
-        
-        # Write metadata
-        with open(f"{dataset_name}.meta", "w", encoding="utf-8") as f:
+
+        with open(meta_path, "w", encoding="utf-8") as f:
             for meta in metadata:
                 f.write(meta + "\n")
-        
+
         print(f"Generated synthetic dataset '{dataset_name}':")
         print(f"  - Documents: {num_documents}")
         print(f"  - Train: {num_train}")
         print(f"  - Test: {num_test}")
         print(f"  - Categories: {list(self.categories.keys())}")
-        print(f"  - Files created: {dataset_name}.txt, {dataset_name}.meta")
+        print(f"  - Files created: {txt_path}, {meta_path}")
     
     def generate_multiple_datasets(self) -> None:
         """Generate multiple synthetic datasets for testing."""

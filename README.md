@@ -10,368 +10,223 @@
 [![PyPI version](https://badge.fury.io/py/text4gcn.svg)](https://badge.fury.io/py/text4gcn)
 [![Python 3.10-3.13](https://img.shields.io/badge/python-3.10%7C3.11%7C3.12%7C3.13-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/vitormeriat/text4gcn/workflows/CI/badge.svg)](https://github.com/vitormeriat/text4gcn/actions)
-[![codecov](https://codecov.io/gh/vitormeriat/text4gcn/branch/main/graph/badge.svg)](https://codecov.io/gh/vitormeriat/text4gcn)
-[![Documentation Status](https://readthedocs.org/projects/text4gcn/badge/?version=latest)](https://text4gcn.readthedocs.io/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/master/notebooks/text4gcn.ipynb)
+[![Documentation](https://img.shields.io/badge/docs-vitormeriat.github.io-blue)](https://vitormeriat.github.io/text4gcn/)
 
 <div id="top"></div>
 
+Text4GCN converts a collection of text documents into a **word-document graph** and trains a Graph Convolutional Network (GCN) on it for document classification. The graph captures vocabulary co-occurrence patterns that traditional bag-of-words models miss.
 
-### **Table of Contents**
+### Scope and limitations
 
-<ol>
-    <li><a href="#abstract">Abstract</a></li>
-    <li><a href="#installation">Installation</a></li>
-    <li><a href="#functionalities">Functionalities</a></li>    
-    <li><a href="#examples">Examples</a></li>
-    <ul>
-        <li><a href="#installation">Get Sample Data</a></li>
-        <li><a href="#datasets-description">Text Pipeline</a></li>
-        <li><a href="#datasets-description">Builder Adjacency</a></li>
-    </ul>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#references">References</a></li>
-</ol>
+- **Nicho científico:** construção de *text graphs* e TGCN com **Related Word Filter (RWF)** — menos arestas / memória, accuracy ≈ TextGCN clássico (Pereira & de Castro, DCAI 2022). Não é um substituto de transformers fine-tuned para SOTA em textos curtos.
+- **Aprendizado transdutivo:** documentos de teste entram no grafo na construção (como Yao et al., AAAI 2019, e o paper do pacote). Novos documentos exigem reconstruir o grafo e retreinar.
+- **Protocolo experimental padrão:** dropout 0.5, lr 0.02, hidden 200, early stopping 10, 10% do train como validação (`TextPipeline.execute(validation_ratio=0.10)`).
 
-<div style="margin-bottom:60px"></div>
+Reprodução das Tabelas 2/3 do paper DCAI 2022:
 
-## About
-
-**Text4GCN** is an open-source Python framework that simplifies the generation of text-based graph data for Graph Neural Network (GNN) architectures. The framework's core strength lies in its ability to build memory-optimized text graphs using different text representations to create relationships and define edge weights.
-
-### Key Features
-
-- 🚀 **Easy-to-use API**: Simple and intuitive interface for researchers and practitioners
-- 📊 **Multiple Dataset Support**: Built-in support for popular text classification datasets (R8, R52, 20NG, etc.)
-- 🔧 **Flexible Graph Building**: Various methods for constructing text graphs (semantic, syntactic, frequency-based)
-- 🧠 **GNN Models**: Pre-implemented Graph Neural Network architectures (GCN, GAT)
-- ⚡ **Memory Optimized**: Efficient graph construction for large-scale text datasets
-- 🔬 **Research Ready**: Designed for both research and production use
-
-### Why Text4GCN?
-
-This project addresses the text classification problem using novel approaches with Graph Convolutional Networks and Graph Attention Networks, combining Deep Learning algorithms with Natural Language Processing techniques.
-
-The main contribution is providing a flexible framework capable of performing `syntactic` and `semantic` filtering that makes text graphs smaller and more representative. This framework offers an alternative and powerful tool for studying Graph Convolutional Networks in text classification tasks.
-
-<div style="margin-bottom:30px; margin-top:30px" align="center">
-  <img width="70%" src="imgs/text-graph.png">
-  <p style="margin-top:5px">Text graph</p>
-</div>
+```bash
+python scripts/reproduce_dcai2022.py --reference-only
+python scripts/reproduce_dcai2022.py --data-dir data/ --dataset R8 --builders frequency,semantic
+```
 
 ---
 
 ## Installation
 
-### Python Version Support
-
-Text4GCN supports Python 3.10, 3.11, 3.12, and 3.13. We recommend using Python 3.11 or 3.12 for the best compatibility.
-
-#### Quick Setup with Different Python Versions
-
 ```bash
-# Using pyenv (recommended for managing multiple Python versions)
-pyenv install 3.11.0
-pyenv local 3.11.0
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install Text4GCN
-pip install text4gcn[cpu]
+pip install text4gcn[cpu]         # CPU
+pip install text4gcn[gpu]         # GPU / CUDA
+pip install text4gcn[syntactic]   # optional: Stanford CoreNLP wrapper (Java jars still required)
 ```
 
-#### Automated Setup Script
+Requires Python ≥ 3.10 and PyTorch ≥ 2.0. The default install does **not** require Java;
+`Syntactic.dependency_parsing()` needs `pip install text4gcn[syntactic]` plus a local CoreNLP path.
 
-We provide a convenient setup script for different Python versions:
+---
 
-```bash
-# Setup with Python 3.11 (default)
-python setup_venv.py
-
-# Setup with specific Python version
-python setup_venv.py 3.12
-python setup_venv.py 3.13
-
-# Activate the environment
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-#### Testing Compatibility
-
-To test Text4GCN with multiple Python versions:
-
-```bash
-python test_python_versions.py
-```
-
-### From PyPI (Recommended)
-
-Text4GCN supports both CPU and GPU (CUDA) versions of PyTorch. Choose the installation that matches your system:
-
-#### CPU Version (Default)
-```bash
-pip install text4gcn[cpu]
-```
-
-#### GPU Version (CUDA)
-```bash
-pip install text4gcn[gpu]
-```
-
-#### Auto-detect Installation
-```bash
-# Install without PyTorch first
-pip install text4gcn
-
-# Then install PyTorch based on your system
-# For CPU:
-pip install torch
-
-# For GPU (CUDA 12.1):
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-```
-
-### From Source
-
-```bash
-git clone https://github.com/vitormeriat/text4gcn.git
-cd text4gcn
-
-# For CPU version
-pip install -e .[cpu]
-
-# For GPU version  
-pip install -e .[gpu]
-```
-
-### Development Installation
-
-```bash
-git clone https://github.com/vitormeriat/text4gcn.git
-cd text4gcn
-
-# Install with development dependencies
-poetry install
-
-# Or install specific PyTorch version
-poetry install --extras "gpu"  # for GPU version
-poetry install --extras "cpu"  # for CPU version
-```
-
-### PyTorch Version Compatibility
-
-| Text4GCN Version | PyTorch CPU | PyTorch GPU (CUDA) |
-|------------------|-------------|-------------------|
-| 2.0.0+           | 2.1.2+      | 2.1.2+ (CUDA 12.1) |
-
-### Device Detection
-
-Text4GCN automatically detects the best available device:
+## Quick start
 
 ```python
-import text4gcn
+from text4gcn import GNN, TextPipeline
+from text4gcn.builder import Frequency
 
-# Check PyTorch installation
-info = text4gcn.utils.check_pytorch_installation()
-print(info)
+# Step 1 — preprocess raw text
+TextPipeline(dataset_name="R8", dataset_path="data/").execute()
 
-# Get device recommendations
-recommendation = text4gcn.utils.recommend_installation()
-print(recommendation)
+# Step 2 — build the word-document graph (returns edge/memory stats)
+stats = Frequency(dataset_name="R8", dataset_path="data/").tfidf()
+print(stats)  # nodes, edges(nnz), density, file size
+
+# Step 3 — train and evaluate
+result = GNN(dataset_name="R8", dataset_path="data/").fit()
+print(f"Test accuracy: {result.test_accuracy:.4f}")
 ```
 
-## Quick Start
+`GNN.fit()` returns a `TrainingResult` dataclass with `test_accuracy`, `test_loss`, `model_path`, and `epochs_trained`.
+
+---
+
+## How it works
+
+```
+Raw text documents
+      │
+      ▼  TextPipeline
+Cleaned corpus + node feature matrices
+      │
+      ▼  Frequency / Semantic / Syntactic builder
+Adjacency matrix (word–word and word–doc edges)
+      │
+      ▼  GNN.fit()
+Trained GCN → TrainingResult(accuracy, loss, model_path, epochs)
+```
+
+---
+
+## TextPipeline
+
+Cleans the corpus, builds vocabulary, and generates node feature matrices:
 
 ```python
-import text4gcn
+from text4gcn import TextPipeline
 
-# 1. Check PyTorch installation and device
-info = text4gcn.utils.check_pytorch_installation()
-print(f"PyTorch available: {info['torch_available']}")
-print(f"CUDA available: {info['cuda_available']}")
+TextPipeline(
+    dataset_name="R8",
+    dataset_path="data/",
+    rare_count=5,        # drop words appearing fewer than 5 times
+    language="english",
+).execute(
+    validation_ratio=0.10,  # fraction of train held out for validation
+)
+```
 
-# 2. Load a dataset
-data = text4gcn.datasets.R8(path="./data")
+---
 
-# 3. Build a text graph using frequency-based approach
-builder = text4gcn.builder.Frequency()
-adjacency = builder.tfidf(dataset_name="R8", dataset_path="./data")
+## Adjacency builders
 
-# 4. Train a GCN model (auto-detects best device)
-model = text4gcn.models.GNN(
-    dataset="R8",
-    path="./data",
-    log_dir="./logs",
-    builder=text4gcn.builder.Builder.Tfidf,
-    layer=text4gcn.models.Layer.GCN,
+Choose an edge-weighting strategy:
+
+| Builder class | Method | Enum value |
+|---|---|---|
+| `Frequency` | `.tfidf()` | `Builder.Tfidf` |
+| `Semantic` | `.word2vec()` | `Builder.Word2Vec` |
+| `Semantic` | `.cosine_similarity()` | `Builder.CosineSimilarity` |
+| `Semantic` | `.bert()` | `Builder.Bert` |
+| `Syntactic` | `.dependency_parsing()` | `Builder.DependencyParsing` |
+| `Syntactic` | `.linguistic_inquiry()` | `Builder.Liwc` |
+
+```python
+from text4gcn.builder import Frequency, Semantic
+
+# TF-IDF (fastest, recommended start) — returns GraphBuildStats
+stats = Frequency(dataset_name="R8", dataset_path="data/").tfidf(window_size=20)
+print(stats.n_edges, stats.file_bytes)
+
+# Or inspect a saved adjacency file later
+from text4gcn import load_adjacency_stats
+load_adjacency_stats("data/R8.adjacency/ind.frequency.tfidf.R8.adj")
+
+# Word2Vec
+Semantic(dataset_name="R8", dataset_path="data/").word2vec(
+    training_algorithm=1, embedding_dimension=300, num_epochs=20
+)
+```
+
+---
+
+## GNN training
+
+```python
+from text4gcn import GNN, Builder
+
+result = GNN(
+    dataset_name="R8",
+    dataset_path="data/",
+    log_dir="logs/",
+    builder=Builder.Tfidf,
     epochs=200,
+    lr=0.02,
+    nhid=200,
     dropout=0.5,
-    device=None  # Auto-detect device, or specify "cpu" or "cuda"
-)
-model.fit()
+    val_ratio=0.1,
+    early_stopping=10,
+    device=None,          # auto-detect CUDA / MPS / CPU
+).fit()
+
+print(result.test_accuracy)   # e.g. 0.9712
+print(result.epochs_trained)  # e.g. 187
+print(result.model_path)      # path to saved .pth file
 ```
 
-### Device Management
+---
+
+## Graph refinement
+
+Reduce graph size and noise before training:
 
 ```python
-# Manual device selection
-model = text4gcn.models.GNN(
-    dataset="R8",
-    path="./data",
-    log_dir="./logs", 
-    builder=text4gcn.builder.Builder.Tfidf,
-    device="cuda"  # Force GPU usage
-)
+from text4gcn import GNN, Builder, RefinementConfig
 
-# Get device information
-device_manager = text4gcn.utils.get_device_manager()
-print(f"Using device: {device_manager.device}")
-print(f"Device info: {device_manager.get_device_info()}")
+result = GNN(
+    dataset_name="R8",
+    dataset_path="data/",
+    builder=Builder.Tfidf,
+    refinement_config=RefinementConfig(
+        min_doc_freq=2,              # drop words in fewer than 2 docs
+        edge_weight_threshold=0.1,   # drop very weak edges
+        keep_docs=True,
+    ),
+).fit()
 ```
 
 ---
 
-## Functionalities
+## Benchmark datasets
 
-* **Datasets**: Module responsible for downloading model datasets, used in benchmark tasks for text classification.
-* **Preprocess**: It performs dataset processing, applies natural language processing to process the information and generates the files necessary for the construction of text graphs.
-* **Build Adjacency**: Creates the adjacency matrix based on a specific representation.
-* **Models**: Provides a two-tier GCN built with PyTorch for document classification task.
-
----
-
-## Examples
-
-### Get data 
+| Dataset | Docs | Classes | Train | Test | Avg. length |
+|---------|------|---------|-------|------|-------------|
+| R8      | 7,674 | 8 | 5,485 | 2,189 | 65.7 |
+| R52     | 9,100 | 52 | 6,532 | 2,568 | 69.8 |
+| 20NG    | 18,846 | 20 | 11,314 | 7,532 | 221.3 |
+| MR      | 10,662 | 2 | 7,108 | 3,554 | 20.4 |
+| Ohsumed | 7,400 | 23 | 3,357 | 4,043 | 135.8 |
 
 ```python
 from text4gcn.datasets import data
 
-# List of all available datasets
 data.list()
-
-# Download sample data for a specific folder
-data.R8(path=path)
-data.R52(path=path)
-data.AG_NEWS(path=path)
-```
-
-**Available Datasets:**
-
-+ **R8** (Reuters News Dataset with 8 labels)
-+ **R52** (Reuters News Dataset with 52 labels)
-+ **20ng** (Newsgroup Dataset)
-+ **`coming soon`** **Ohsumed** (Cardiovascular Diseases Abstracts Dataset)
-+ **`coming soon`** **MR** (Movie Reviews Dataset)
-+ **`coming soon`** **Cora** (Citation Dataset)
-+ **`coming soon`** **Citeseer** (Citation Dataset)
-+ **`coming soon`** **Pubmed** (Citation Dataset)
-
-**Datasets Description:**
-
-| Dataset | Docs | Training | Test | Words | Nodes | Classes | Average Length |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 20NG    | 18,846 | 11,314 | 7,532 | 42,757 | 61,603 | 20 | 221.26 |
-| R8      | 7,674  | 5,485  | 2,189 | 7,688  | 15,362 | 8  | 65.72  |
-| R52     | 9,100  | 6,532  | 2,568 | 8,892  | 17,992 | 52 | 69.82  |
-| MR      | 10,662 | 7,108  | 3,554 | 18,764 | 29,426 | 2  | 20.39  |
-| Ohsumed | 7,400  | 3,357  | 4,043 | 14,157 | 21,557 | 23 | 135.82 |
-
-### Text Pipeline 
-
-```python
-from text4gcn.preprocess import TextPipeline
-
-# Create a text pipeline for processing a dataset
-pipe = TextPipeline(
-    dataset_name="R8",
-    rare_count=5,
-    dataset_path="my_folder",
-    language="english"
-)
-
-# Run the created pipeline
-pipe.execute()
-```
-
-### Frequency Adjacency 
-
-```python
-from text4gcn.builder import FrequencyAdjacency
-
-# Create the adjacency matrix based on a specific builder
-freq = FrequencyAdjacency(
-    dataset_name="R8",
-    dataset_path="my_folder"
-)
-
-# Run the created pipeline
-freq.build()
-
-```
-
-**Available Builders:**
-
-+ **Liwc** Linguistic Inquiry and Word Count to extract a dependency relationship
-+ **Frequency** 
-+ **Embedding** Based on Word2vec, applied due to its ability to capture semantic information for word representations
-+ **CosineSimilarity** 
-+ **DependencyParsing** Based on the Syntactic Dependency Tree extracted with Stanford CoreNLP
-+ **`coming soon`** **ConstituencyParsing** 
-
-### GCN 
-
-```python
-from text4gcn.models import Builder as bd
-from text4gcn.models import Layer as layer
-from text4gcn.models import GNN
-
-gnn = GNN(
-    dataset="R8",           # Dataset to train
-    path="my_folder",       # Dataset path
-    log_dir="examples/log", # Log path
-    layer=layer.GCN,        # Layer Type
-    epoches=200,            # Number of traing epoches
-    dropout=0.5,            # Dropout rate
-    val_ratio=0.1,          # Train data used to validation
-    early_stopping=10,      # Stop early technique
-    lr=00.2,                # Initial learing rate
-    nhid=200,               # Dimensions of hidden layers
-    builder=bd.Embedding    # Type of Filtered Text Graph
-)
-gnn.fit()
+data.R8(path="data/")
+data.R52(path="data/")
 ```
 
 ---
 
+## Documentation
+
+Full documentation at **[vitormeriat.github.io/text4gcn](https://vitormeriat.github.io/text4gcn/)**.
+
+---
 
 ## Contributing
 
-Contributions are **greatly appreciated**. If you want to help us improve this software, please fork the repo and create a new pull request. Don't forget to give the project a star! Thanks!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
 5. Open a Pull Request
-
-Alternatively, you can make suggestions or report bugs by opening a new issue with the appropriate tag ("feature" or "bug") and following our Contributing template.
 
 ---
 
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+Distributed under the MIT License. See `LICENSE` for details.
 
 ---
 
 ## References
 
-+ [Kipf and Welling, 2017]  Semi-supervised Classification with Graph Convolutional Networks
-+ [Liang Yao, Chengsheng Mao, Yuan Luo, 2018] Graph Convolutional Networks for Text Classification
+- Pereira & de Castro (2022) — *Natural Language Processing Based on a Text Graph Convolutional Network* (DCAI). See `papers/`.
+- Yao, Mao & Luo (2019) — *Graph Convolutional Networks for Text Classification* (AAAI)
+- Kipf & Welling (2017) — *Semi-supervised Classification with Graph Convolutional Networks*
 
-
-<p style="margin-bottom:20px; margin-top:40px" align="right">(<a href="#top">back to top</a>)</p>
+<p align="right">(<a href="#top">back to top</a>)</p>

@@ -8,7 +8,6 @@ This class is responsible for:
 - Managing word embeddings
 """
 
-from typing import List, Dict, Any
 from text4gcn.modules import word_processor as wdprc
 from text4gcn.modules import file_ops as flop
 from text4gcn.modules import logger as logger

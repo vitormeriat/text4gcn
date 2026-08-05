@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from time import time
 from typing import Dict, Optional, Tuple
 
@@ -37,6 +38,9 @@ def show_metrics(test_labels, test_pred) -> None:
 
 def plot_training_history(log_dir, train_acc, val_acc, train_loss, val_loss) -> None:
     """Save accuracy and loss plots to *log_dir*."""
+    from pathlib import Path
+
+    Path(log_dir).mkdir(parents=True, exist_ok=True)
     epochs = range(1, len(train_acc) + 1)
 
     plt.figure(figsize=(16, 10))
@@ -71,6 +75,7 @@ class TextGCNTrainer:
         self.predata = pre_data
         self.earlystopping = args.early_stopping
         self.log_dir = args.log_dir
+        self.dropout = getattr(args, "dropout", 0.5)
 
     def fit(self) -> Dict:
         """Prepare data, train the model, evaluate on test set.
@@ -89,12 +94,14 @@ class TextGCNTrainer:
             output_dim=self.nhid,
             support=self.support,
             num_classes=self.y_train.shape[1],
+            dropout_rate=self.dropout,
         ).to(self.device)
 
         self.criterion = th.nn.CrossEntropyLoss()
         self.optimizer = th.optim.Adam(self.model.parameters(), lr=self.args.lr)
 
         print("\nModel structure:\n\n", self.model, "\n")
+        print(f"Dropout rate: {self.dropout}")
         for name, param in self.model.named_parameters():
             print(f"Layer: {name} | Size: {param.size()}")
 
@@ -158,7 +165,7 @@ class TextGCNTrainer:
                 ).sum().item() / t_mask.sum().item()
             except ZeroDivisionError:
                 acc = 0.0
-        return loss.numpy(), acc, pred.numpy(), labels.numpy(), (time() - t)
+        return float(loss), acc, pred.numpy(), labels.numpy(), (time() - t)
 
     def _test(self, t1: float) -> Tuple[float, float]:
         """Evaluate on the test set, print metrics, return (accuracy, loss)."""
@@ -178,7 +185,7 @@ class TextGCNTrainer:
 
         show_metrics(test_labels, test_pred)
 
-        tmp = self.model.layer1.embedding.numpy()
+        tmp = self.model.layer1.embedding.detach().cpu().numpy()
         word_embeddings = tmp[self.train_size: self.adj.shape[0] - self.test_size]
         train_doc_embeddings = tmp[: self.train_size]
         test_doc_embeddings = tmp[self.adj.shape[0] - self.test_size:]
@@ -195,23 +202,32 @@ class TextGCNTrainer:
 
     def _save_model(self) -> str:
         """Save model state dict; return the file path."""
+        from pathlib import Path
+
+        Path(self.log_dir).mkdir(parents=True, exist_ok=True)
         path = f"{self.log_dir}/{unique_name()}.pth"
         th.save(self.model.state_dict(), path)
         return path
 
     def _train(self) -> Dict:
         t1 = time()
-        th.manual_seed(self.args.seed)
-        print(f"\n{'∎'*20} Torch Seed: {th.seed()}")
+        seed = int(self.args.seed)
+        th.manual_seed(seed)
+        if th.cuda.is_available():
+            th.cuda.manual_seed_all(seed)
+        print(f"\n{'∎'*20} Torch Seed: {seed}")
 
         train_loss_hist, train_acc_hist = [], []
         eval_loss_hist, eval_acc_hist = [], []
         val_losses = []
+        best_val_loss = float("inf")
+        best_state = None
         model_path: Optional[str] = None
         epoch = 0
 
         for epoch in range(self.max_epoch):
             epoch_start = time()
+            self.model.train()
 
             logits = self.model(self.features)
             loss = self.criterion(logits * self.tm_train_mask, th.max(self.y_train, 1)[1])
@@ -233,29 +249,37 @@ class TextGCNTrainer:
             )
             val_losses.append(val_loss)
 
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                best_state = deepcopy(self.model.state_dict())
+
             print(
-                f"Epoch:{epoch+1:04d}, train_loss={float(loss):.5f}, train_acc={acc:.5f}, "
+                f"Epoch:{epoch+1:04d}, train_loss={float(loss.detach()):.5f}, train_acc={acc:.5f}, "
                 f"val_loss={val_loss:.5f}, val_acc={val_acc:.5f}, time={time()-epoch_start:.5f}"
             )
 
-            if epoch > self.earlystopping and val_losses[-1] > np.mean(
-                val_losses[-(self.earlystopping + 1): -1]
-            ):
-                print(f"Early stopping at epoch {epoch+1}. Saving model...")
-                model_path = self._save_model()
-                break
-
-            train_loss_hist.append(float(loss))
+            train_loss_hist.append(float(loss.detach()))
             train_acc_hist.append(float(acc))
             eval_loss_hist.append(float(val_loss))
             eval_acc_hist.append(float(val_acc))
 
-        if model_path is None:
-            model_path = self._save_model()
+            if epoch > self.earlystopping and val_losses[-1] > np.mean(
+                val_losses[-(self.earlystopping + 1): -1]
+            ):
+                print(
+                    f"Early stopping at epoch {epoch+1}. "
+                    f"Restoring best validation checkpoint (val_loss={best_val_loss:.5f})."
+                )
+                break
+
+        if best_state is not None:
+            self.model.load_state_dict(best_state)
+        model_path = self._save_model()
 
         print(
             f"\nCompleted {epoch+1} epochs — "
-            f"train_loss={float(loss):.4f}, val_loss={val_loss:.4f}, acc={acc:.4f}"
+            f"train_loss={float(loss.detach()):.4f}, best_val_loss={best_val_loss:.4f}, "
+            f"last_train_acc={acc:.4f}"
         )
 
         plot_training_history(
