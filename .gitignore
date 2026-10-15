@@ -173,6 +173,9 @@ requirements.txt
 notebooks/
 examples/
 
+# Benchmark corpora: distributed as assets of the `datasets-v1` GitHub release
+data/
+
 # Unfinished baseline models (also excluded in pyproject.toml)
 text4gcn/models/baseline/
 

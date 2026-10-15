@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
@@ -129,7 +130,7 @@ class GNN:
     def __init__(
         self,
         dataset_name: str,
-        dataset_path: str,
+        dataset_path: str | os.PathLike[str],
         log_dir: str = ".",
         builder: Builder = Builder.Tfidf,
         lr: float = 0.02,

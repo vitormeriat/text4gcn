@@ -73,20 +73,12 @@ def _word_doc_degree(adj: sp.spmatrix, train_size: int, test_size: int) -> np.nd
     """For each node, number of document neighbors (doc-word edges)."""
     n = adj.shape[0]
     vocab_size = n - train_size - test_size
-    doc_degree = np.zeros(n)
     # Document indices: 0..train_size-1 and (train_size+vocab_size)..(n-1)
-    doc_indices = np.concatenate([
-        np.arange(train_size),
-        np.arange(train_size + vocab_size, n),
-    ])
-    for j in doc_indices:
-        col = adj[:, j]
-        if hasattr(col, "indices"):
-            for i in col.indices:
-                doc_degree[i] += 1
-        else:
-            doc_degree += np.asarray(adj[:, j].toarray()).flatten()
-    return doc_degree
+    is_doc = np.zeros(n, dtype=bool)
+    is_doc[:train_size] = True
+    is_doc[train_size + vocab_size:] = True
+    doc_columns = sp.csr_matrix(adj)[:, is_doc]
+    return np.asarray((doc_columns != 0).sum(axis=1), dtype=float).ravel()
 
 
 class GraphRefinement:

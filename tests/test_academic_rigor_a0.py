@@ -223,3 +223,29 @@ class TestLayerApi:
                 layer="GAT",
                 device="cpu",
             )
+
+
+class TestDevicePlacement:
+    def test_all_training_tensors_follow_trainer_device(self, tmp_path):
+        """Regression: `support` stayed on CPU while features went to CUDA."""
+        n_nodes, n_classes = 4, 2
+        y = np.zeros((n_nodes, n_classes), dtype=np.float32)
+        y[::2, 0] = y[1::2, 1] = 1.0
+        mask = np.array([True, True, False, False])
+        predata = (np.eye(n_nodes, dtype=np.float32), np.eye(n_nodes, dtype=np.float32),
+                   y, y, y, mask, mask, mask, 2, 2)
+        # "meta" stands in for CUDA: any tensor not explicitly moved stays on "cpu".
+        args = argparse.Namespace(
+            early_stopping=10, seed=7, val_ratio=0.1, max_epoch=1, dataset="toy",
+            dropout=0.0, log_dir=str(tmp_path), layer="GCN", nhid=4, lr=0.02,
+            device=th.device("meta"),
+        )
+        trainer = TextGCNTrainer(model=GCN, args=args, pre_data=predata)
+        trainer.prepare_data()
+        trainer.convert_tensor()
+
+        tensors = [trainer.features, trainer.y_train, trainer.y_val, trainer.y_test,
+                   trainer.train_mask, trainer.val_mask, trainer.test_mask,
+                   trainer.tm_train_mask, *trainer.support]
+        assert {t.device.type for t in tensors} == {"meta"}
+

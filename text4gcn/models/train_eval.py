@@ -148,14 +148,14 @@ class TextGCNTrainer:
         self.tm_train_mask = th.transpose(
             th.unsqueeze(self.train_mask, 0), 1, 0
         ).repeat(1, self.y_train.shape[1])
-        self.support = [th.Tensor(s) for s in self.support]
+        self.support = [th.Tensor(s).to(self.device) for s in self.support]
 
     def _evaluate(self, model, criterion, features, labels, mask) -> Tuple:
         t = time()
         model.eval()
         with th.no_grad():
             logits = model(features)
-            t_mask = th.from_numpy(np.array(mask * 1.0, dtype=np.float32))
+            t_mask = th.as_tensor(mask, dtype=th.float32, device=logits.device)
             tm_mask = th.transpose(th.unsqueeze(t_mask, 0), 1, 0).repeat(1, labels.shape[1])
             loss = criterion(logits * tm_mask, th.max(labels, 1)[1])
             pred = th.max(logits, 1)[1]
@@ -165,7 +165,7 @@ class TextGCNTrainer:
                 ).sum().item() / t_mask.sum().item()
             except ZeroDivisionError:
                 acc = 0.0
-        return float(loss), acc, pred.numpy(), labels.numpy(), (time() - t)
+        return float(loss), acc, pred.cpu().numpy(), labels.cpu().numpy(), (time() - t)
 
     def _test(self, t1: float) -> Tuple[float, float]:
         """Evaluate on the test set, print metrics, return (accuracy, loss)."""
@@ -177,9 +177,10 @@ class TextGCNTrainer:
             f"time={test_duration:.5f}"
         )
 
+        test_mask = self.test_mask.cpu().numpy()
         test_pred, test_labels = [], []
-        for i in range(len(self.test_mask)):
-            if self.test_mask[i]:
+        for i in range(len(test_mask)):
+            if test_mask[i]:
                 test_pred.append(pred[i])
                 test_labels.append(np.argmax(labels[i]))
 

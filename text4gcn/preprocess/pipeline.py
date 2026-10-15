@@ -7,6 +7,7 @@ from text4gcn.modules.logger import Process
 from collections import OrderedDict
 from math import ceil
 import random
+import os
 
 
 class TextPipeline():
@@ -29,6 +30,13 @@ class TextPipeline():
         `language` to retrieve stop words
     seed : int
         Random seed for train/test document shuffle (reproducibility).
+    encoding : str
+        Encoding of the input `{dataset_name}.txt` corpus (default ``"utf-8"``).
+        Use ``"latin1"`` for legacy corpora that are not valid UTF-8.
+    ascii_only : bool
+        If True (default), cleaning keeps only ASCII letters and digits, as in
+        the original TextGCN preprocessing. Set to False for corpora in other
+        scripts (e.g. Arabic, Cyrillic, accented Latin) so their words are kept.
 
     Methods
     -------
@@ -39,10 +47,12 @@ class TextPipeline():
     def __init__(
         self,
         dataset_name: str,
-        dataset_path: str,
+        dataset_path: str | os.PathLike[str],
         rare_count: int = 5,
         language: str = "english",
         seed: int = 1234,
+        encoding: str = "utf-8",
+        ascii_only: bool = True,
     ):
         from pathlib import Path
 
@@ -53,6 +63,8 @@ class TextPipeline():
         self.rare_count = rare_count
         self.language = language
         self.seed = seed
+        self.encoding = encoding
+        self.ascii_only = ascii_only
 
         if not dataset_name or not str(dataset_name).strip():
             raise ValueError("dataset_name must be a non-empty string.")
@@ -70,7 +82,7 @@ class TextPipeline():
             overwrite=False
         )
 
-        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'w') as my_file:
+        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'w', encoding="utf-8") as my_file:
             my_file.writelines(hist)
 
     @Process.log("CLEANED DATA: Removed rare & stop-words.")
@@ -87,8 +99,17 @@ class TextPipeline():
             dir_path=corpus_cleaned,
             overwrite=False)
 
-        docs_of_words = [clean.clean_str(line.strip().decode(
-            'latin1')).split() for line in open(corpus_path, 'rb')]
+        try:
+            with open(corpus_path, 'r', encoding=self.encoding) as corpus:
+                docs_of_words = [
+                    clean.clean_str(line.strip(), ascii_only=self.ascii_only).split()
+                    for line in corpus]
+        except UnicodeDecodeError as e:
+            raise UnicodeDecodeError(
+                e.encoding, e.object, e.start, e.end,
+                f"{e.reason}. '{corpus_path}' is not valid {self.encoding}; "
+                "pass TextPipeline(encoding=...) with the corpus encoding, "
+                "e.g. encoding='latin1'") from e
 
         word_counts = clean.extract_word_counts(docs_of_words=docs_of_words)
 
@@ -144,7 +165,7 @@ class TextPipeline():
             corpus_meta_path=ds_corpus_meta
         )
 
-        cleaned_doc_lines = [line.strip() for line in open(ds_corpus, 'r')]
+        cleaned_doc_lines = [line.strip() for line in open(ds_corpus, 'r', encoding="utf-8")]
 
         random.seed(self.seed)
 
@@ -213,7 +234,7 @@ class TextPipeline():
         # ###################################################
 
         # Build vocabulary
-        docs_of_words_generator = (line.split() for line in open(ds_corpus))
+        docs_of_words_generator = (line.split() for line in open(ds_corpus, encoding="utf-8"))
 
         vocabulary = wdprc.extract_vocabulary(
             docs_of_words=docs_of_words_generator
@@ -267,23 +288,23 @@ class TextPipeline():
         )
 
         # Adjust train size, for different training rates, for example: use 90% of training set
-        real_train_size = len(open(ds_corpus_train_idx).readlines())
+        real_train_size = len(open(ds_corpus_train_idx, encoding="utf-8").readlines())
         adjusted_train_size = ceil(real_train_size * (1.0 - validation_ratio))
-        test_size = len(open(ds_corpus_test_idx).readlines())
+        test_size = len(open(ds_corpus_test_idx, encoding="utf-8").readlines())
 
         nfeatures = NodeFeatures(logger=self.logger)
 
         word_vectors, word_emb_dim = OrderedDict(), 300
 
         # Extract Vocabulary
-        vocabulary = open(ds_corpus_vocabulary).read().splitlines()
+        vocabulary = open(ds_corpus_vocabulary, encoding="utf-8").read().splitlines()
         # Extract Meta List
-        doc_meta_list = open(file=ds_corpus_meta, mode='r').read().splitlines()
+        doc_meta_list = open(file=ds_corpus_meta, mode='r', encoding="utf-8").read().splitlines()
         # Extract Document Labels
         doc_labels = nfeatures.extract_doc_labels(
             ds_corpus_meta_file=ds_corpus_meta)
         # Extract Documents of Words
-        docs_of_words = [line.split() for line in open(file=ds_corpus)]
+        docs_of_words = [line.split() for line in open(file=ds_corpus, encoding="utf-8")]
 
         # Extract mean document word vectors and one hot labels of train-set
         # The feature vectors of the training instances as scipy.sparse.csr.csr_matrix object;

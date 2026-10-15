@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://badge.fury.io/py/text4gcn.svg)](https://badge.fury.io/py/text4gcn)
 [![Python 3.10-3.13](https://img.shields.io/badge/python-3.10%7C3.11%7C3.12%7C3.13-blue.svg)](https://www.python.org/downloads/)
-[![CI](https://github.com/vitormeriat/text4gcn/workflows/CI/badge.svg)](https://github.com/vitormeriat/text4gcn/actions)
+[![CI](https://github.com/vitormeriat/text4gcn/actions/workflows/ci.yml/badge.svg)](https://github.com/vitormeriat/text4gcn/actions/workflows/ci.yml)
 [![Documentation](https://img.shields.io/badge/docs-vitormeriat.github.io-blue)](https://vitormeriat.github.io/text4gcn/)
 
 <div id="top"></div>
@@ -64,6 +64,18 @@ print(f"Test accuracy: {result.test_accuracy:.4f}")
 
 `GNN.fit()` returns a `TrainingResult` dataclass with `test_accuracy`, `test_loss`, `model_path`, and `epochs_trained`.
 
+### Tutorials
+
+Five notebooks, meant to be read in order ([overview](https://vitormeriat.github.io/text4gcn/tutorials/)):
+
+| # | Tutorial | |
+|---|---|---|
+| 1 | [Text as a graph](docs/tutorials/01_text_as_a_graph.ipynb): what nodes and edges Text4GCN builds | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/main/docs/tutorials/01_text_as_a_graph.ipynb) |
+| 2 | [Your first classifier](docs/tutorials/02_first_classifier.ipynb): 20 Newsgroups, from raw text to accuracy | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/main/docs/tutorials/02_first_classifier.ipynb) |
+| 3 | [Choosing a graph builder](docs/tutorials/03_choosing_a_graph_builder.ipynb): TF-IDF vs. Word2Vec RWF vs. cosine | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/main/docs/tutorials/03_choosing_a_graph_builder.ipynb) |
+| 4 | [Refining the graph](docs/tutorials/04_refining_the_graph.ipynb): fewer edges, same accuracy? | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/main/docs/tutorials/04_refining_the_graph.ipynb) |
+| 5 | [Bring your own corpus](docs/tutorials/05_bring_your_own_corpus.ipynb): your data, any language | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/vitormeriat/text4gcn/blob/main/docs/tutorials/05_bring_your_own_corpus.ipynb) |
+
 ---
 
 ## How it works
@@ -111,7 +123,7 @@ Choose an edge-weighting strategy:
 | `Frequency` | `.tfidf()` | `Builder.Tfidf` |
 | `Semantic` | `.word2vec()` | `Builder.Word2Vec` |
 | `Semantic` | `.cosine_similarity()` | `Builder.CosineSimilarity` |
-| `Semantic` | `.bert()` | `Builder.Bert` |
+| `Semantic` | `.bert()` | — (graph is built, but not yet selectable in `GNN`) |
 | `Syntactic` | `.dependency_parsing()` | `Builder.DependencyParsing` |
 | `Syntactic` | `.linguistic_inquiry()` | `Builder.Liwc` |
 
@@ -183,20 +195,19 @@ result = GNN(
 
 ## Benchmark datasets
 
-| Dataset | Docs | Classes | Train | Test | Avg. length |
+| Dataset | Docs | Classes | Train | Test | Get it with |
 |---------|------|---------|-------|------|-------------|
-| R8      | 7,674 | 8 | 5,485 | 2,189 | 65.7 |
-| R52     | 9,100 | 52 | 6,532 | 2,568 | 69.8 |
-| 20NG    | 18,846 | 20 | 11,314 | 7,532 | 221.3 |
-| MR      | 10,662 | 2 | 7,108 | 3,554 | 20.4 |
-| Ohsumed | 7,400 | 23 | 3,357 | 4,043 | 135.8 |
+| R8      | 7,674 | 8 | 5,485 | 2,189 | `download("R8", path)` |
+| R52     | 9,100 | 52 | 6,532 | 2,568 | `download("R52", path)` |
+| Ohsumed | 7,400 | 23 | 3,357 | 4,043 | `download("ohsumed", path)` |
+| PubMed  | 19,717 | 3 | 13,802 | 5,915 | `download("pubmed", path)` |
+| 20NG    | 18,846 | 20 | 11,314 | 7,532 | `twenty_newsgroups(path)` |
+| MR      | 10,662 | 2 | 7,108 | 3,554 | your own files, via `save_corpus(...)` |
 
 ```python
-from text4gcn.datasets import data
+from text4gcn.datasets import download
 
-data.list()
-data.R8(path="data/")
-data.R52(path="data/")
+download("R8", "data/")  # writes data/R8.txt and data/R8.meta (SHA-256 verified)
 ```
 
 ---

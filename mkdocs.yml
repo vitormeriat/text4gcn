@@ -52,6 +52,11 @@ theme:
 plugins:
   - search:
       lang: en
+  - mkdocs-jupyter:
+      include: ["tutorials/*.ipynb"]
+      execute: false          # notebooks are stored without outputs
+      include_source: true    # "download notebook" button
+      ignore_h1_titles: true  # page titles come from the nav
 
 markdown_extensions:
   - admonition
@@ -81,6 +86,13 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting Started: getting-started.md
+  - Tutorials:
+    - Overview: tutorials/index.md
+    - 1 · Text as a graph: tutorials/01_text_as_a_graph.ipynb
+    - 2 · Your first classifier: tutorials/02_first_classifier.ipynb
+    - 3 · Choosing a graph builder: tutorials/03_choosing_a_graph_builder.ipynb
+    - 4 · Refining the graph: tutorials/04_refining_the_graph.ipynb
+    - 5 · Bring your own corpus: tutorials/05_bring_your_own_corpus.ipynb
   - User Guide:
     - Understanding Text Graphs: guides/text-graph.md
     - Choosing a Builder: guides/builders.md
@@ -92,6 +104,7 @@ nav:
     - TextPipeline: api/pipeline.md
     - Builders: api/builders.md
     - Graph Refinement: api/refinement.md
+    - Datasets: api/datasets.md
   - Changelog: changelog.md
   - Contributing: contributing.md
 

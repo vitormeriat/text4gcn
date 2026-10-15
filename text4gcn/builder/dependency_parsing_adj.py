@@ -135,7 +135,7 @@ class DependencyParsingAdjacency():
     def _save_history(self, hist):
         self.flop.create_dir(
             dir_path=f'{self.dataset_path}/log', overwrite=False)
-        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a') as my_file:
+        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a', encoding="utf-8") as my_file:
             my_file.writelines(hist)
 
     @Process.log("EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix.")
@@ -152,13 +152,13 @@ class DependencyParsingAdjacency():
             overwrite=False
         )
 
-        docs_of_words = [line.split() for line in open(file=ds_corpus)]
+        docs_of_words = [line.split() for line in open(file=ds_corpus, encoding="utf-8")]
         # Extract Vocabulary.
-        vocab = open(ds_corpus_vocabulary).read().splitlines()
+        vocab = open(ds_corpus_vocabulary, encoding="utf-8").read().splitlines()
         # Real train-size, not adjusted.
-        train_size = len(open(ds_corpus_train_idx).readlines())
+        train_size = len(open(ds_corpus_train_idx, encoding="utf-8").readlines())
         # Real test-size.
-        test_size = len(open(ds_corpus_test_idx).readlines())
+        test_size = len(open(ds_corpus_test_idx, encoding="utf-8").readlines())
 
         word_doc_freq = define_word_doc_freq(docs_of_words)
 

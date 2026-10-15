@@ -17,7 +17,7 @@ Quick start::
     print(result.test_accuracy)
 """
 
-__version__ = "2.0.0rc1"
+__version__ = "2.0.0rc2"
 __author__ = "Vitor Meriat"
 __email__ = "vitormeriat@gmail.com"
 

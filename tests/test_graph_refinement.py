@@ -80,6 +80,16 @@ class TestGraphRefinement:
         assert predata_new[0].shape[0] <= predata[0].shape[0]
         assert stats["nodes_removed"] >= 0
 
+    @pytest.mark.parametrize("fmt", ["csr", "coo", "lil"])
+    def test_min_doc_freq_counts_document_neighbours(self, fmt):
+        """Regression: on CSR graphs every word got doc frequency 0, so all words were dropped."""
+        adj, *rest = _make_toy_graph()
+        predata = (adj.asformat(fmt), *rest)
+        # word nodes 2, 3, 4 have 3, 2 and 1 document neighbours
+        _, info = apply_refinement(predata, RefinementConfig(min_doc_freq=2), return_metadata=True)
+        kept_words = [m.original_index for m in info["metadata"] if m.node_type == "word"]
+        assert kept_words == [2, 3]
+
     def test_apply_refinement_returns_tuple(self):
         """Refined predata must be a tuple of 10 elements."""
         predata = _make_toy_graph()

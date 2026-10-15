@@ -1,10 +1,8 @@
 from typing import List, Dict, Tuple, Iterable, Any
-from scipy.spatial.distance import cosine
 from collections import Counter
 from tqdm import tqdm
 from math import log
 import numpy as np
-import itertools
 import pickle
 
 
@@ -108,38 +106,34 @@ def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict
     return weight_rows, weight_cols, pmi_weights
 
 
-def extract_cosine_similarity_word_weights(vocab: List[str], 
+def extract_cosine_similarity_word_weights(vocab: List[str],
                                            train_size: int,
-                                           word_vec_path: str, 
-                                           threshold: float) -> Tuple[List[int], List[int], List[float]]:
-    """Calculate Cosine Similarity of Word Vectors as weights"""
-    word_vectors = pickle.load(
-        file=open(word_vec_path, 'rb'))  # type: Dict[str,List[float]]
+                                           word_vec_path: str,
+                                           threshold: float,
+                                           chunk_size: int = 1024) -> Tuple[List[int], List[int], List[float]]:
+    """Word-word edges between words whose vectors have cosine similarity > threshold.
 
-    weight_rows = []  # type: List[int]
-    weight_cols = []  # type: List[int]
-    cos_sim_weights = []  # type: List[float]
+    Pairs are compared in row chunks of `chunk_size` words (vectorised), so memory
+    stays at O(chunk_size * vocab) instead of O(vocab²). Words without a vector,
+    or with an all-zero vector, get no edges.
+    """
+    with open(word_vec_path, 'rb') as f:
+        word_vectors = pickle.load(f)  # type: Dict[str,List[float]]
 
-    len_vocab = len(vocab)
-    pbar = tqdm(total=len_vocab)
-    i_temp = None
+    ids = np.array([i for i, word in enumerate(vocab) if word in word_vectors], dtype=np.int64)
+    if ids.size == 0:
+        return [], [], []
+    vectors = np.array([word_vectors[vocab[i]] for i in ids], dtype=np.float64)
+    norms = np.linalg.norm(vectors, axis=1)
+    ids, vectors = ids[norms > 0], vectors[norms > 0] / norms[norms > 0, None]
 
-    # for (i, word_i), (j, word_j) in tqdm(itertools.product(enumerate(vocab), enumerate(vocab))):
-    for (i, word_i), (j, word_j) in itertools.product(enumerate(vocab), enumerate(vocab)):
-        if i != i_temp: 
-            pbar.update(1)
-        i_temp = i
-        # print(f"{i} - {word_i} - {j} - {word_j}", end='\r')
-        if word_i in word_vectors and word_j in word_vectors:
-            vector_i = np.array(word_vectors[word_i])
-            vector_j = np.array(word_vectors[word_j])
-            similarity = 1.0 - cosine(vector_i, vector_j)
-            if similarity > threshold:
-                #print(word_i, word_j, similarity)
-                weight_rows.append(train_size + i)
-                weight_cols.append(train_size + j)
-                cos_sim_weights.append(similarity)
-    pbar.close()
+    weight_rows, weight_cols, cos_sim_weights = [], [], []  # type: List[int], List[int], List[float]
+    for start in tqdm(range(0, len(ids), chunk_size)):
+        similarity = vectors[start:start + chunk_size] @ vectors.T
+        rows, cols = np.nonzero(similarity > threshold)
+        weight_rows.extend((train_size + ids[start + rows]).tolist())
+        weight_cols.extend((train_size + ids[cols]).tolist())
+        cos_sim_weights.extend(similarity[rows, cols].tolist())
     return weight_rows, weight_cols, cos_sim_weights
 
 

@@ -38,3 +38,6 @@ from text4gcn.builder import Frequency, Semantic, Syntactic
 | [`Syntactic`](builders.md#syntactic) | `text4gcn.builder` | Dependency parsing / LIWC adjacency |
 | [`RefinementConfig`](refinement.md#refinementconfig) | `text4gcn` | Graph refinement parameters |
 | [`apply_refinement`](refinement.md#apply_refinement) | `text4gcn` | Apply refinement to loaded corpus |
+| [`save_corpus`](datasets.md#save_corpus) | `text4gcn.datasets` | Write your own corpus in the input format |
+| [`twenty_newsgroups`](datasets.md#twenty_newsgroups) | `text4gcn.datasets` | Download 20 Newsgroups in the input format |
+| [`download`](datasets.md#download) | `text4gcn.datasets` | Download R8, R52, Ohsumed or PubMed |
