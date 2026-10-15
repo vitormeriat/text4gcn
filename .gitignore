@@ -128,9 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Poetry
-poetry.lock
-
 # IDE
 .vscode/
 .idea/
@@ -160,6 +157,46 @@ examples/log/
 *.shuffled/
 *.cleaned/
 *.node_features/
-*.adjacency/docs/_site/
+*.adjacency/
 
 docs/.jekyll-cache/
+
+# Test fixtures (override the *.txt / *.meta patterns above)
+!tests/data/
+!tests/data/**
+
+# ---------------------------------------------------------------------------
+# Not yet validated — kept local only, out of GitHub and the PyPI package
+# ---------------------------------------------------------------------------
+PLANO_MELHORIAS.md
+requirements.txt
+notebooks/
+examples/
+
+# Unfinished baseline models (also excluded in pyproject.toml)
+text4gcn/models/baseline/
+
+# Dev helper scripts (only reproduce_dcai2022.py is used by CI / docs)
+scripts/*
+!scripts/reproduce_dcai2022.py
+
+# Legacy Jekyll / Sphinx docs (MkDocs is the current docs build)
+docs/_site/
+docs/_includes/
+docs/_layouts/
+docs/_pages/
+docs/_posts/
+docs/_config.yml
+docs/Gemfile
+docs/Gemfile.lock
+docs/404.html
+docs/LICENSE
+docs/README.md
+docs/conf.py
+docs/index.rst
+docs/assets/*
+!docs/assets/logo.svg
+!docs/assets/images/
+
+# Local tooling
+.claude/

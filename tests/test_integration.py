@@ -110,7 +110,7 @@ class TestModuleImports:
         assert hasattr(text4gcn, '__author__')
         assert hasattr(text4gcn, '__email__')
         
-        assert text4gcn.__version__ == "2.0.0"
+        assert text4gcn.__version__ == "2.0.0rc1"
         assert text4gcn.__author__ == "Vitor Meriat"
         assert text4gcn.__email__ == "vitormeriat@gmail.com"
     

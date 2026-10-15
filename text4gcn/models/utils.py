@@ -212,7 +212,7 @@ def preprocess_features(features):
     r_mat_inv = sp.diags(r_inv)
     features = r_mat_inv.dot(features)
     # return sparse_to_tuple(features)
-    return features.A
+    return features.toarray()
 
 
 def normalize_adj(adj):
@@ -229,4 +229,4 @@ def preprocess_adj(adj):
     """Preprocessing of adjacency matrix for simple GCN model and conversion to tuple representation."""
     adj_normalized = normalize_adj(adj + sp.eye(adj.shape[0]))
     # return sparse_to_tuple(adj_normalized)
-    return adj_normalized.A
+    return adj_normalized.toarray()

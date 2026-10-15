@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="70%" src="imgs/logo.svg">
+  <img width="70%" src="https://raw.githubusercontent.com/vitormeriat/text4gcn/main/imgs/logo.svg">
   <h1 style="margin-bottom:40px; margin-top:20px">Text4GCN</h1>
   <p>A Python framework for text classification using Graph Neural Networks</p>
 </div>
@@ -225,7 +225,7 @@ Distributed under the MIT License. See `LICENSE` for details.
 
 ## References
 
-- Pereira & de Castro (2022) — *Natural Language Processing Based on a Text Graph Convolutional Network* (DCAI). See `papers/`.
+- Pereira & de Castro (2022) — *Natural Language Processing Based on a Text Graph Convolutional Network* (DCAI). See [`papers/`](https://github.com/vitormeriat/text4gcn/tree/main/papers).
 - Yao, Mao & Luo (2019) — *Graph Convolutional Networks for Text Classification* (AAAI)
 - Kipf & Welling (2017) — *Semi-supervised Classification with Graph Convolutional Networks*
 

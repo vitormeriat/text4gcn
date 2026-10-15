@@ -9,7 +9,6 @@ from tqdm import tqdm
 
 
 from sklearn.metrics.pairwise import cosine_similarity as cos
-import numpy as np
 
 # Lazily loaded — importing text4gcn.builder must not hit HuggingFace.
 _tokenizer = None
