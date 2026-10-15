@@ -6,18 +6,21 @@ from shutil import rmtree
 from os import makedirs
 import pickle as pkl
 
+# Split values in `<name>.meta` that mark a training document; any other value is test.
+TRAIN_SPLITS = frozenset({"train", "training", "20news-bydate-train"})
+
 
 class FileOps():
     def __init__(self, logger: logger.PrintLog):
         self.logger = logger
 
     def get_lines_info(self, file_path):
-        with open(file_path, 'r') as file:
+        with open(file_path, 'r', encoding="utf-8") as file:
             lines = file.readlines()
             return len(lines)
 
     def validate_input_meta_columns(self, file_path):
-        lines = [line.strip() for line in open(file_path, 'r').readlines()]
+        lines = [line.strip() for line in open(file_path, 'r', encoding="utf-8").readlines()]
 
         validate_lines = True
         if len(lines) > 0:
@@ -70,7 +73,8 @@ class FileOps():
             makedirs(dir_path)
 
     def write_iterable_to_file(self, an_iterable: Iterable[Any], file_path: str, file_mode: str = 'w'):
-        with open(file_path, file_mode) as f:
+        encoding = None if 'b' in file_mode else 'utf-8'
+        with open(file_path, file_mode, encoding=encoding) as f:
             f.writelines("%s\n" % item for item in an_iterable)
 
     def check_paths(self, *paths: str):
@@ -85,15 +89,15 @@ class FileOps():
 
     def load_corpus_meta(self, corpus_meta_path: str) -> Tuple[List[str], List[str], List[str]]:
         all_doc_meta_list = [
-            line.strip() for line in open(corpus_meta_path, 'r').readlines()]
+            line.strip() for line in open(corpus_meta_path, 'r', encoding="utf-8").readlines()]
 
         train_doc_meta_list = [
-            doc_meta for doc_meta in all_doc_meta_list if doc_meta.split('\t')[
-                1].endswith('train')]
+            doc_meta for doc_meta in all_doc_meta_list
+            if doc_meta.split('\t')[1] in TRAIN_SPLITS]
 
         test_doc_meta_list = [
-            doc_meta for doc_meta in all_doc_meta_list if doc_meta.split('\t')[
-                1].endswith('test')]
+            doc_meta for doc_meta in all_doc_meta_list
+            if doc_meta.split('\t')[1] not in TRAIN_SPLITS]
 
         return all_doc_meta_list, train_doc_meta_list, test_doc_meta_list
 

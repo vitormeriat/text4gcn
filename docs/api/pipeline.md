@@ -19,6 +19,8 @@ class TextPipeline:
         rare_count: int = 5,
         language: str = "english",
         seed: int = 1234,
+        encoding: str = "utf-8",
+        ascii_only: bool = True,
     ) -> None
 ```
 
@@ -31,6 +33,19 @@ class TextPipeline:
 | `rare_count` | `int` | `5` | Words appearing fewer than this many times across the corpus are dropped. |
 | `language` | `str` | `"english"` | Language for stop-word removal (NLTK stop-word list). |
 | `seed` | `int` | `1234` | Random seed for document shuffle (reproducible train/test order). |
+| `encoding` | `str` | `"utf-8"` | Encoding of the input `.txt` corpus. Use `"latin1"` for legacy corpora that are not valid UTF-8. Intermediate files are always UTF-8. |
+| `ascii_only` | `bool` | `True` | Keep only `A-Za-z0-9` when cleaning (original TextGCN). Set `False` for Arabic, Cyrillic, accented Latin, etc. |
+
+!!! example "Non-English corpus (e.g. Arabic)"
+
+    ```python
+    TextPipeline(
+        dataset_name="MyArabic",
+        dataset_path="data/",
+        language="arabic",   # NLTK stop-word list
+        ascii_only=False,    # keep Arabic letters and diacritics
+    ).execute()
+    ```
 
 ---
 

@@ -66,9 +66,9 @@ class NodeFeatureBuilder:
         self.flop.create_dir(dir_path=dir_corpus_node_features, overwrite=False)
         
         # Calculate sizes
-        real_train_size = len(open(ds_corpus_train_idx).readlines())
+        real_train_size = len(open(ds_corpus_train_idx, encoding="utf-8").readlines())
         adjusted_train_size = ceil(real_train_size * (1.0 - validation_ratio))
-        test_size = len(open(ds_corpus_test_idx).readlines())
+        test_size = len(open(ds_corpus_test_idx, encoding="utf-8").readlines())
         
         # Load word vectors
         if use_predefined_word_vectors:
@@ -79,10 +79,10 @@ class NodeFeatureBuilder:
             word_vectors, word_emb_dim = OrderedDict(), 300
         
         # Load data
-        vocabulary = open(ds_corpus_vocabulary).read().splitlines()
-        doc_meta_list = open(ds_corpus_meta, 'r').read().splitlines()
+        vocabulary = open(ds_corpus_vocabulary, encoding="utf-8").read().splitlines()
+        doc_meta_list = open(ds_corpus_meta, 'r', encoding="utf-8").read().splitlines()
         doc_labels = self.nfeatures.extract_doc_labels(ds_corpus_meta_file=ds_corpus_meta)
-        docs_of_words = [line.split() for line in open(ds_corpus)]
+        docs_of_words = [line.split() for line in open(ds_corpus, encoding="utf-8")]
         
         # Build features
         x = self.nfeatures.compute_x(

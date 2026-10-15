@@ -1,6 +1,7 @@
 from collections import Counter
 from typing import List, Set
 import re
+import unicodedata
 
 
 def config_nltk():
@@ -23,12 +24,23 @@ def create_title(title):
     return txt.center(100, "=")
 
 
-def clean_str(a_str: str) -> str:
+def _is_word_char(ch: str) -> bool:
+    """Letters/digits of any script, combining marks (e.g. Arabic harakat) and kept punctuation."""
+    return ch.isalnum() or unicodedata.category(ch).startswith("M") or ch in "(),!?'`"
+
+
+def clean_str(a_str: str, ascii_only: bool = True) -> str:
     """
     Tokenizing/string cleaning for all data-sets except for SST.
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+
+    With ``ascii_only=False`` letters and digits of any script are kept
+    (e.g. Arabic), instead of only ``A-Za-z0-9``.
     """
-    string = re.sub(r"[^A-Za-z0-9(),!?\'`]", " ", a_str)
+    if ascii_only:
+        string = re.sub(r"[^A-Za-z0-9(),!?\'`]", " ", a_str)
+    else:
+        string = "".join(ch if _is_word_char(ch) else " " for ch in a_str)
     string = re.sub(r"\'s", " \'s", string)
     string = re.sub(r"\'ve", " \'ve", string)
     string = re.sub(r"n\'t", " n\'t", string)

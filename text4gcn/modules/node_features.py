@@ -25,7 +25,7 @@ class NodeFeatures():
         self.logger = logger
 
     def extract_doc_labels(self, ds_corpus_meta_file: str) -> List[str]:
-        with open(ds_corpus_meta_file) as ds_corpus_meta:
+        with open(ds_corpus_meta_file, encoding="utf-8") as ds_corpus_meta:
             doc_labels = list(OrderedDict.fromkeys(
                 doc_meta.split()[2] for doc_meta in ds_corpus_meta))
         return doc_labels

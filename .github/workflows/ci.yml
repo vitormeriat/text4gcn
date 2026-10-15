@@ -66,6 +66,7 @@ jobs:
           tests/test_builder.py \
           tests/test_dataset.py \
           tests/test_device.py \
+          tests/test_unicode_corpus.py \
           -q -o addopts= --tb=short
 
     - name: Reproduce script smoke

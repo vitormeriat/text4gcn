@@ -19,7 +19,7 @@ class LoadData:
 
     def parse_index_file(self, filename):
         """Parse index file."""
-        return [int(line.strip()) for line in open(filename)]
+        return [int(line.strip()) for line in open(filename, encoding="utf-8")]
 
     def sample_mask(self, idx, row_length: int):
         """Create mask."""
@@ -122,25 +122,6 @@ class LoadData:
 
 def unique_name():
     return datetime.utcnow().strftime('%Y%m%d-%H%M%S%f')[:-3]
-
-
-def get_train_test(target_fn):
-    train_lst = []
-    test_lst = []
-    with read_file(target_fn, mode="r") as fin:
-        for indx, item in enumerate(fin):
-            if item.split("\t")[1] in {"train", "training", "20news-bydate-train"}:
-                train_lst.append(indx)
-            else:
-                test_lst.append(indx)
-
-    return train_lst, test_lst
-
-
-def read_file(path, mode='r', encoding=None):
-    if mode not in {"r", "rb"}:
-        raise ValueError("only read")
-    return open(path, mode=mode, encoding=encoding)
 
 
 def return_seed(nums=10):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
 
 from text4gcn.builder.cosine_similarity_adj import CosineSimilarityAdjacency
@@ -11,13 +12,13 @@ from text4gcn.graph.stats import GraphBuildStats
 
 
 class Adjacency:
-    def __init__(self, dataset_name: str, dataset_path: str) -> None:
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
 
 
 class Frequency(Adjacency):
-    def __init__(self, dataset_name: str, dataset_path: str) -> None:
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
     def tfidf(
@@ -34,7 +35,7 @@ class Frequency(Adjacency):
 
 
 class Syntactic(Adjacency):
-    def __init__(self, dataset_name: str, dataset_path: str) -> None:
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
     def dependency_parsing(self, core_nlp_path: str, language: str = "english"):
@@ -65,7 +66,7 @@ class Syntactic(Adjacency):
 
 
 class Semantic(Adjacency):
-    def __init__(self, dataset_name: str, dataset_path: str) -> None:
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
     def word2vec(
@@ -114,7 +115,7 @@ class Semantic(Adjacency):
 
     def cosine_similarity(
         self, threshold: float = 0.95, output_path: Optional[str] = None
-    ):
+    ) -> GraphBuildStats:
         """Build adjacency from precomputed word-vector cosine similarity."""
         adj = CosineSimilarityAdjacency(
             dataset_path=self.dataset_path,

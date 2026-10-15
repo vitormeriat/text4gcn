@@ -1,6 +1,6 @@
 [project]
 name = "text4gcn"
-version = "2.0.0rc1"
+version = "2.0.0rc2"
 description = "A Python framework for text classification using Graph Neural Networks (GNNs)"
 authors = [
     {name = "Vitor Meriat", email = "vitormeriat@gmail.com"}
@@ -83,6 +83,7 @@ pre-commit = "^3.4.0"
 mkdocs = "^1.5.0"
 mkdocs-material = "^9.5.0"
 mkdocstrings = {version = "^0.24.0", extras = ["python"]}
+mkdocs-jupyter = ">=0.24.0,<1.0"
 
 [build-system]
 requires = ["poetry-core"]

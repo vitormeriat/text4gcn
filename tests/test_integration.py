@@ -110,7 +110,7 @@ class TestModuleImports:
         assert hasattr(text4gcn, '__author__')
         assert hasattr(text4gcn, '__email__')
         
-        assert text4gcn.__version__ == "2.0.0rc1"
+        assert text4gcn.__version__ == "2.0.0rc2"
         assert text4gcn.__author__ == "Vitor Meriat"
         assert text4gcn.__email__ == "vitormeriat@gmail.com"
     
@@ -129,12 +129,10 @@ class TestModuleImports:
     
     def test_datasets_module_imports(self):
         """Test datasets module imports."""
-        from text4gcn.datasets import R8, R52, AG_NEWS
-        
+        from text4gcn.datasets import download, save_corpus, twenty_newsgroups
+
         # Test that dataset functions are available
-        assert R8 is not None
-        assert R52 is not None
-        assert AG_NEWS is not None
+        assert all(callable(f) for f in (download, save_corpus, twenty_newsgroups))
 
 
 class TestErrorHandling:

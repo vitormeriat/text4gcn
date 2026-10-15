@@ -51,7 +51,7 @@ class WordProcessor:
         self.flop.check_paths(self.dataset_path)
         
         # Build vocabulary
-        docs_of_words_generator = (line.split() for line in open(ds_corpus))
+        docs_of_words_generator = (line.split() for line in open(ds_corpus, encoding="utf-8"))
         
         vocabulary = wdprc.extract_vocabulary(docs_of_words=docs_of_words_generator)
         

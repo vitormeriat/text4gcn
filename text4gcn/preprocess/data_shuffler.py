@@ -61,7 +61,7 @@ class DataShuffler:
         )
         
         # Load cleaned documents
-        cleaned_doc_lines = [line.strip() for line in open(cleaned_data_path, 'r')]
+        cleaned_doc_lines = [line.strip() for line in open(cleaned_data_path, 'r', encoding="utf-8")]
         
         # Shuffle train indices
         train_doc_meta_ids = [all_doc_meta_list.index(train_doc_meta) 

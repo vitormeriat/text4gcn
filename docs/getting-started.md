@@ -65,16 +65,19 @@ natural language processing machine learning algorithms
 
 Supported split values: `train`, `training`, `20news-bydate-train`, anything else is treated as `test`.
 
-### Download benchmark datasets
+### Get a dataset
 
 ```python
-from text4gcn.datasets import data
+from text4gcn.datasets import download, save_corpus, twenty_newsgroups
 
-data.list()          # show available datasets
-data.R8(path="data/")
-data.R52(path="data/")
-data.AG_NEWS(path="data/")
+download("R8", "data/")                       # R8, R52, ohsumed or pubmed (SHA-256 verified)
+twenty_newsgroups("data/", name="20NG4",      # via scikit-learn, official train/test split
+                  categories=["alt.atheism", "soc.religion.christian", "comp.graphics", "sci.med"])
+save_corpus("data/", "mine",                  # your own texts, labels and train/test splits
+            texts=["great movie", "boring plot"], labels=["pos", "neg"], splits=["train", "test"])
 ```
+
+See the [Datasets API](api/datasets.md) and the [Bring your own corpus](tutorials/05_bring_your_own_corpus.ipynb) tutorial.
 
 ---
 

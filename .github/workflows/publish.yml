@@ -7,6 +7,8 @@ on:
 
 jobs:
   publish:
+    # Only version releases (v2.0.0, ...) publish; data releases such as `datasets-v1` do not.
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-latest
     
     steps:

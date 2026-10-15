@@ -55,6 +55,9 @@ result = GNN(dataset_name="R8", dataset_path="data/", seed=1234).fit()
 print(f"Test accuracy: {result.test_accuracy:.4f}")
 ```
 
+!!! tip "Learn by example"
+    The [tutorials](tutorials/index.md) tell the whole story in five notebooks: from a twelve-sentence graph you can see, to a real benchmark, to comparing graph builders, to your own corpus.
+
 Reproduce DCAI 2022 Tables 2/3 (reference + optional local comparison):
 
 ```bash
@@ -71,6 +74,8 @@ python scripts/reproduce_dcai2022.py --data-dir data/ --dataset R8 --builders fr
 | 20NG    | 18,846 | 20 | 11,314 | 7,532 | 221.3 |
 | MR      | 10,662 | 2 | 7,108 | 3,554 | 20.4 |
 | Ohsumed | 7,400 | 23 | 3,357 | 4,043 | 135.8 |
+
+R8, R52, Ohsumed and PubMed: `text4gcn.datasets.download(name, path)`. 20NG: `twenty_newsgroups(path)`. Anything else: `save_corpus(...)`. See [Datasets](api/datasets.md).
 
 ## References
 

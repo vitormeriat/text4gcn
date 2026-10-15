@@ -2,6 +2,7 @@ from text4gcn.modules import file_ops as flop
 from text4gcn.modules import logger as logger
 from text4gcn.modules import adjacency as adj
 from text4gcn.modules.logger import Process
+from text4gcn.graph.stats import compute_adjacency_stats, report_stats
 from scipy.sparse import csr_matrix
 import pickle
 
@@ -26,15 +27,15 @@ class CosineSimilarityAdjacency():
         self.flop.create_dir(dir_path=f'{corpus_path}.adjacency',
                              overwrite=False)
 
-        docs_of_words = [line.split() for line in open(file=ds_corpus)]
+        docs_of_words = [line.split() for line in open(file=ds_corpus, encoding="utf-8")]
         # Extract Vocabulary.
-        vocab = open(ds_corpus_vocabulary).read().splitlines()
+        vocab = open(ds_corpus_vocabulary, encoding="utf-8").read().splitlines()
         # Word to its id.
         word_to_id = {word: i for i, word in enumerate(vocab)}
         # Real train-size, not adjusted.
-        train_size = len(open(ds_corpus_train_idx).readlines())
+        train_size = len(open(ds_corpus_train_idx, encoding="utf-8").readlines())
         # Real test-size.
-        test_size = len(open(ds_corpus_test_idx).readlines())
+        test_size = len(open(ds_corpus_test_idx, encoding="utf-8").readlines())
 
         self.logger.info("Calculating Cosine Similarity of Word Vectors")
 
@@ -64,5 +65,15 @@ class CosineSimilarityAdjacency():
                                       shape=(adjacency_len, adjacency_len))
 
         # Dump Adjacency Matrix
-        with open(f"{corpus_path}.adjacency/ind.cosine.similarity.{self.dataset_name}.adj", 'wb') as f:
+        adj_path = f"{corpus_path}.adjacency/ind.cosine.similarity.{self.dataset_name}.adj"
+        with open(adj_path, 'wb') as f:
             pickle.dump(adjacency_matrix, f)
+
+        stats = compute_adjacency_stats(
+            adjacency_matrix,
+            path=adj_path,
+            builder="cosine.similarity",
+            dataset_name=self.dataset_name,
+        )
+        report_stats(stats, self.logger)
+        return stats
