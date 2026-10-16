@@ -1,39 +1,48 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from time import time
-from typing import Dict, Optional, Tuple
+from time import perf_counter
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.sparse as sp
 import torch as th
 from sklearn import metrics
-from tabulate import tabulate
 
 from text4gcn.models.utils import preprocess_adj, preprocess_features, unique_name
+from text4gcn.utils.logging import get_logger
+from text4gcn.utils.reporting import Reporter, format_count, format_duration
+
+logger = get_logger(__name__)
 
 
 # ---------------------------------------------------------------------------
 # Module-level helpers (no class state needed)
 # ---------------------------------------------------------------------------
 
-def show_metrics(test_labels, test_pred) -> None:
-    """Print classification report and all metric aggregations."""
-    print("\nTest Precision, Recall and F1-Score...")
-    print(metrics.classification_report(test_labels, test_pred, digits=4))
-    print("\nMacro average Test Precision, Recall and F1-Score...")
-    print(metrics.precision_recall_fscore_support(test_labels, test_pred, average="macro"))
-    print("\nMicro average Test Precision, Recall and F1-Score...")
-    print(metrics.precision_recall_fscore_support(test_labels, test_pred, average="micro"))
-    print("\nWeighted average Test Precision, Recall and F1-Score...")
-    print(metrics.precision_recall_fscore_support(test_labels, test_pred, average="weighted"))
-    print("\nConfusion Matrix...")
-    print(metrics.confusion_matrix(test_labels, test_pred))
-    print("F1-Score (macro)...  ", metrics.f1_score(test_labels, test_pred, average="macro"))
-    print("Precision (macro)... ", metrics.precision_score(test_labels, test_pred, average="macro"))
-    print("Recall (macro)...    ", metrics.recall_score(test_labels, test_pred, average="macro"))
-    print("Accuracy...          ", metrics.accuracy_score(test_labels, test_pred))
+def evaluation_tables(test_labels: Sequence[int], test_pred: Sequence[int],
+                      class_names: Sequence[str]) -> Tuple[Dict[str, float], "object", "object"]:
+    """Test metrics, per-class report and confusion matrix (pandas), with class names."""
+    import pandas as pd
+
+    labels = list(range(len(class_names)))
+    precision, recall, f1, support = metrics.precision_recall_fscore_support(
+        test_labels, test_pred, labels=labels, zero_division=0)
+    report = pd.DataFrame({"precision": precision, "recall": recall, "f1": f1, "support": support},
+                          index=pd.Index(class_names, name="class"))
+    confusion = pd.DataFrame(metrics.confusion_matrix(test_labels, test_pred, labels=labels),
+                             index=pd.Index(class_names, name="true"),
+                             columns=pd.Index(class_names, name="predicted"))
+    summary = {
+        "accuracy": float(metrics.accuracy_score(test_labels, test_pred)),
+        "macro_precision": float(np.mean(precision)),
+        "macro_recall": float(np.mean(recall)),
+        "macro_f1": float(np.mean(f1)),
+        "weighted_f1": float(metrics.f1_score(test_labels, test_pred, labels=labels,
+                                              average="weighted", zero_division=0)),
+    }
+    return summary, report, confusion
 
 
 def plot_training_history(log_dir, train_acc, val_acc, train_loss, val_loss) -> None:
@@ -65,7 +74,8 @@ def plot_training_history(log_dir, train_acc, val_acc, train_loss, val_loss) -> 
 # ---------------------------------------------------------------------------
 
 class TextGCNTrainer:
-    def __init__(self, model, args, pre_data):
+    def __init__(self, model, args, pre_data, report: Optional[Reporter] = None,
+                 class_names: Optional[Sequence[str]] = None):
         self.args = args
         self.model = model
         self.device = args.device
@@ -76,15 +86,17 @@ class TextGCNTrainer:
         self.earlystopping = args.early_stopping
         self.log_dir = args.log_dir
         self.dropout = getattr(args, "dropout", 0.5)
+        self.report = report if report is not None else Reporter(getattr(args, "verbose", 1))
+        self.class_names = list(class_names) if class_names is not None else None
 
     def fit(self) -> Dict:
-        """Prepare data, train the model, evaluate on test set.
+        """Prepare data, train the model, evaluate on the test set.
 
         Returns
         -------
         dict
-            Keys: ``test_accuracy``, ``test_loss``, ``model_path``,
-            ``epochs_trained``.
+            Keys: ``test_accuracy``, ``test_loss``, ``model_path``, ``epochs_trained``,
+            ``best_epoch``, ``history``, ``metrics``, ``report``, ``confusion_matrix``.
         """
         self.prepare_data()
         self.convert_tensor()
@@ -100,10 +112,11 @@ class TextGCNTrainer:
         self.criterion = th.nn.CrossEntropyLoss()
         self.optimizer = th.optim.Adam(self.model.parameters(), lr=self.args.lr)
 
-        print("\nModel structure:\n\n", self.model, "\n")
-        print(f"Dropout rate: {self.dropout}")
-        for name, param in self.model.named_parameters():
-            print(f"Layer: {name} | Size: {param.size()}")
+        n_params = sum(p.numel() for p in self.model.parameters())
+        n_classes = self.y_train.shape[1]
+        self.report.write(f"  model     GCN {self.features.shape[0]:,} → {self.nhid} → {n_classes} · "
+                          f"{format_count(n_params)} parameters · dropout {self.dropout} · lr {self.args.lr}")
+        logger.debug("model structure:\n%s", self.model)
 
         return self._train()
 
@@ -123,20 +136,12 @@ class TextGCNTrainer:
         self.test_size = test_size
 
     def convert_tensor(self) -> None:
-        print("\nData statistics\n")
-        print(tabulate(
-            [
-                ["Nodes", "Classes", "Train samples", "Val samples", "Test samples"],
-                [
-                    self.features.shape[0],
-                    self.y_train.shape[1],
-                    self.train_mask.sum(),
-                    self.val_mask.sum(),
-                    self.test_mask.sum(),
-                ],
-            ],
-            headers="firstrow",
-        ))
+        n_nodes = self.features.shape[0]
+        n_words = n_nodes - self.train_size - self.test_size
+        self.report.write(
+            f"  graph     {n_nodes:,} nodes: {int(self.train_mask.sum()):,} train · "
+            f"{int(self.val_mask.sum()):,} validation · {int(self.test_mask.sum()):,} test documents "
+            f"+ {n_words:,} words")
 
         self.features = th.from_numpy(self.features).float().to(self.device)
         self.y_train = th.from_numpy(self.y_train).float().to(self.device)
@@ -151,7 +156,7 @@ class TextGCNTrainer:
         self.support = [th.Tensor(s).to(self.device) for s in self.support]
 
     def _evaluate(self, model, criterion, features, labels, mask) -> Tuple:
-        t = time()
+        t = perf_counter()
         model.eval()
         with th.no_grad():
             logits = model(features)
@@ -165,41 +170,30 @@ class TextGCNTrainer:
                 ).sum().item() / t_mask.sum().item()
             except ZeroDivisionError:
                 acc = 0.0
-        return float(loss), acc, pred.cpu().numpy(), labels.cpu().numpy(), (time() - t)
+        return float(loss), acc, pred.cpu().numpy(), labels.cpu().numpy(), (perf_counter() - t)
 
-    def _test(self, t1: float) -> Tuple[float, float]:
-        """Evaluate on the test set, print metrics, return (accuracy, loss)."""
-        test_loss, test_acc, pred, labels, test_duration = self._evaluate(
+    def _test(self) -> Dict:
+        """Evaluate on the test set and report the metrics."""
+        start = perf_counter()
+        test_loss, test_acc, pred, labels, _ = self._evaluate(
             self.model, self.criterion, self.features, self.y_test, self.test_mask
         )
-        print(
-            f"\nTest set results: loss={test_loss:.5f}, accuracy={test_acc:.5f}, "
-            f"time={test_duration:.5f}"
-        )
+        test_mask = self.test_mask.cpu().numpy().astype(bool)
+        test_pred = pred[test_mask]
+        test_labels = np.argmax(labels[test_mask], axis=1)
+        class_names = self.class_names or [str(i) for i in range(labels.shape[1])]
+        summary, report, confusion = evaluation_tables(test_labels, test_pred, class_names)
 
-        test_mask = self.test_mask.cpu().numpy()
-        test_pred, test_labels = [], []
-        for i in range(len(test_mask)):
-            if test_mask[i]:
-                test_pred.append(pred[i])
-                test_labels.append(np.argmax(labels[i]))
-
-        show_metrics(test_labels, test_pred)
-
-        tmp = self.model.layer1.embedding.detach().cpu().numpy()
-        word_embeddings = tmp[self.train_size: self.adj.shape[0] - self.test_size]
-        train_doc_embeddings = tmp[: self.train_size]
-        test_doc_embeddings = tmp[self.adj.shape[0] - self.test_size:]
-
-        print(
-            f"\nEmbeddings:"
-            f"\n  Word:      {len(word_embeddings)}"
-            f"\n  Train doc: {len(train_doc_embeddings)}"
-            f"\n  Test doc:  {len(test_doc_embeddings)}"
-        )
-        print(f"Elapsed: {time() - t1:.2f}s")
-
-        return float(test_acc), float(test_loss)
+        self.report.write(
+            f"  ✓ test      accuracy {test_acc:.1%} · macro-F1 {summary['macro_f1']:.1%} · "
+            f"loss {test_loss:.4f} · {len(test_labels):,} documents  ({format_duration(perf_counter() - start)})")
+        self.report.write()
+        table = report.reset_index().to_string(index=False, float_format=lambda v: f"{v:.3f}")
+        for line in table.splitlines():
+            self.report.write(f"    {line}")
+        self.report.write()
+        return {"test_accuracy": float(test_acc), "test_loss": float(test_loss), "metrics": summary,
+                "report": report, "confusion_matrix": confusion}
 
     def _save_model(self) -> str:
         """Save model state dict; return the file path."""
@@ -210,24 +204,34 @@ class TextGCNTrainer:
         th.save(self.model.state_dict(), path)
         return path
 
+    def _log_epoch(self, bar, epoch: int, row: Dict) -> None:
+        text = (f"loss {row['loss']:.4f} · acc {row['accuracy']:.1%} · "
+                f"val_loss {row['val_loss']:.4f} · val_acc {row['val_accuracy']:.1%}")
+        if bar is not None:
+            bar.set_postfix_str(text, refresh=False)
+            bar.update()
+        elif self.report.verbose == 2:
+            self.report.write(f"    epoch {epoch:>3}/{self.max_epoch} · {text} · {row['seconds']:.1f} s")
+
     def _train(self) -> Dict:
-        t1 = time()
+        import pandas as pd
+
+        start = perf_counter()
         seed = int(self.args.seed)
         th.manual_seed(seed)
         if th.cuda.is_available():
             th.cuda.manual_seed_all(seed)
-        print(f"\n{'∎'*20} Torch Seed: {seed}")
 
-        train_loss_hist, train_acc_hist = [], []
-        eval_loss_hist, eval_acc_hist = [], []
+        history: List[Dict] = []
         val_losses = []
         best_val_loss = float("inf")
+        best_epoch = 0
         best_state = None
-        model_path: Optional[str] = None
-        epoch = 0
+        early_stop = False
+        bar = self.report.bar(total=self.max_epoch, desc="    epochs", unit="epoch")
 
         for epoch in range(self.max_epoch):
-            epoch_start = time()
+            epoch_start = perf_counter()
             self.model.train()
 
             logits = self.model(self.features)
@@ -252,46 +256,45 @@ class TextGCNTrainer:
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
+                best_epoch = epoch + 1
                 best_state = deepcopy(self.model.state_dict())
 
-            print(
-                f"Epoch:{epoch+1:04d}, train_loss={float(loss.detach()):.5f}, train_acc={acc:.5f}, "
-                f"val_loss={val_loss:.5f}, val_acc={val_acc:.5f}, time={time()-epoch_start:.5f}"
-            )
-
-            train_loss_hist.append(float(loss.detach()))
-            train_acc_hist.append(float(acc))
-            eval_loss_hist.append(float(val_loss))
-            eval_acc_hist.append(float(val_acc))
+            row = {"epoch": epoch + 1, "loss": float(loss.detach()), "accuracy": float(acc),
+                   "val_loss": float(val_loss), "val_accuracy": float(val_acc),
+                   "seconds": perf_counter() - epoch_start}
+            history.append(row)
+            self._log_epoch(bar, epoch + 1, row)
 
             if epoch > self.earlystopping and val_losses[-1] > np.mean(
                 val_losses[-(self.earlystopping + 1): -1]
             ):
-                print(
-                    f"Early stopping at epoch {epoch+1}. "
-                    f"Restoring best validation checkpoint (val_loss={best_val_loss:.5f})."
-                )
+                early_stop = True
                 break
 
+        if bar is not None:
+            bar.close()
         if best_state is not None:
             self.model.load_state_dict(best_state)
         model_path = self._save_model()
 
-        print(
-            f"\nCompleted {epoch+1} epochs — "
-            f"train_loss={float(loss.detach()):.4f}, best_val_loss={best_val_loss:.4f}, "
-            f"last_train_acc={acc:.4f}"
-        )
+        stop = "early stop" if early_stop else "maximum reached"
+        self.report.write(
+            f"  ✓ train     {len(history)} epochs ({stop}) · best epoch {best_epoch} "
+            f"(val_loss {best_val_loss:.4f}, val_acc {history[best_epoch - 1]['val_accuracy']:.1%})  "
+            f"({format_duration(perf_counter() - start)})")
 
         plot_training_history(
-            self.log_dir, train_acc_hist, eval_acc_hist, train_loss_hist, eval_loss_hist
+            self.log_dir,
+            [r["accuracy"] for r in history], [r["val_accuracy"] for r in history],
+            [r["loss"] for r in history], [r["val_loss"] for r in history],
         )
-        print("\nOptimization Finished!")
 
-        test_acc, test_loss = self._test(t1)
-        return {
-            "test_accuracy": test_acc,
-            "test_loss": test_loss,
+        result = self._test()
+        self.report.write(f"  model     {model_path}")
+        result.update({
             "model_path": model_path,
-            "epochs_trained": epoch + 1,
-        }
+            "epochs_trained": len(history),
+            "best_epoch": best_epoch,
+            "history": pd.DataFrame(history).set_index("epoch"),
+        })
+        return result

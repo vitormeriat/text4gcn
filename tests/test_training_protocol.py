@@ -115,7 +115,7 @@ class TestEarlyStopBestCheckpoint:
             return loss, 0.5, np.zeros(n_nodes), labels.detach().cpu().numpy(), 0.0
 
         trainer._evaluate = fake_evaluate  # type: ignore[method-assign]
-        trainer._test = lambda t1: (0.0, 0.0)  # type: ignore[method-assign]
+        trainer._test = lambda: {}  # type: ignore[method-assign]
         trainer._train()
 
         # Best val is epoch index 1 (loss 0.5); model must match that snapshot

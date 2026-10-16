@@ -8,31 +8,40 @@ from text4gcn.builder.word2vec_adj import Word2VecAdjacency
 from text4gcn.builder.frequency_adj import FrequencyAdjacency
 from text4gcn.builder.linguistic_inquiry_adj import LiwcAdjacency
 from text4gcn.graph.stats import GraphBuildStats
+from text4gcn.utils.reporting import check_verbose
 
 
 class Adjacency:
-    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
+    """Base of the graph builders.
+
+    ``verbose``: ``0`` silent, ``1`` (default) a progress bar while building and a
+    summary line, ``2`` the summary line only.
+    """
+
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str], verbose: int = 1) -> None:
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
+        self.verbose = check_verbose(verbose)
 
 
 class Frequency(Adjacency):
-    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
-        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str], verbose: int = 1) -> None:
+        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path, verbose=verbose)
 
     def tfidf(self, window_size: int = 20) -> GraphBuildStats:
         """Build TF-IDF + PMI adjacency (Yao / Frequency baseline)."""
         adj = FrequencyAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
+            verbose=self.verbose,
             window_size=window_size,
         )
         return adj.build()
 
 
 class Syntactic(Adjacency):
-    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
-        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str], verbose: int = 1) -> None:
+        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path, verbose=verbose)
 
     def dependency_parsing(self, core_nlp_path: str, language: str = "english") -> GraphBuildStats:
         """Build adjacency via Stanford CoreNLP dependency pairs (RWF syntactic).
@@ -42,6 +51,7 @@ class Syntactic(Adjacency):
         adj = DependencyParsingAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
+            verbose=self.verbose,
             core_nlp_path=core_nlp_path,
             language=language,
         )
@@ -52,14 +62,15 @@ class Syntactic(Adjacency):
         adj = LiwcAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
+            verbose=self.verbose,
             liwc_path=liwc_path,
         )
         return adj.build()
 
 
 class Semantic(Adjacency):
-    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
-        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
+    def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str], verbose: int = 1) -> None:
+        super().__init__(dataset_name=dataset_name, dataset_path=dataset_path, verbose=verbose)
 
     def word2vec(
         self,
@@ -81,6 +92,7 @@ class Semantic(Adjacency):
         adj = Word2VecAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
+            verbose=self.verbose,
             training_regime=training_algorithm,
             embedding_dimension=embedding_dimension,
             num_epochs=num_epochs,
@@ -104,6 +116,7 @@ class Semantic(Adjacency):
         adj = BERTAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
+            verbose=self.verbose,
             language=language,
             threshold=threshold,
         )
@@ -113,6 +126,7 @@ class Semantic(Adjacency):
         """Build adjacency from precomputed word-vector cosine similarity."""
         adj = CosineSimilarityAdjacency(
             dataset_path=self.dataset_path,
+            verbose=self.verbose,
             dataset_name=self.dataset_name,
             threshold=threshold,
         )

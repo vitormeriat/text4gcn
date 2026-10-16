@@ -22,9 +22,6 @@ def config_nltk():
             nltk.download(resource, quiet=True)
 
 
-def create_title(title):
-    txt = f" {title} "
-    return txt.center(100, "=")
 
 
 def _is_word_char(ch: str) -> bool:

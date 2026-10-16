@@ -3,6 +3,10 @@ from typing import List
 import os
 import zlib
 
+from text4gcn.utils.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 def _stable_hash(text: str) -> int:
     """Process-independent hash, so that gensim's vector initialisation does not
@@ -26,7 +30,7 @@ def train_word2vec(
     With ``workers=1`` the result is reproducible for a given ``seed``; more
     workers train faster, but thread scheduling makes the vectors vary between runs.
     """
-    print('[INFO] Training Word2Vec...')
+    logger.debug("training Word2Vec: %d epochs, %d dimensions", num_epochs, embedding_dimension)
     model = Word2Vec(document_list,
                      vector_size=embedding_dimension,
                      window=5,

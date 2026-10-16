@@ -27,6 +27,7 @@ class GNN:
         early_stopping: int = 10,
         device: str | None = None,
         refinement_config: RefinementConfig | None = None,
+        verbose: int = 1,
     ) -> None
 ```
 
@@ -47,6 +48,7 @@ class GNN:
 | `early_stopping` | `int` | `10` | Stop when the validation loss rises above its mean over this many previous epochs (the TextGCN criterion); the best validation weights are restored. |
 | `device` | `str \| None` | `None` | PyTorch device (`"cpu"`, `"cuda"`, `"cuda:1"`, …). Detected automatically when `None`. |
 | `refinement_config` | `RefinementConfig \| None` | `None` | Optional graph refinement applied after loading the corpus. |
+| `verbose` | `int` | `1` | `0` silent; `1` a progress bar over the epochs and a summary; `2` one line per epoch instead of the bar (for logs, CI and saved notebooks). |
 
 ### Raises
 
@@ -66,7 +68,22 @@ def fit(self) -> TrainingResult
 
 Runs the full pipeline: validates paths → loads corpus → applies optional refinement → trains GCN → evaluates on test set.
 
-Prints per-epoch metrics to stdout and saves `metrics-acc.png` and `metrics-loss.png` to `log_dir`.
+Saves the best checkpoint, `metrics-acc.png` and `metrics-loss.png` to `log_dir`. With the default `verbose=1` it prints a progress bar while training, then a summary:
+
+```text
+text4gcn · GNN("20NG4") · frequency.tfidf · cpu · seed 1234
+  graph     14,537 nodes: 1,973 train · 219 validation · 1,455 test documents + 10,890 words
+  model     GCN 14,537 → 200 → 4 · 2.91 M parameters · dropout 0.5 · lr 0.02
+  ✓ train     52 epochs (early stop) · best epoch 50 (val_loss 1.3680, val_acc 93.2%)  (6m30s)
+  ✓ test      accuracy 86.7% · macro-F1 86.2% · loss 1.2886 · 1,455 documents  (0.6 s)
+
+                     class  precision  recall    f1  support
+               alt.atheism      0.805   0.883 0.842      384
+                       ...
+  model     logs/20261017-000340123.pth
+```
+
+Diagnostics (array shapes, model structure) are logged at debug level: see [Diagnostics](index.md#diagnostics).
 
 **Returns** [`TrainingResult`](#trainingresult)
 
@@ -154,6 +171,11 @@ class TrainingResult:
     test_loss: float
     model_path: str
     epochs_trained: int
+    best_epoch: int
+    metrics: dict[str, float]
+    history: pandas.DataFrame
+    report: pandas.DataFrame
+    confusion_matrix: pandas.DataFrame
 ```
 
 ### Fields
@@ -164,17 +186,21 @@ class TrainingResult:
 | `test_loss` | `float` | Cross-entropy loss on the held-out test set. |
 | `model_path` | `str` | Path of the saved checkpoint (`.pth`) inside `log_dir`, holding the weights with the best validation loss. |
 | `epochs_trained` | `int` | Number of epochs that completed before stopping. |
+| `best_epoch` | `int` | Epoch with the lowest validation loss; its weights are the ones restored and saved. |
+| `metrics` | `dict` | Test `accuracy`, `macro_precision`, `macro_recall`, `macro_f1`, `weighted_f1`. |
+| `history` | `DataFrame` | One row per epoch (index `epoch`): `loss`, `accuracy`, `val_loss`, `val_accuracy`, `seconds`. |
+| `report` | `DataFrame` | Test `precision`, `recall`, `f1`, `support` per class, indexed by class name. |
+| `confusion_matrix` | `DataFrame` | Test confusion matrix: rows are true classes, columns predicted ones. |
 
 ### Example
 
 ```python
 result = GNN(dataset_name="R8", dataset_path="data/").fit()
 
-print(result.test_accuracy)   # 0.9712
-print(result.test_loss)       # 0.08431
-print(result.model_path)      # 'logs/20240501-152301123.pth'
-print(result.epochs_trained)  # 187
-print(result)                 # TrainingResult(accuracy=0.9712, loss=0.08431, epochs=187, ...)
+result                        # TrainingResult(accuracy=0.9712, macro_f1=0.9301, loss=0.0843, epochs=187, best_epoch=177, ...)
+result.metrics["macro_f1"]    # 0.9301
+result.history[["loss", "val_loss"]].plot()   # learning curves
+result.confusion_matrix       # true × predicted, with class names
 ```
 
 ---

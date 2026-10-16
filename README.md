@@ -67,8 +67,10 @@ result = GNN(dataset_name="R8", dataset_path="data/").fit()
 print(f"Test accuracy: {result.test_accuracy:.4f}")
 ```
 
-`GNN.fit()` returns a `TrainingResult` with `test_accuracy`, `test_loss`, `model_path`
-and `epochs_trained`. To use your own data, write it with
+Each step prints one summary line (`verbose=0` silences it, `verbose=2` prints one line
+per training epoch instead of a progress bar). `GNN.fit()` returns a `TrainingResult`
+with the test accuracy, `metrics` (macro-F1, …), a per-class `report`, the
+`confusion_matrix` and the per-epoch `history`. To use your own data, write it with
 [`save_corpus()`](https://vitormeriat.github.io/text4gcn/tutorials/05_bring_your_own_corpus/).
 
 ## Tutorials
@@ -97,7 +99,7 @@ Cleaned, shuffled corpus + vocabulary + node features
 Adjacency matrix (document–word and word–word edges)
       │
       ▼  GNN.fit()
-Trained GCN → TrainingResult(test_accuracy, test_loss, model_path, epochs_trained)
+Trained GCN → TrainingResult(test_accuracy, metrics, report, confusion_matrix, history, model_path)
 ```
 
 ### TextPipeline
@@ -167,7 +169,9 @@ result = GNN(
     device=None,             # CUDA if available, else CPU
 ).fit()
 
-print(result.test_accuracy, result.epochs_trained, result.model_path)
+print(result)                       # accuracy, macro-F1, loss, epochs, best epoch, model path
+result.confusion_matrix             # pandas DataFrame with class names
+result.history[["loss", "val_loss"]].plot()
 ```
 
 ### Graph refinement

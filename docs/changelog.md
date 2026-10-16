@@ -8,6 +8,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [2.0.0] — unreleased
 
 ### Added
+- Console output redesigned: one summary line per stage, a progress bar while training and on the slow graph-building steps, and a per-class table at the end; `verbose=0/1/2` on `TextPipeline`, the builders and `GNN`
+- `TrainingResult.best_epoch`, `metrics`, `history`, `report` and `confusion_matrix` (pandas, with class names); `GraphBuildStats.word_word_edges` and `summary()`
+- `text4gcn.set_verbosity()` and `TEXT4GCN_VERBOSITY` for diagnostic logs, through the standard `logging` module (`NullHandler` by default)
 - Tutorials: five notebooks in `docs/tutorials/` (text as a graph → first classifier on 20 Newsgroups → comparing graph builders → refining the graph → your own corpus), rendered in the docs with `mkdocs-jupyter`
 - `text4gcn.datasets.save_corpus()` writes any labelled corpus in the `.txt` / `.meta` input format, with validation
 - `text4gcn.datasets.twenty_newsgroups()` downloads 20 Newsgroups (scikit-learn) in the input format
@@ -46,6 +49,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Graph files are no longer interchangeable with 1.x even for the same builder: Word2Vec, LIWC, cosine-similarity and RWF weights changed (see *Fixed*)
 
 ### Removed
+- The custom `modules.logger` (`PrintLog`, `Process`), `graph.report_stats()` and `models.show_metrics()`: progress goes through `verbose`, results through the returned objects, diagnostics through `logging`. `tabulate` is no longer a dependency
 - `output_path` of `tfidf()`, `word2vec()` and `cosine_similarity()`, and `TextPipeline.execute(use_predefined_word_vectors=…)`: they were accepted but ignored
 - `GNN(val_ratio=…)`: it never changed the split; set it with `TextPipeline.execute(validation_ratio=…)`
 - `Syntactic.constituency_parsing()`, `Semantic.llm()` and `Builder.ConstituencyParsing`, which did nothing

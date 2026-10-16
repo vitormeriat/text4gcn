@@ -21,6 +21,7 @@ class TextPipeline:
         seed: int = 1234,
         encoding: str = "utf-8",
         ascii_only: bool = True,
+        verbose: int = 1,
     ) -> None
 ```
 
@@ -35,6 +36,7 @@ class TextPipeline:
 | `seed` | `int` | `1234` | Random seed for document shuffle (reproducible train/test order). |
 | `encoding` | `str` | `"utf-8"` | Encoding of the input `.txt` corpus. Use `"latin1"` for legacy corpora that are not valid UTF-8. Intermediate files are always UTF-8. |
 | `ascii_only` | `bool` | `True` | Keep only `A-Za-z0-9` when cleaning (original TextGCN). Set `False` for Arabic, Cyrillic, accented Latin, etc. |
+| `verbose` | `int` | `1` | `0` silent; `1` or `2` one summary line per stage. |
 
 !!! example "Non-English corpus (e.g. Arabic)"
 
@@ -66,7 +68,18 @@ Runs the complete preprocessing pipeline. Stages execute in order:
 3. **Prepare words** — build vocabulary and TF-IDF word vectors
 4. **Build node features** — compute x, y, tx, ty, allx, ally matrices, write to `{dataset_name}.node_features/`
 
-A processing log is written to `{dataset_path}/log/{dataset_name}_dataset.txt`.
+Each stage prints one line, for example:
+
+```text
+text4gcn · TextPipeline("20NG4") · language english · validation 10%
+  ✓ clean     3,647 documents · 10,890 words kept (rare_count=5)  (1.1 s)
+  ✓ shuffle   train 2,192 · test 1,455 documents (seed 1234)  (0.2 s)
+  ✓ words     10,890 words · 8,941 with a WordNet definition  (5.7 s)
+  ✓ features  train 1,973 · validation 219 · test 1,455 documents · 4 classes  (1.8 s)
+```
+
+The same lines, with a timestamp, are written to the processing log
+`{dataset_path}/log/{dataset_name}_dataset.txt`; the graph builders append theirs.
 
 #### Parameters
 

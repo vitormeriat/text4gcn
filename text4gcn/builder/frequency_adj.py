@@ -1,10 +1,9 @@
+from text4gcn.builder._common import run_build, save_graph
 from text4gcn.modules import file_ops as flop
-from text4gcn.modules import logger as logger
 from text4gcn.modules import adjacency as adj
-from text4gcn.modules.logger import Process
-from text4gcn.graph.stats import GraphBuildStats, compute_adjacency_stats, report_stats
+from text4gcn.graph.stats import GraphBuildStats
+from text4gcn.utils.reporting import Reporter, check_verbose
 from scipy.sparse import csr_matrix
-import pickle
 
 
 class FrequencyAdjacency():
@@ -28,21 +27,14 @@ class FrequencyAdjacency():
         Builds the adjacency matrix and returns :class:`GraphBuildStats`.
     """
 
-    def __init__(self, dataset_name: str, dataset_path: str, window_size: int = 20):
+    def __init__(self, dataset_name: str, dataset_path: str, window_size: int = 20, verbose: int = 1):
         self.window_size = window_size
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
-        self.logger = logger.PrintLog()
-        self.flop = flop.FileOps(logger=self.logger)
+        self.verbose = check_verbose(verbose)
+        self.flop = flop.FileOps()
 
-    def _save_history(self, hist):
-        self.flop.create_dir(
-            dir_path=f'{self.dataset_path}/log', overwrite=False)
-        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a', encoding="utf-8") as my_file:
-            my_file.writelines(hist)
-
-    @Process.log("EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix.")
-    def _build(self) -> GraphBuildStats:
+    def _build(self, report: Reporter) -> GraphBuildStats:
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}"
         ds_corpus = f'{corpus_path}.shuffled/{self.dataset_name}.txt'
@@ -66,14 +58,14 @@ class FrequencyAdjacency():
         windows_of_words = adj.extract_windows(docs_of_words=docs_of_words,
                                                window_size=self.window_size)
 
-        self.logger.info("Calculating PMI")
         # Extract word-word weights
         rows, cols, weights = adj.extract_pmi_word_weights(windows_of_words,
                                                            word_to_id,
                                                            vocab,
-                                                           train_size)
+                                                           train_size,
+                                                           progress=report.progress)
+        word_word_edges = len(weights)
 
-        self.logger.info("Calculating TF-IDF")
         # Extract word-doc weights
         rows, cols, weights = adj.extract_tf_idf_doc_word_weights(rows,
                                                                   cols,
@@ -84,30 +76,13 @@ class FrequencyAdjacency():
                                                                   word_to_id)
 
         adjacency_len = train_size + len(vocab) + test_size
-
-        self.logger.info(
-            f"[INFO] ({len(weights)}, ({len(rows)}, {len(cols)})), shape=({adjacency_len}, {adjacency_len})")
-
         adjacency_matrix = csr_matrix((weights, (rows, cols)),
                                       shape=(adjacency_len, adjacency_len))
 
         adj_path = f"{corpus_path}.adjacency/ind.frequency.tfidf.{self.dataset_name}.adj"
-        # Dump Adjacency Matrix
-        with open(adj_path, 'wb') as f:
-            pickle.dump(adjacency_matrix, f)
-
-        stats = compute_adjacency_stats(
-            adjacency_matrix,
-            path=adj_path,
-            builder="frequency.tfidf",
-            dataset_name=self.dataset_name,
-        )
-        report_stats(stats, self.logger)
-        return stats
+        return save_graph(adjacency_matrix, adj_path, "frequency.tfidf", self.dataset_name, word_word_edges)
 
     def build(self) -> GraphBuildStats:
         """Builds the adjacency matrix and returns edge/memory stats."""
-        stats = self._build()
-        hist = self.logger.log_history()
-        self._save_history(hist)
-        return stats
+        return run_build(self._build, f'Frequency.tfidf("{self.dataset_name}") · window {self.window_size}',
+                         self.verbose, self.dataset_path, self.dataset_name)

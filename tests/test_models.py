@@ -192,10 +192,9 @@ def test_empty_document_gets_zero_features():
     """A document left empty by cleaning must not produce NaN features."""
     import numpy as np
 
-    from text4gcn.modules.logger import PrintLog
     from text4gcn.modules.node_features import NodeFeatures
 
-    tx = NodeFeatures(logger=PrintLog()).compute_tx(
+    tx = NodeFeatures().compute_tx(
         [["a"], []], test_size=1, real_train_size=1, word_emb_dim=3, w_vectors={"a": [1.0, 1.0, 1.0]})
     assert not np.isnan(tx.toarray()).any()
 
@@ -205,6 +204,8 @@ def test_training_result_is_frozen():
 
     from text4gcn import TrainingResult
 
-    result = TrainingResult(test_accuracy=0.9, test_loss=0.3, model_path="logs/m.pth", epochs_trained=10)
+    result = TrainingResult(test_accuracy=0.9, test_loss=0.3, model_path="logs/m.pth", epochs_trained=10,
+                            best_epoch=8, metrics={"macro_f1": 0.88}, history=None, report=None,
+                            confusion_matrix=None)
     with pytest.raises(dataclasses.FrozenInstanceError):
         result.test_accuracy = 1.0

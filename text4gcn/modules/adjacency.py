@@ -1,9 +1,16 @@
-from typing import List, Dict, Tuple, Iterable, Any
+from typing import List, Dict, Tuple, Iterable, Any, Callable
 from collections import Counter
-from tqdm import tqdm
 from math import log
 import numpy as np
 import pickle
+
+
+def no_progress(iterable, desc: str = "", total=None, unit: str = "it"):
+    """Default progress hook: iterate silently (see ``Reporter.progress``)."""
+    return iterable
+
+
+Progress = Callable[..., Iterable]
 
 
 def flatten_nested_iterables(iterables_of_iterables: Iterable[Iterable[Any]]) -> Iterable[Any]:
@@ -51,9 +58,10 @@ def extract_word_counts_in_windows(windows_of_words: List[List[str]]) -> Dict[st
     return Counter(flatten_nested_iterables(bags_of_words))
 
 
-def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_id: Dict[str, int]) -> Dict[str, int]:
+def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_id: Dict[str, int],
+                                    progress: Progress = no_progress) -> Dict[str, int]:
     word_ids_pair_to_counts = Counter()
-    for window in windows_of_words:
+    for window in progress(windows_of_words, desc="PMI", total=len(windows_of_words), unit="window"):
         for i in range(1, len(window)):
             try:
                 word_id_i = word_to_id[window[i]]
@@ -73,7 +81,7 @@ def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_i
 
 
 def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict[str, int], vocab: List[str],
-                             train_size: int) -> Tuple[List[int], List[int], List[float]]:
+                             train_size: int, progress: Progress = no_progress) -> Tuple[List[int], List[int], List[float]]:
     """Calculate PMI as weights"""
     weight_rows = []  # type: List[int]
     weight_cols = []  # type: List[int]
@@ -83,7 +91,7 @@ def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict
     word_counts_in_windows = extract_word_counts_in_windows(
         windows_of_words=windows_of_words)
     word_ids_pair_to_counts = extract_word_ids_pair_to_counts(
-        windows_of_words, word_to_id)
+        windows_of_words, word_to_id, progress=progress)
 
     for word_id_pair, count in word_ids_pair_to_counts.items():
         word_ids_in_str = word_id_pair.split(',')
@@ -110,7 +118,8 @@ def extract_cosine_similarity_word_weights(vocab: List[str],
                                            train_size: int,
                                            word_vec_path: str,
                                            threshold: float,
-                                           chunk_size: int = 1024) -> Tuple[List[int], List[int], List[float]]:
+                                           chunk_size: int = 1024,
+                                           progress: Progress = no_progress) -> Tuple[List[int], List[int], List[float]]:
     """Word-word edges between words whose vectors have cosine similarity > threshold.
 
     Pairs are compared in row chunks of `chunk_size` words (vectorised), so memory
@@ -128,7 +137,8 @@ def extract_cosine_similarity_word_weights(vocab: List[str],
     ids, vectors = ids[norms > 0], vectors[norms > 0] / norms[norms > 0, None]
 
     weight_rows, weight_cols, cos_sim_weights = [], [], []  # type: List[int], List[int], List[float]
-    for start in tqdm(range(0, len(ids), chunk_size)):
+    starts = range(0, len(ids), chunk_size)
+    for start in progress(starts, desc="cosine", total=len(starts), unit="chunk"):
         similarity = vectors[start:start + chunk_size] @ vectors.T
         rows, cols = np.nonzero(similarity > threshold)
         weight_rows.extend((train_size + ids[start + rows]).tolist())

@@ -32,8 +32,12 @@ from .graph import (
     load_adjacency_stats,
 )
 
+from .utils.logging import _configure_library_logger, set_verbosity
+
 # Submodules kept for power users
 from . import datasets, builder, models, preprocess, modules, utils, graph
+
+_configure_library_logger()
 
 __all__ = [
     # Core classes
@@ -48,6 +52,7 @@ __all__ = [
     "GraphBuildStats",
     "compute_adjacency_stats",
     "load_adjacency_stats",
+    "set_verbosity",
     # Submodules
     "datasets",
     "builder",

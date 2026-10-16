@@ -5,7 +5,6 @@ import hashlib
 import pytest
 
 from text4gcn.modules import file_ops as flop
-from text4gcn.modules import logger
 from text4gcn.datasets import data
 
 
@@ -63,9 +62,8 @@ def test_download_verifies_checksum(tmp_path, monkeypatch):
 
 def test_validate_files_with_success():
     """Test file validation with valid input files."""
-    # Initialize logger and file operations
-    lgg = logger.PrintLog()
-    flops = flop.FileOps(logger=lgg)
+    # Initialize file operations
+    flops = flop.FileOps()
 
     # Validate that text and meta files have matching line counts
     num_lines_f1, num_lines_f2 = flops.validate_input_files_lines(
@@ -88,9 +86,8 @@ def test_validate_files_with_success():
 
 def test_validate_files_fail_meta_missing_column():
     """Test file validation failure when meta file has incorrect column structure."""
-    # Initialize logger and file operations
-    lgg = logger.PrintLog()
-    flops = flop.FileOps(logger=lgg)
+    # Initialize file operations
+    flops = flop.FileOps()
 
     # Validate line counts (should match even if columns are wrong)
     num_lines_f1, num_lines_f2 = flops.validate_input_files_lines(
@@ -113,9 +110,8 @@ def test_validate_files_fail_meta_missing_column():
 
 def test_validate_files_fail_different_rows_count():
     """Test file validation failure when text and meta files have different row counts."""
-    # Initialize logger and file operations
-    lgg = logger.PrintLog()
-    flops = flop.FileOps(logger=lgg)
+    # Initialize file operations
+    flops = flop.FileOps()
 
     # Validate line counts - should detect mismatch (10 lines in txt vs 20 in meta)
     num_lines_f1, num_lines_f2 = flops.validate_input_files_lines(
@@ -148,7 +144,7 @@ def test_save_corpus_writes_aligned_utf8_files(tmp_path):
 
     assert txt.read_text(encoding="utf-8") == "first line with spaces\nمرحبا بالعالم\n"
     assert meta.read_text(encoding="utf-8") == "0\ttrain\ta\n1\ttest\tb\n"
-    flops = flop.FileOps(logger=logger.PrintLog())
+    flops = flop.FileOps()
     assert flops.validate_files(path_txt=str(txt), path_meta=str(meta))[1]
 
 
@@ -187,7 +183,7 @@ def test_load_corpus_meta_accepts_training_split(tmp_path):
     meta = tmp_path / "ds.meta"
     meta.write_text("0\ttraining\tC01\n1\ttrain\tC02\n2\t20news-bydate-train\tC01\n3\ttest\tC02\n",
                     encoding="utf-8")
-    flops = flop.FileOps(logger=logger.PrintLog())
+    flops = flop.FileOps()
 
     all_docs, train, test = flops.load_corpus_meta(str(meta))
 

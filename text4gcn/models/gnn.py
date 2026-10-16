@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import argparse
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from text4gcn.graph import RefinementConfig, apply_refinement
 from text4gcn.models.builder import Builder
 from text4gcn.models.layers import Layer
 from text4gcn.models.model import GCN
 from text4gcn.models.train_eval import TextGCNTrainer
-from text4gcn.models.utils import LoadData
+from text4gcn.models.utils import LoadData, load_class_names
 from text4gcn.utils.device import get_device_manager
+from text4gcn.utils.reporting import Reporter, check_verbose, format_count
 
 
 @dataclass(frozen=True)
@@ -30,20 +31,39 @@ class TrainingResult:
         the best validation loss.
     epochs_trained : int
         Number of epochs completed before stopping.
+    best_epoch : int
+        Epoch with the lowest validation loss; its weights are the ones restored.
+    metrics : dict
+        Test ``accuracy``, ``macro_precision``, ``macro_recall``, ``macro_f1`` and
+        ``weighted_f1``.
+    history : pandas.DataFrame
+        One row per epoch: ``loss``, ``accuracy``, ``val_loss``, ``val_accuracy``,
+        ``seconds``.
+    report : pandas.DataFrame
+        Test ``precision``, ``recall``, ``f1`` and ``support`` per class.
+    confusion_matrix : pandas.DataFrame
+        Test confusion matrix; rows are true classes, columns predicted ones.
     """
 
     test_accuracy: float
     test_loss: float
     model_path: str
     epochs_trained: int
+    best_epoch: int
+    metrics: Dict[str, float]
+    history: Any = field(compare=False)
+    report: Any = field(compare=False)
+    confusion_matrix: Any = field(compare=False)
 
-    def __str__(self) -> str:
+    def __repr__(self) -> str:
         return (
             f"TrainingResult(accuracy={self.test_accuracy:.4f}, "
-            f"loss={self.test_loss:.5f}, "
-            f"epochs={self.epochs_trained}, "
+            f"macro_f1={self.metrics['macro_f1']:.4f}, loss={self.test_loss:.4f}, "
+            f"epochs={self.epochs_trained}, best_epoch={self.best_epoch}, "
             f"model_path={self.model_path!r})"
         )
+
+    __str__ = __repr__
 
 
 class GNN:
@@ -76,13 +96,16 @@ class GNN:
     layer : Layer
         GNN layer type. Default ``Layer.GCN``.
     early_stopping : int
-        Stop training if validation loss does not improve for this many
-        consecutive epochs. Default ``10``.
+        Stop when the validation loss rises above its mean over this many
+        previous epochs (the TextGCN criterion). Default ``10``.
     device : str or None
         PyTorch device string (``'cpu'``, ``'cuda'``). Auto-detected if
         ``None``.
     refinement_config : RefinementConfig or None
         Optional graph refinement settings applied after loading the corpus.
+    verbose : int
+        ``0`` silent; ``1`` (default) a progress bar over the epochs and a
+        summary; ``2`` one line per epoch instead of the bar.
 
     Examples
     --------
@@ -135,6 +158,7 @@ class GNN:
         early_stopping: int = 10,
         device: Optional[str] = None,
         refinement_config: Optional[RefinementConfig] = None,
+        verbose: int = 1,
     ) -> None:
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
@@ -148,6 +172,7 @@ class GNN:
         self.layer = layer
         self.early_stopping = early_stopping
         self.refinement_config = refinement_config
+        self.verbose = check_verbose(verbose)
 
         dataset_path_obj = Path(dataset_path)
         if not dataset_path_obj.exists():
@@ -168,12 +193,6 @@ class GNN:
         self.device_manager = get_device_manager(device)
         self.device = self.device_manager.device
         self.device_manager.set_seed(seed)
-
-        device_info = self.device_manager.get_device_info()
-        print(f"Using device: {self.device}")
-        if self.device_manager.is_cuda:
-            print(f"GPU: {device_info['gpu_name']}")
-            print(f"GPU Memory: {device_info['gpu_memory_gb']:.1f} GB")
 
     def _validate_data_paths(self) -> None:
         """Raise a descriptive error if required pipeline outputs are missing."""
@@ -234,9 +253,14 @@ class GNN:
         """
         self._validate_data_paths()
 
-        args = self._build_args()
-        print(f"\n{'='*30} MODEL CONFIGURATION\n{args}\n")
+        report = Reporter(self.verbose)
+        device = str(self.device)
+        if self.device_manager.is_cuda:
+            device += f" ({self.device_manager.get_device_info()['gpu_name']})"
+        builder = getattr(self.builder, "value", self.builder)
+        report.header(f'GNN("{self.dataset_name}") · {builder} · {device} · seed {self.seed}')
 
+        args = self._build_args()
         predata = LoadData(
             path=self.dataset_path,
             dataset=self.dataset_name,
@@ -251,13 +275,11 @@ class GNN:
                 dataset_name=self.dataset_name,
                 return_metadata=True,
             )
-            if info and "stats" in info:
-                print("\nGraph refinement stats:", info["stats"])
+            stats = info["stats"]
+            report.write(
+                f"  refined   {stats['nodes_original']:,} → {stats['nodes_refined']:,} nodes · "
+                f"{format_count(stats['edges_before'])} → {format_count(stats['edges_after'])} edges")
 
-        result = TextGCNTrainer(model=GCN, args=args, pre_data=predata).fit()
-        return TrainingResult(
-            test_accuracy=result["test_accuracy"],
-            test_loss=result["test_loss"],
-            model_path=result["model_path"],
-            epochs_trained=result["epochs_trained"],
-        )
+        result = TextGCNTrainer(model=GCN, args=args, pre_data=predata, report=report,
+                                class_names=load_class_names(self.dataset_path, self.dataset_name)).fit()
+        return TrainingResult(**result)

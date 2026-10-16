@@ -36,7 +36,7 @@ Builds a TF-IDF–weighted word-document graph. Fastest option; recommended as a
 
 ```python
 class Frequency:
-    def __init__(self, dataset_name: str, dataset_path: str) -> None
+    def __init__(self, dataset_name: str, dataset_path: str, verbose: int = 1) -> None
 ```
 
 ### `tfidf()`
@@ -78,7 +78,7 @@ Builds edges based on semantic similarity between words (Word2Vec, BERT, cosine 
 
 ```python
 class Semantic:
-    def __init__(self, dataset_name: str, dataset_path: str) -> None
+    def __init__(self, dataset_name: str, dataset_path: str, verbose: int = 1) -> None
 ```
 
 ### `word2vec()`
@@ -191,7 +191,7 @@ Builds edges from syntactic structure: dependency parsing or LIWC categories.
 
 ```python
 class Syntactic:
-    def __init__(self, dataset_name: str, dataset_path: str) -> None
+    def __init__(self, dataset_name: str, dataset_path: str, verbose: int = 1) -> None
 ```
 
 ### `dependency_parsing()`
@@ -268,3 +268,13 @@ Frozen dataclass returned by every builder method (`tfidf()`, `word2vec()`, `cos
 | `builder` | `str \| None` | Builder label (e.g. `frequency.tfidf`). |
 | `dataset_name` | `str \| None` | Dataset name. |
 | `path` | `str \| None` | Path to the adjacency file. |
+| `word_word_edges` | `int \| None` | Stored non-zeros between two word nodes. The builders differ only in these: all keep the same TF-IDF document–word edges. |
+
+`stats.summary()` gives the one-line form that the builders print:
+
+```text
+text4gcn · Frequency.tfidf("20NG4") · window 20
+  ✓ graph     14,537 nodes · 4.53 M edges (4.26 M word–word) · density 2.15% · 52.0 MiB  (4m00s)
+```
+
+`verbose` (`0`, `1` default, `2`) is given to `Frequency`, `Semantic` or `Syntactic`: `0` is silent, `1` adds a progress bar during the slow steps (PMI, word pairs).

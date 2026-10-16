@@ -2,12 +2,14 @@ from text4gcn.modules.node_features import NodeFeatures
 from text4gcn.modules import word_processor as wdprc
 from text4gcn.modules import clean_data as clean
 from text4gcn.modules import file_ops as flop
-from text4gcn.modules import logger as logger
-from text4gcn.modules.logger import Process
+from text4gcn.utils.logging import get_logger
+from text4gcn.utils.reporting import Reporter, check_verbose
 from collections import OrderedDict
 from math import ceil
 import random
 import os
+
+logger = get_logger(__name__)
 
 
 class TextPipeline():
@@ -37,6 +39,8 @@ class TextPipeline():
         If True (default), cleaning keeps only ASCII letters and digits, as in
         the original TextGCN preprocessing. Set to False for corpora in other
         scripts (e.g. Arabic, Cyrillic, accented Latin) so their words are kept.
+    verbose : int
+        ``0`` silent, ``1`` (default) or ``2``: one summary line per stage.
 
     Methods
     -------
@@ -53,11 +57,12 @@ class TextPipeline():
         seed: int = 1234,
         encoding: str = "utf-8",
         ascii_only: bool = True,
+        verbose: int = 1,
     ):
         from pathlib import Path
 
-        self.logger = logger.PrintLog()
-        self.flop = flop.FileOps(logger=self.logger)
+        self.flop = flop.FileOps()
+        self.verbose = check_verbose(verbose)
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.rare_count = rare_count
@@ -76,17 +81,7 @@ class TextPipeline():
                 f"'{dataset_name}.txt' / '{dataset_name}.meta' before running execute()."
             )
 
-    def save_history(self, hist):
-        self.flop.create_dir(
-            dir_path=f'{self.dataset_path}/log',
-            overwrite=False
-        )
-
-        with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'w', encoding="utf-8") as my_file:
-            my_file.writelines(hist)
-
-    @Process.log("CLEANED DATA: Removed rare & stop-words.")
-    def clean_data(self):
+    def clean_data(self) -> str:
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}.txt"
         corpus_cleaned = f"{self.dataset_path}/{self.dataset_name}.cleaned"
@@ -126,6 +121,7 @@ class TextPipeline():
             rare_count=self.rare_count
         )
 
+        n_words = len({word for words in docs_of_words for word in words})
         docs_of_words = clean.glue_lines(
             lines_of_words=docs_of_words,
             glue_str=' ',
@@ -138,10 +134,9 @@ class TextPipeline():
             file_mode='w'
         )
 
-        self.logger.info(f"Rare-Count = <{self.rare_count}>")
+        return f"{len(docs_of_words):,} documents · {n_words:,} words kept (rare_count={self.rare_count})"
 
-    @Process.log("SHUFFLED DATA: Corpus documents shuffled.")
-    def shuffle_data(self):
+    def shuffle_data(self) -> str:
 
         ds_corpus = f"{self.dataset_path}/{self.dataset_name}.cleaned/{self.dataset_name}.txt"
         ds_corpus_meta = f"{self.dataset_path}/{self.dataset_name}.meta"
@@ -213,9 +208,9 @@ class TextPipeline():
             file_path=ds_corpus_shuffled,
             file_mode='w'
         )
+        return f"train {len(train_doc_meta_ids):,} · test {len(test_doc_meta_ids):,} documents (seed {self.seed})"
 
-    @Process.log("PREPARED WORDS: Vocabulary & word-vectors extracted.")
-    def prepare_words(self):
+    def prepare_words(self) -> str:
 
         ds_corpus = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.txt"
 
@@ -264,9 +259,10 @@ class TextPipeline():
             word_to_word_vectors_dict,
             ds_corpus_word_vectors
         )
+        n_defined = sum(1 for definition in word_definitions if definition)
+        return f"{len(vocabulary):,} words · {n_defined:,} with a WordNet definition"
 
-    @Process.log("EXTRACTED NODE FEATURES: x, y, tx, ty, allx, ally.")
-    def build_node_features(self, validation_ratio: float):
+    def build_node_features(self, validation_ratio: float) -> str:
 
         ds_corpus = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.txt"
         ds_corpus_meta = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.meta"
@@ -292,7 +288,7 @@ class TextPipeline():
         adjusted_train_size = ceil(real_train_size * (1.0 - validation_ratio))
         test_size = len(open(ds_corpus_test_idx, encoding="utf-8").readlines())
 
-        nfeatures = NodeFeatures(logger=self.logger)
+        nfeatures = NodeFeatures()
 
         word_vectors, word_emb_dim = OrderedDict(), 300
 
@@ -375,9 +371,11 @@ class TextPipeline():
             node_features_dict=node_feature_matrices
         )
 
-        self.logger.info(f"x.shape={x.shape}, y.shape={y.shape}")
-        self.logger.info(f"tx.shape={tx.shape}, ty.shape={ty.shape}")
-        self.logger.info(f"allx.shape={allx.shape}, ally.shape={ally.shape}")
+        logger.debug("x %s, y %s, tx %s, ty %s, allx %s, ally %s",
+                     x.shape, y.shape, tx.shape, ty.shape, allx.shape, ally.shape)
+        val_size = real_train_size - adjusted_train_size
+        return (f"train {adjusted_train_size:,} · validation {val_size:,} · test {test_size:,} documents "
+                f"· {len(doc_labels)} classes")
 
     def execute(
         self,
@@ -398,16 +396,18 @@ class TextPipeline():
         if seed is not None:
             self.seed = seed
 
-        self.logger.info(clean.create_title("NLTK Configuration"))
+        report = Reporter(self.verbose)
+        report.header(f'TextPipeline("{self.dataset_name}") · language {self.language} '
+                      f'· validation {validation_ratio:.0%}')
         clean.config_nltk()
-        self.logger.info(f"Random seed (shuffle) = <{self.seed}>")
-        self.logger.info(f"Validation ratio = <{validation_ratio}>")
-        self.logger.info()
 
-        self.clean_data()
-        self.shuffle_data()
-        self.prepare_words()
-        self.build_node_features(validation_ratio=validation_ratio)
+        with report.step("clean") as step:
+            step.summary = self.clean_data()
+        with report.step("shuffle") as step:
+            step.summary = self.shuffle_data()
+        with report.step("words") as step:
+            step.summary = self.prepare_words()
+        with report.step("features") as step:
+            step.summary = self.build_node_features(validation_ratio=validation_ratio)
 
-        hist = self.logger.log_history()
-        self.save_history(hist)
+        report.save(f"{self.dataset_path}/log/{self.dataset_name}_dataset.txt", mode="w")

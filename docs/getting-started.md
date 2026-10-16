@@ -180,10 +180,14 @@ result = GNN(
 ).fit()
 
 print(result)
-# TrainingResult(accuracy=0.9712, loss=0.09843, epochs=187, model_path='logs/20240501-120000.pth')
+# TrainingResult(accuracy=0.9712, macro_f1=0.9301, loss=0.0984, epochs=187, best_epoch=177, model_path='logs/…pth')
 ```
 
-`fit()` prints per-epoch progress to stdout and saves accuracy/loss plots to `log_dir/`.
+`fit()` shows a progress bar while training and ends with a summary: accuracy, macro-F1
+and a per-class table. The same numbers are in the result (`result.metrics`,
+`result.report`, `result.confusion_matrix`, and `result.history` per epoch). Pass
+`verbose=0` to silence it, or `verbose=2` for one line per epoch. Accuracy and loss
+plots are saved to `log_dir/`.
 
 !!! note "Validation ratio"
     The train/val split is set by `TextPipeline.execute(validation_ratio=…)` (default 10% of the training documents).

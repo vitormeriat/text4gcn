@@ -1,6 +1,4 @@
 from typing import Any, Iterable, List, Tuple
-# from ..modules import logger
-from text4gcn.modules import logger
 from os.path import exists
 from shutil import rmtree
 from os import makedirs
@@ -11,8 +9,6 @@ TRAIN_SPLITS = frozenset({"train", "training", "20news-bydate-train"})
 
 
 class FileOps():
-    def __init__(self, logger: logger.PrintLog):
-        self.logger = logger
 
     def get_lines_info(self, file_path):
         with open(file_path, 'r', encoding="utf-8") as file:
@@ -65,10 +61,6 @@ class FileOps():
             if overwrite:
                 rmtree(dir_path)
                 makedirs(dir_path)
-            else:
-                # print('[WARN] directory:%r already exists, not overwritten.' % dir_path)
-                self.logger.warning(
-                    'Directory:%r already exists, not overwritten.' % dir_path)
         else:
             makedirs(dir_path)
 

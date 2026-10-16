@@ -1,6 +1,6 @@
 from .builder import Builder
 from .gnn import GNN, Layer, TrainingResult
-from .train_eval import TextGCNTrainer, plot_training_history, show_metrics
+from .train_eval import TextGCNTrainer, plot_training_history
 
 __all__ = [
     "Builder",
@@ -9,5 +9,4 @@ __all__ = [
     "TrainingResult",
     "TextGCNTrainer",
     "plot_training_history",
-    "show_metrics",
 ]

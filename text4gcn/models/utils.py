@@ -1,8 +1,18 @@
+from collections import OrderedDict
 from datetime import datetime, timezone
-from tabulate import tabulate
 import scipy.sparse as sp
 import pickle as pkl
 import numpy as np
+
+from text4gcn.utils.logging import get_logger
+
+logger = get_logger(__name__)
+
+
+def load_class_names(path, dataset: str) -> list:
+    """Class labels in the order of the one-hot label columns (first appearance in the shuffled meta)."""
+    with open(f"{path}/{dataset}.shuffled/{dataset}.meta", encoding="utf-8") as meta:
+        return list(OrderedDict.fromkeys(line.split()[2] for line in meta if line.strip()))
 
 
 class LoadData:
@@ -59,19 +69,8 @@ class LoadData:
         features = sp.vstack((allx, tx)).tolil()
         labels = np.vstack((ally, ty))
 
-        print("\nShow info about load data:\n")
-
-        print(tabulate([
-            ["x", str(x.shape)],
-            ["y", str(y.shape)],
-            ["tx", str(tx.shape)],
-            ["ty", str(ty.shape)],
-            ["allx", str(allx.shape)],
-            ["ally", str(ally.shape)],
-            ["adj", str(adj.shape)],
-            ["Features", str(features.shape)],
-            ["Labels", str(labels.shape)],
-        ], ["Data", "Shape"]))
+        logger.debug("loaded x %s, y %s, tx %s, ty %s, allx %s, ally %s, adj %s",
+                     x.shape, y.shape, tx.shape, ty.shape, allx.shape, ally.shape, adj.shape)
 
         train_idx_orig = self.parse_index_file(
             f"{self.path}/{self.dataset}.shuffled/{self.dataset}.train")

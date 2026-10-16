@@ -32,6 +32,9 @@ class GraphBuildStats:
         Dataset name used when building.
     path :
         Path to the adjacency file, if known.
+    word_word_edges :
+        Stored non-zeros between two word nodes, if known. The builders differ
+        only in these edges; they all keep the same TF-IDF document–word edges.
     """
 
     n_nodes: int
@@ -41,21 +44,36 @@ class GraphBuildStats:
     builder: Optional[str] = None
     dataset_name: Optional[str] = None
     path: Optional[str] = None
+    word_word_edges: Optional[int] = None
 
     def to_dict(self) -> Mapping[str, Any]:
         return asdict(self)
 
-    def __str__(self) -> str:
-        size = (
-            f", file={self.file_bytes / (1024 * 1024):.2f} MiB"
-            if self.file_bytes is not None
-            else ""
-        )
-        label = self.builder or "adjacency"
-        return (
-            f"GraphBuildStats({label}: nodes={self.n_nodes}, "
-            f"edges(nnz)={self.n_edges}, density={self.density:.6e}{size})"
-        )
+    def summary(self) -> str:
+        """One line for people: ``14,537 nodes · 4.53 M edges (4.26 M word–word) · …``."""
+        from text4gcn.utils.reporting import format_bytes, format_count
+
+        parts = [f"{self.n_nodes:,} nodes", f"{format_count(self.n_edges)} edges"]
+        if self.word_word_edges is not None:
+            parts[-1] += f" ({format_count(self.word_word_edges)} word–word)"
+        parts.append(f"density {self.density:.2%}")
+        if self.file_bytes is not None:
+            parts.append(format_bytes(self.file_bytes))
+        return " · ".join(parts)
+
+    def __repr__(self) -> str:
+        fields = [f"builder={self.builder!r}", f"dataset={self.dataset_name!r}",
+                  f"nodes={self.n_nodes:,}", f"edges={self.n_edges:,}"]
+        if self.word_word_edges is not None:
+            fields.append(f"word_word={self.word_word_edges:,}")
+        fields.append(f"density={self.density:.2%}")
+        if self.file_bytes is not None:
+            from text4gcn.utils.reporting import format_bytes
+
+            fields.append(f"size={format_bytes(self.file_bytes)!r}")
+        return f"GraphBuildStats({', '.join(fields)})"
+
+    __str__ = __repr__
 
 
 def compute_adjacency_stats(
@@ -64,6 +82,7 @@ def compute_adjacency_stats(
     path: Optional[Union[str, Path]] = None,
     builder: Optional[str] = None,
     dataset_name: Optional[str] = None,
+    word_word_edges: Optional[int] = None,
 ) -> GraphBuildStats:
     """Compute :class:`GraphBuildStats` from a sparse adjacency matrix."""
     if not sp.issparse(adj):
@@ -90,6 +109,7 @@ def compute_adjacency_stats(
         builder=builder,
         dataset_name=dataset_name,
         path=path_str,
+        word_word_edges=word_word_edges,
     )
 
 
@@ -109,13 +129,3 @@ def load_adjacency_stats(
         builder=builder,
         dataset_name=dataset_name,
     )
-
-
-def report_stats(stats: GraphBuildStats, logger: Any = None) -> GraphBuildStats:
-    """Print or log graph stats (claim-facing #edges / memory)."""
-    message = str(stats)
-    if logger is not None and hasattr(logger, "info"):
-        logger.info(message)
-    else:
-        print(message)
-    return stats
