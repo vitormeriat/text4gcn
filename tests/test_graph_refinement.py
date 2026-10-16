@@ -130,6 +130,37 @@ class TestGraphRefinement:
         assert stats["nodes_original"] == stats["nodes_refined"]
 
 
+class TestRefinementSemantics:
+    """Regressions: documented guarantees of RefinementConfig."""
+
+    @staticmethod
+    def _kept(config):
+        _, info = apply_refinement(_make_toy_graph(), config, return_metadata=True)
+        return [m.original_index for m in info["metadata"]]
+
+    def test_keep_docs_protects_documents_from_degree_filters(self):
+        # every document has weighted degree 1.5 < 2.0
+        kept = self._kept(RefinementConfig(min_degree=2.0, keep_docs=True))
+        assert {0, 1, 5} <= set(kept)
+
+    def test_without_keep_docs_degree_filters_reach_documents(self):
+        with pytest.raises(ValueError, match="training document"):
+            self._kept(RefinementConfig(min_degree=2.0, keep_docs=False))
+
+    def test_keep_word_indices_overrides_other_word_filters(self):
+        # vocabulary index 2 is node 4, which has a single document neighbour
+        kept = self._kept(RefinementConfig(keep_word_indices={2}, min_doc_freq=10))
+        assert [i for i in kept if 2 <= i <= 4] == [4]
+
+    def test_top_k_keeps_original_weights(self):
+        """An edge in the top-k of both endpoints used to be summed twice."""
+        predata = _make_toy_graph()
+        out, _ = apply_refinement(predata, RefinementConfig(top_k_edges_per_node=1))
+        original = set(np.round(predata[0].data, 6))
+        assert set(np.round(out[0].data, 6)) <= original
+        assert (out[0] != out[0].T).nnz == 0
+
+
 class TestNodeMetadata:
     """Test NodeMetadata and build_node_metadata."""
 

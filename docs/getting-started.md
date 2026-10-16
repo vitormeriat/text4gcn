@@ -129,10 +129,10 @@ See [Choosing a Builder](guides/builders.md) for a comparison.
     from text4gcn.builder import Semantic
 
     Semantic(dataset_name="R8", dataset_path="data/").word2vec(
-        training_algorithm=1,   # 1 = CBOW, 2 = Skip-Gram
+        training_algorithm=1,   # 1 = skip-gram, 0 = CBOW
         embedding_dimension=300,
         num_epochs=20,
-        threshold=0.95,
+        threshold=0.7,
     )
     ```
 

@@ -36,7 +36,8 @@ class RefinementConfig:
     max_doc_freq_ratio: Optional[float] = None
     """For word nodes only: drop if doc_freq / num_docs > this (max_df ratio)."""
     keep_docs: bool = True
-    """If True, always keep all document nodes (train + test). Only filter words."""
+    """If True, always keep all document nodes (train + test): every node filter,
+    including min_degree/max_degree, then applies to word nodes only."""
     drop_word_indices: Optional[Set[int]] = None
     """Word indices (in vocabulary) to drop, e.g. stopwords."""
     keep_word_indices: Optional[Set[int]] = None
@@ -130,6 +131,9 @@ class GraphRefinement:
             node_type, word_id = _node_type_and_word_id(i, train_size, vocab_size)
             deg = degree[i]
 
+            if node_type != "word" and self.config.keep_docs:
+                continue  # documents are never filtered
+
             if self.config.min_degree is not None and deg < self.config.min_degree:
                 keep[i] = False
                 continue
@@ -138,6 +142,10 @@ class GraphRefinement:
                 continue
 
             if node_type == "word":
+                if self.config.keep_word_indices is not None and word_id is not None:
+                    # A whitelist overrides every other word filter.
+                    keep[i] = word_id in self.config.keep_word_indices
+                    continue
                 if self.config.min_word_degree is not None and deg < self.config.min_word_degree:
                     keep[i] = False
                     continue
@@ -152,10 +160,6 @@ class GraphRefinement:
                     if doc_degree_word[i] / num_docs > self.config.max_doc_freq_ratio:
                         keep[i] = False
                         continue
-                if self.config.keep_word_indices is not None and word_id is not None:
-                    if word_id not in self.config.keep_word_indices:
-                        keep[i] = False
-                        continue
                 if self.config.drop_word_indices is not None and word_id is not None:
                     if word_id in self.config.drop_word_indices:
                         keep[i] = False
@@ -164,10 +168,6 @@ class GraphRefinement:
                     if vocab[word_id] in self.config.stopwords:
                         keep[i] = False
                         continue
-            elif self.config.keep_docs:
-                # keep all docs by default; no change to keep[i]
-                pass
-            # else: could add doc filters here
 
         return keep
 
@@ -206,8 +206,9 @@ class GraphRefinement:
                 sub = sp.csr_matrix(
                     (data, (rows, cols)), shape=(n, n)
                 )
-            sub = sub + sub.T
-            sub = sub.multiply(sub > 0)  # keep symmetric, drop duplicates that became 0
+            # An edge survives if it is in the top-k of either endpoint. maximum()
+            # keeps its original weight; a sum would double edges kept by both.
+            sub = sub.maximum(sub.T)
 
         return sub
 

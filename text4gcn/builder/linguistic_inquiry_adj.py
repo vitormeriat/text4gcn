@@ -19,53 +19,24 @@ class LiwcAdjacency():
         self.flop = flop.FileOps(logger=self.logger)
 
     def build_relation_pair(self, docs_of_words):
+        """Count adjacent word pairs that share at least one LIWC category."""
         stop_words = set(stopwords.words('english'))
         liwc = Liwc(self.liwc_path)
 
-        errors = 0
         rela_pair_count_str = {}
         for docs_of_word in tqdm(docs_of_words):
-            res = []
-            try:
-                for word in docs_of_word:
-                    if len(liwc.parse(word)):
-                        res.append(
-                            {'token': word, 'class': liwc.get_class(word)[1]})
-                    else:
-                        res.append({'token': word, 'class': None})
-
-            except Exception:
-                errors += 1
-
-            res_len = len(res)
-            for i in range(res_len):
-                if i+1 == res_len:
+            categories = [set(liwc.search(word)) for word in docs_of_word]
+            for i in range(len(docs_of_word) - 1):
+                word_i, word_j = docs_of_word[i], docs_of_word[i + 1]
+                if word_i == word_j or word_i in stop_words or word_j in stop_words:
                     continue
-
-                if res[i]['class'] is None or res[i + 1]['class'] is None:
+                if not categories[i] & categories[i + 1]:
                     continue
-
-                if res[i]['class'] == res[i+1]['class']:
-                    continue
-
-                if res[i]['token'] in stop_words or res[i+1]['token'] in stop_words:
-                    continue
-
-                word_pair_str = res[i]['token'] + ',' + res[i+1]['token']
-                if word_pair_str in rela_pair_count_str:
-                    rela_pair_count_str[word_pair_str] += 1
-                else:
-                    rela_pair_count_str[word_pair_str] = 1
-                # two orders
-                word_pair_str = res[i+1]['token'] + ',' + res[i]['token']
-                if word_pair_str in rela_pair_count_str:
-                    rela_pair_count_str[word_pair_str] += 1
-                else:
-                    rela_pair_count_str[word_pair_str] = 1
-        print(f'[INFO] Error in Dependency Parse: {errors}')
+                for pair in (f'{word_i},{word_j}', f'{word_j},{word_i}'):
+                    rela_pair_count_str[pair] = rela_pair_count_str.get(pair, 0) + 1
         return rela_pair_count_str
 
-    def compute_weights_with_PMI(self, docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col):
+    def compute_weights_with_PMI(self, docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, row, col):
         """Delegate to shared RWF weight helper (DCAI 2022 Eq. 6–8)."""
         return adjcy.compute_weights_with_PMI(
             docs_of_words,
@@ -73,10 +44,6 @@ class LiwcAdjacency():
             word_window_freq,
             train_size,
             word_id_map,
-            min_count1,
-            max_count1,
-            count_mean1,
-            count_std1,
             row,
             col,
         )
@@ -85,12 +52,9 @@ class LiwcAdjacency():
         row = []
         col = []
 
-        min_count1, max_count1, count_mean1, count_std1 = relation_pair_statitcs(
-            rela_pair_count_str)
-
         # compute weights PMI
         weight = self.compute_weights_with_PMI(docs_of_words, rela_pair_count_str, word_window_freq,
-                                               train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col)
+                                               train_size, word_id_map, row, col)
 
         # doc word frequency
         doc_word_freq = get_doc_word_freq(docs_of_words, word_id_map)

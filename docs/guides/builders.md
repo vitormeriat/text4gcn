@@ -48,10 +48,10 @@ Word2Vec trains embeddings on your corpus from scratch. Words are connected if t
 from text4gcn.builder import Semantic
 
 Semantic(dataset_name="R8", dataset_path="data/").word2vec(
-    training_algorithm=1,   # 1=CBOW, 2=Skip-Gram
+    training_algorithm=1,   # 1 = skip-gram, 0 = CBOW
     embedding_dimension=300,
     num_epochs=20,
-    threshold=0.95,
+    threshold=0.7,
 )
 ```
 
@@ -61,8 +61,9 @@ Semantic(dataset_name="R8", dataset_path="data/").word2vec(
 - You want embeddings trained on your own data
 
 **Tune:**
-- `training_algorithm` — CBOW (`1`) is faster; Skip-Gram (`2`) is better on rare words
-- `threshold` — higher values (0.95+) create sparser graphs; lower values (0.80) create denser, noisier graphs
+- `training_algorithm` — skip-gram (`1`, used in the DCAI 2022 paper) is better on rare words; CBOW (`0`) is faster
+- `seed` / `workers` — with the default `workers=1` the graph is reproducible for a given `seed`; more workers train faster but vary between runs
+- `threshold` — higher values create sparser graphs. On 20 Newsgroups (4 categories, 20 epochs) 0.95 kept 79 word–word edges, 0.7 kept 1,610 and 0.5 kept 11,127, all with the same accuracy; the default is 0.7
 
 ---
 
@@ -87,7 +88,10 @@ Semantic(dataset_name="R8", dataset_path="data/").bert(threshold=0.95)
 
 ## Semantic — Cosine Similarity
 
-Connects words whose TF-IDF document-vector cosine similarity exceeds the threshold. Captures document-level distributional similarity without training embeddings.
+Connects words whose **WordNet definitions** are similar: `TextPipeline` saves a TF-IDF vector of each word's WordNet glosses, and the builder links two words when the cosine similarity of those vectors exceeds the threshold. Words that WordNet does not know get no word–word edges.
+
+!!! note "English only"
+    WordNet definitions are in English. On other languages almost no word has a definition, so the graph keeps only the document–word edges.
 
 ```python
 from text4gcn.builder import Semantic
@@ -96,8 +100,8 @@ Semantic(dataset_name="R8", dataset_path="data/").cosine_similarity(threshold=0.
 ```
 
 **Use when:**
-- You want a non-parametric semantic measure without training Word2Vec
-- Documents are long enough for TF-IDF vectors to be meaningful
+- You want a semantic measure from a lexical resource, without training Word2Vec
+- The corpus is in English
 
 ---
 
@@ -125,7 +129,7 @@ Syntactic(dataset_name="R8", dataset_path="data/").dependency_parsing(
 
 ## Syntactic — LIWC
 
-Connects words that share LIWC (Linguistic Inquiry and Word Count) psycholinguistic categories (e.g. "positive emotion", "cognitive process").
+Connects **adjacent** words that share at least one LIWC (Linguistic Inquiry and Word Count) psycholinguistic category (e.g. "positive emotion", "cognitive process"). Like the other RWF builders, a pair needs positive PMI, and its weight is its pair count divided by the largest pair count.
 
 ```python
 from text4gcn.builder import Syntactic

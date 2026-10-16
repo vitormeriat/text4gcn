@@ -46,7 +46,7 @@ class RefinementConfig:
 | `max_word_degree` | `float \| None` | `None` | Drop **word** nodes with degree above this. |
 | `min_doc_freq` | `int \| None` | `None` | Drop word nodes that appear in fewer than this many documents (equivalent to sklearn's `min_df`). |
 | `max_doc_freq_ratio` | `float \| None` | `None` | Drop word nodes that appear in more than this fraction of documents (equivalent to `max_df`). |
-| `keep_docs` | `bool` | `True` | When `True`, document nodes are never removed by node filters. |
+| `keep_docs` | `bool` | `True` | When `True`, document nodes are never removed: every node filter, including `min_degree` / `max_degree`, applies to word nodes only. |
 | `drop_word_indices` | `set[int] \| None` | `None` | Explicit set of vocabulary indices to drop. |
 | `keep_word_indices` | `set[int] \| None` | `None` | When set, only these vocabulary indices are kept (overrides other word filters). |
 
@@ -55,7 +55,7 @@ class RefinementConfig:
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `edge_weight_threshold` | `float \| None` | `None` | Drop edges with weight strictly below this value. |
-| `top_k_edges_per_node` | `int \| None` | `None` | Keep only the top-k heaviest edges per node (symmetric). |
+| `top_k_edges_per_node` | `int \| None` | `None` | Keep only the top-k heaviest edges per node. An edge survives if it is in the top-k of either endpoint, with its original weight. |
 
 ### Vocabulary fields
 

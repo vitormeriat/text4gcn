@@ -76,7 +76,7 @@ class DependencyParsingAdjacency():
         nlp.close()
         return rela_pair_count_str
 
-    def compute_weights_with_PMI(self, docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col):
+    def compute_weights_with_PMI(self, docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, row, col):
         """Delegate to shared RWF weight helper (DCAI 2022 Eq. 6–8)."""
         return adjcy.compute_weights_with_PMI(
             docs_of_words,
@@ -84,10 +84,6 @@ class DependencyParsingAdjacency():
             word_window_freq,
             train_size,
             word_id_map,
-            min_count1,
-            max_count1,
-            count_mean1,
-            count_std1,
             row,
             col,
         )
@@ -96,10 +92,6 @@ class DependencyParsingAdjacency():
         row = []
         col = []
 
-        min_count1, max_count1, count_mean1, count_std1 = relation_pair_statitcs(
-            rela_pair_count_str
-        )
-
         # compute weights PMI
         weight = self.compute_weights_with_PMI(
             docs_of_words,
@@ -107,10 +99,6 @@ class DependencyParsingAdjacency():
             word_window_freq,
             train_size,
             word_id_map,
-            min_count1,
-            max_count1,
-            count_mean1,
-            count_std1,
             row,
             col
         )

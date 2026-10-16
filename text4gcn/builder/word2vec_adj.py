@@ -18,8 +18,10 @@ class Word2VecAdjacency():
                  embedding_dimension,
                  num_epochs,
                  language: str = "english",
-                 threshold: float = 0.95,
-                 output_path: str = None):
+                 threshold: float = 0.7,
+                 output_path: str = None,
+                 seed: int = 1234,
+                 workers: int = 1):
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.training_regime = training_regime
@@ -30,6 +32,8 @@ class Word2VecAdjacency():
         self.language = language
         self.threshold = threshold
         self.output_path = output_path
+        self.seed = seed
+        self.workers = workers
 
     def build_relation_pair(self, docs_of_words):
         stop_words = set(stopwords.words(self.language))
@@ -40,6 +44,8 @@ class Word2VecAdjacency():
             num_epochs=self.num_epochs,
             embedding_dimension=self.embedding_dimension,
             training_regime=self.training_regime,
+            seed=self.seed,
+            workers=self.workers,
         )
 
         errors = 0
@@ -81,12 +87,9 @@ class Word2VecAdjacency():
         row = []
         col = []
 
-        min_count1, max_count1, count_mean1, count_std1 = adjcy.relation_pair_statitcs(
-            rela_pair_count_str)
-
         # compute weights PMI
         weight = adjcy.compute_weights_with_PMI(
-            docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col)
+            docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, row, col)
 
         # doc word frequency
         doc_word_freq = adjcy.get_doc_word_freq(docs_of_words, word_id_map)

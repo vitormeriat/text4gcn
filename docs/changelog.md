@@ -23,7 +23,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Changed
 - Training seed is deterministic (`GNN(seed=…)` seeds torch / NumPy / Python); no random offset
 - Dropout from `GNN(dropout=…)` is passed into the GCN; `model.train()` after each eval epoch
-- RWF word–word weights use Max–Min normalisation (DCAI Eq. 6); PMI is a gate only
+- `Semantic.word2vec(threshold=…)` defaults to 0.7 instead of 0.95: with the 20 epochs now actually applied, 0.95 left almost no word–word edges (79 on 20 Newsgroups, 4 categories)
+- RWF word–word weights are the pair count divided by the largest pair count, in (0, 1]; PMI is a gate only. (A Max–Min scaling gave the least frequent pairs weight 0, which deleted their edges.)
 - `Layer` is `str, Enum` with **only** `Layer.GCN` (GAT removed from the public API)
 - CoreNLP import is lazy; syntactic builders require the optional extra
 - Documentation CI uses MkDocs (replacing Sphinx)
@@ -46,6 +47,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - AsyncProcessor dead path
 
 ### Fixed
+- `Semantic.word2vec(num_epochs=…)` was never passed to gensim, which always trained 5 epochs. Training is now also reproducible: `seed` (default 1234) and `workers` (default 1) are new parameters, and vector initialisation no longer depends on `PYTHONHASHSEED`. The code behind the DCAI 2022 paper had the same bug, so its SEMANTIC results were obtained with 5 epochs
+- `Syntactic.linguistic_inquiry()` looked words up in the LIWC dictionary letter by letter, so real words never matched; it now connects adjacent words that share at least one LIWC category. The code behind the DCAI 2022 paper had the same bug, so its LINGUISTIC results do not reflect LIWC categories
+- `Semantic.cosine_similarity()`: words without a WordNet definition all received the same placeholder vector and formed a clique (99% of the word–word edges on 20 Newsgroups); they now get no word–word edges
+- `RefinementConfig(keep_docs=True)` did not protect documents from `min_degree` / `max_degree`
+- `RefinementConfig(keep_word_indices=…)` now overrides the other word filters, as documented
+- `RefinementConfig(top_k_edges_per_node=…)` doubled the weight of edges kept by both endpoints
 - Ohsumed's `training` split (and `20news-bydate-train`) was dropped by the shuffle step, which only accepted values ending in `train`; split handling now follows the documented rule (`train`, `training`, `20news-bydate-train` → train, anything else → test)
 - `RefinementConfig(min_doc_freq=…)` / `max_doc_freq_ratio` counted 0 documents for every word on CSR graphs, which removed all words (chance-level accuracy)
 - `Semantic.cosine_similarity()` compares word vectors in vectorised chunks (seconds instead of hours on a 10k-word vocabulary) and returns `GraphBuildStats` like the other builders

@@ -16,30 +16,29 @@ def extract_vocabulary(docs_of_words: Iterable[List[str]]) -> List[str]:
     return list(vocabulary.keys())
 
 
-def extract_tf_idf_word_vectors(word_definitions: List[str], max_features: int) -> List[np.ndarray]:
-    tf_idf_vectorizer = TfidfVectorizer(max_features=max_features)
-    return tf_idf_vectorizer.fit_transform(word_definitions).toarray()
+def extract_tf_idf_word_vectors(word_definitions: List[str], max_features: int) -> np.ndarray:
+    """TF-IDF vectors of the word definitions, one row per word.
+
+    Words without a definition (empty string) get an all-zero row, so similarity
+    builders give them no edges instead of treating them all as identical.
+    """
+    defined = [i for i, definition in enumerate(word_definitions) if definition]
+    if not defined:                     # e.g. a non-English corpus: WordNet knows no word
+        return np.zeros((len(word_definitions), 1))
+    tf_idf = TfidfVectorizer(max_features=max_features).fit_transform(
+        [word_definitions[i] for i in defined]).toarray()
+    vectors = np.zeros((len(word_definitions), tf_idf.shape[1]))
+    vectors[defined] = tf_idf
+    return vectors
 
 
 def extract_word_definitions(vocabulary: List[str]) -> List[str]:
+    """All WordNet definitions of each word, joined; an empty string when WordNet
+    does not know the word."""
     from nltk.corpus import wordnet
-    # from nltk import download
-    # temporary_nltk_folder = 'venv/nltk_data/'
-    # download(info_or_id='wordnet', download_dir=temporary_nltk_folder)
-    # download(info_or_id='wordnet')
-    # download(info_or_id='omw-1.4')
 
-    merged_definitions_of_words = []
-    for word in vocabulary:
-        syn_sets_of_word = wordnet.synsets(word.strip())
-        word_definitions = [syn_set.definition()
-                            for syn_set in syn_sets_of_word]
-        merged_definitions_of_word = ' '.join(
-            word_definitions) if word_definitions else '<PAD>'
-
-        merged_definitions_of_words.append(merged_definitions_of_word)
-    # rmtree(temporary_nltk_folder)
-    return merged_definitions_of_words
+    return [' '.join(synset.definition() for synset in wordnet.synsets(word.strip()))
+            for word in vocabulary]
 
 
 def build_word_doc_list(docs_of_words):

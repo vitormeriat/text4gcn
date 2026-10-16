@@ -68,12 +68,9 @@ class EmbeddingAdjacency():
         row = []
         col = []
 
-        min_count1, max_count1, count_mean1, count_std1 = adjcy.relation_pair_statitcs(
-            rela_pair_count_str)
-
         # compute weights PMI
         weight = adjcy.compute_weights_with_PMI(
-            docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col)
+            docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, row, col)
 
         # doc word frequency
         doc_word_freq = adjcy.get_doc_word_freq(docs_of_words, word_id_map)

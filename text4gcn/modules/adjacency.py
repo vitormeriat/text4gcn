@@ -216,21 +216,6 @@ def build_word_window_freq(docs_of_words):
     return word_window_freq
 
 
-def relation_pair_statitcs(rela_pair_count_str):
-    """Return min, max, mean, and sample std of RWF pair occurrence counts."""
-    if not rela_pair_count_str:
-        return 0.0, 0.0, 0.0, 1.0
-
-    count1 = list(rela_pair_count_str.values())
-    min_count1 = float(min(count1))
-    max_count1 = float(max(count1))
-    count_mean1 = float(np.mean(count1))
-    count_std1 = float(np.std(count1, ddof=1)) if len(count1) > 1 else 1.0
-    if count_std1 == 0.0:
-        count_std1 = 1.0
-    return min_count1, max_count1, count_mean1, count_std1
-
-
 def get_doc_word_freq(docs_of_words, word_id_map):
     doc_word_freq = {}
     for doc_id in range(len(docs_of_words)):
@@ -273,57 +258,37 @@ def compute_weights_with_PMI(
     word_window_freq,
     train_size,
     word_id_map,
-    min_count1,
-    max_count1,
-    count_mean1,
-    count_std1,
     row,
     col,
 ):
     """Build word–word edge weights for RWF builders (DCAI 2022 Eq. 6–8).
 
-    PMI is used only as a gate (``Rdep``: keep edge iff PMI > 0). The stored
-    weight is Max–Min normalisation of the RWF pair count ``O(wi, wj)``, as in
-    Eq. (6) of Pereira & de Castro (DCAI 2022).
-
-    Parameters ``count_mean1`` and ``count_std1`` are kept for call-site
-    compatibility; they are not used for the weight.
+    PMI is used only as a gate (``Rdep``: keep edge iff PMI > 0). The weight is
+    the RWF pair count ``O(wi, wj)`` divided by the largest count, so weights lie
+    in (0, 1] and every pair that passes the filter keeps a non-zero edge (a
+    Max–Min scaling would give the least frequent pairs weight 0, deleting them).
     """
-    del count_mean1, count_std1  # unused; Max–Min uses min/max only
     weight = []
-    errors = 0
+    if not rela_pair_count_str:
+        return weight
     num_window = len(docs_of_words)
-    denom = max_count1 - min_count1
+    max_count = max(rela_pair_count_str.values())
 
     for key, count in rela_pair_count_str.items():
-        try:
-            temp = key.split(',')
-            i = temp[0]
-            j = temp[1]
+        i, j = key.split(',')
+        if i not in word_window_freq or j not in word_window_freq:
+            continue
 
-            if i not in word_window_freq or j not in word_window_freq:
-                continue
+        pmi = log(
+            1.0
+            * count
+            / num_window
+            / (1.0 * word_window_freq[i] * word_window_freq[j] / num_window ** 2)
+        )
+        if pmi <= 0:
+            continue
 
-            word_freq_i = word_window_freq[i]
-            word_freq_j = word_window_freq[j]
-            pmi = log(
-                1.0
-                * count
-                / num_window
-                / (1.0 * word_freq_i * word_freq_j / num_window ** 2)
-            )
-            if pmi <= 0:
-                continue
-
-            row.append(train_size + word_id_map[i])
-            col.append(train_size + word_id_map[j])
-            if denom == 0.0:
-                wei = 1.0
-            else:
-                wei = (count - min_count1) / denom
-            weight.append(wei)
-        except Exception:
-            errors += 1
-
-    print(f'[INFO] Error in Compute Weights: {errors}')
+        row.append(train_size + word_id_map[i])
+        col.append(train_size + word_id_map[j])
+        weight.append(count / max_count)
     return weight

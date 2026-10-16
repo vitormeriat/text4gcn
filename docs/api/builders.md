@@ -91,8 +91,10 @@ def word2vec(
     embedding_dimension: int,
     num_epochs: int,
     language: str = "english",
-    threshold: float = 0.95,
+    threshold: float = 0.7,
     output_path: str = None,
+    seed: int = 1234,
+    workers: int = 1,
 ) -> GraphBuildStats
 ```
 
@@ -102,12 +104,14 @@ Trains Word2Vec embeddings on the corpus and connects words whose cosine similar
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `training_algorithm` | `int` | — | `1` = CBOW, `2` = Skip-Gram. |
+| `training_algorithm` | `int` | — | `1` = skip-gram (as in the DCAI 2022 paper), `0` = CBOW. |
 | `embedding_dimension` | `int` | — | Embedding size (e.g. 300). |
-| `num_epochs` | `int` | — | Training epochs for Word2Vec. |
+| `num_epochs` | `int` | — | Word2Vec training epochs (the paper uses 20). |
 | `language` | `str` | `"english"` | Language for tokenisation. |
-| `threshold` | `float` | `0.95` | Minimum cosine similarity to create an edge. |
+| `threshold` | `float` | `0.7` | Minimum cosine similarity between two adjacent words' embeddings to create an edge. Calibrated on 20 Newsgroups: with 20 epochs, the paper's 0.95 leaves almost no word–word edges. |
 | `output_path` | `str \| None` | `None` | Override output directory. |
+| `seed` | `int` | `1234` | Seed of the Word2Vec initialisation. |
+| `workers` | `int` | `1` | Word2Vec threads. With `1` the graph is reproducible for a given `seed`; more threads train faster but vary between runs. |
 
 #### Returns
 
@@ -119,10 +123,10 @@ Trains Word2Vec embeddings on the corpus and connects words whose cosine similar
 from text4gcn.builder import Semantic
 
 stats = Semantic(dataset_name="R8", dataset_path="data/").word2vec(
-    training_algorithm=1,   # CBOW
+    training_algorithm=1,   # skip-gram
     embedding_dimension=300,
     num_epochs=20,
-    threshold=0.95,
+    threshold=0.7,
 )
 ```
 
@@ -162,7 +166,7 @@ Semantic(dataset_name="R8", dataset_path="data/").bert(threshold=0.95)
 def cosine_similarity(self, threshold: float = 0.95, output_path: str = None)
 ```
 
-Connects words using TF-IDF–weighted cosine similarity between document vectors.
+Connects words whose WordNet definitions are similar: the cosine similarity of the TF-IDF vectors of their glosses, saved by `TextPipeline`. Words without a WordNet definition get no word–word edges, so the builder is meaningful for English only.
 
 #### Parameters
 
@@ -220,7 +224,7 @@ Connects words that have a syntactic dependency relation in the corpus, using St
 def linguistic_inquiry(self, liwc_path: str)
 ```
 
-Connects words that share LIWC (Linguistic Inquiry and Word Count) categories.
+Connects adjacent words that share at least one LIWC (Linguistic Inquiry and Word Count) category, gated by positive PMI. The edge weight is the pair count divided by the largest pair count.
 
 !!! note "Working in Progress"
     Requires access to a LIWC dictionary file.

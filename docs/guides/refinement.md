@@ -88,7 +88,7 @@ Removes all edges with TF-IDF or PMI weight below 0.05.
 RefinementConfig(top_k_edges_per_node=10)
 ```
 
-Keeps only the 10 heaviest edges per node. Creates a sparser, cleaner graph. Applied symmetrically.
+Keeps only the 10 heaviest edges per node. Creates a sparser, cleaner graph. An edge survives if it is among the 10 heaviest of *either* endpoint, and keeps its original weight.
 
 ---
 

@@ -75,10 +75,18 @@ class Semantic(Adjacency):
         embedding_dimension: int,
         num_epochs: int,
         language: str = "english",
-        threshold: float = 0.95,
+        threshold: float = 0.7,
         output_path: Optional[str] = None,
+        seed: int = 1234,
+        workers: int = 1,
     ) -> GraphBuildStats:
-        """Build Word2Vec RWF adjacency (DCAI 2022 semantic filter)."""
+        """Build Word2Vec RWF adjacency (DCAI 2022 semantic filter).
+
+        The default ``threshold`` (0.7) was calibrated on 20 Newsgroups with the
+        paper's 20 epochs; the paper's 0.95 leaves almost no word–word edges once
+        the epochs are actually applied. ``seed`` fixes the Word2Vec initialisation. With ``workers=1`` (default)
+        the graph is reproducible; more workers train faster but vary between runs.
+        """
         adj = Word2VecAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
@@ -88,6 +96,8 @@ class Semantic(Adjacency):
             language=language,
             threshold=threshold,
             output_path=output_path,
+            seed=seed,
+            workers=workers,
         )
         return adj.build()
 

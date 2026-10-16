@@ -40,35 +40,28 @@ class TestSeedWiring:
 
 
 class TestRwfWeights:
-    def test_max_min_not_zscore(self):
+    def test_weights_are_count_over_max_count(self):
         docs = [["a", "b"], ["a", "b"], ["a", "c"]]
         rela = {"a,b": 10, "b,a": 10, "a,c": 2, "c,a": 2}
         word_window_freq = {"a": 3, "b": 2, "c": 1}
         word_id_map = {"a": 0, "b": 1, "c": 2}
-        min_c, max_c, mean_c, std_c = adjcy.relation_pair_statitcs(rela)
         row, col = [], []
         weights = adjcy.compute_weights_with_PMI(
-            docs,
-            rela,
-            word_window_freq,
-            train_size=0,
-            word_id_map=word_id_map,
-            min_count1=min_c,
-            max_count1=max_c,
-            count_mean1=mean_c,
-            count_std1=std_c,
-            row=row,
-            col=col,
+            docs, rela, word_window_freq, train_size=0, word_id_map=word_id_map, row=row, col=col,
         )
-        assert weights, "expected at least one positive-PMI edge"
-        assert all(0.0 <= w <= 1.0 for w in weights)
-        assert 1.0 in weights
+        assert sorted(weights) == pytest.approx([0.2, 0.2, 1.0, 1.0])
 
-    def test_relation_pair_stats_min_not_stuck_at_zero(self):
-        rela = {"a,b": 5, "b,a": 5, "a,c": 3, "c,a": 3}
-        min_c, max_c, _, _ = adjcy.relation_pair_statitcs(rela)
-        assert min_c == 3.0
-        assert max_c == 5.0
+    def test_least_frequent_pair_keeps_an_edge(self):
+        """Regression: Max-Min scaling gave the least frequent pairs weight 0, deleting their edges."""
+        docs = [["a", "b"], ["c", "d"], ["a", "b"]]
+        rela = {"a,b": 2, "b,a": 2, "c,d": 1, "d,c": 1}
+        word_window_freq = {"a": 2, "b": 2, "c": 1, "d": 1}
+        word_id_map = {"a": 0, "b": 1, "c": 2, "d": 3}
+        weights = adjcy.compute_weights_with_PMI(
+            docs, rela, word_window_freq, train_size=0, word_id_map=word_id_map, row=[], col=[],
+        )
+        assert len(weights) == 4
+        assert min(weights) > 0.0
 
 
 class TestEarlyStopBestCheckpoint:
