@@ -104,7 +104,7 @@ class Word2VecAdjacency():
             dir_path=f'{self.dataset_path}/log', overwrite=False)
         with open(f'{self.dataset_path}/log/{self.dataset_name}_dataset.txt', 'a', encoding="utf-8") as my_file:
             my_file.writelines(hist)
-    
+
     def build(self) -> GraphBuildStats:
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}"

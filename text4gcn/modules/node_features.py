@@ -62,8 +62,8 @@ class NodeFeatures():
 
     def compute_tx(self, docs_of_words: List[List[str]], test_size: int, real_train_size: int, word_emb_dim: int,
                    w_vectors: WORD_VECTORS_TYPE) -> csr_matrix:
-        """ 
-        tx: feature vectors of test docs, no initial features 
+        """
+        tx: feature vectors of test docs, no initial features
         """
         data_tx = []
         for i in range(test_size):

@@ -52,7 +52,7 @@ class PrintLog():
 
 class Process:
     '''
-    Metadata class to define a decorator to save all the metadata related with the execution 
+    Metadata class to define a decorator to save all the metadata related with the execution
     of a function and save all to the database
     '''
 

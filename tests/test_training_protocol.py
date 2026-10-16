@@ -228,4 +228,3 @@ class TestDevicePlacement:
                    trainer.train_mask, trainer.val_mask, trainer.test_mask,
                    trainer.tm_train_mask, *trainer.support]
         assert {t.device.type for t in tensors} == {"meta"}
-

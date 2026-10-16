@@ -2,94 +2,84 @@ name: CI
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: poetry
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Lint (ruff)
+        run: poetry run ruff check .
+
+      - name: Type check (mypy, not blocking yet)
+        continue-on-error: true
+        run: poetry run mypy text4gcn
+
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Install Poetry
+        run: pipx install poetry
 
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: latest
-        virtualenvs-create: true
-        virtualenvs-in-project: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
 
-    - name: Load cached venv
-      id: cached-poetry-dependencies
-      uses: actions/cache@v3
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/pyproject.toml') }}
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
 
-    - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root --with dev
+      - name: Tests
+        run: poetry run pytest tests/ -q -o addopts= --tb=short
 
-    - name: Install project
-      run: poetry install --no-interaction --with dev
-
-    - name: Lint (flake8 — critical + style on package)
-      run: |
-        poetry run flake8 text4gcn \
-          --max-line-length=100 \
-          --count \
-          --select=E9,F63,F7,F82,F821,E722,F401,F841
-
-    - name: Type check (mypy)
-      continue-on-error: true
-      run: poetry run mypy text4gcn --ignore-missing-imports
-      # Soft gate until the remaining type annotations are complete.
-      # flake8 (F821) and pytest are the hard quality gates.
-
-    - name: Tests
-      run: |
-        poetry run pytest tests/ \
-          -q -o addopts= --tb=short
-
-    - name: Reproduce script smoke
-      run: poetry run python scripts/reproduce_dcai2022.py --reference-only
+      - name: Reproduce script smoke
+        run: poetry run python scripts/reproduce_dcai2022.py --reference-only
 
   build:
     runs-on: ubuntu-latest
-    needs: test
-
+    needs: [lint, test]
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
+      - name: Install Poetry
+        run: pipx install poetry
 
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: latest
-        virtualenvs-create: true
-        virtualenvs-in-project: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
 
-    - name: Install dependencies
-      run: poetry install --no-interaction --no-root
+      - name: Build package
+        run: poetry build
 
-    - name: Build package
-      run: poetry build
+      - name: Check package metadata
+        run: pipx run twine check --strict dist/*
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist
-        path: dist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

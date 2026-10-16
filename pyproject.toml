@@ -56,47 +56,29 @@ packages = [{include = "text4gcn"}]
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
-black = "^23.0.0"
-isort = "^5.12.0"
-flake8 = "^6.0.0"
 mypy = "^1.5.0"
 pre-commit = "^3.4.0"
+ruff = ">=0.6"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.5.0"
 mkdocs-material = "^9.5.0"
-mkdocstrings = {version = "^0.24.0", extras = ["python"]}
 mkdocs-jupyter = ">=0.24.0,<1.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 88
-target-version = ['py310', 'py311', 'py312', 'py313']
-include = '\.pyi?$'
-extend-exclude = '''
-/(
-  \.eggs
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | build
-  | dist
-)/
-'''
+[tool.ruff]
+line-length = 100
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-multi_line_output = 3
-line_length = 88
-known_first_party = ["text4gcn"]
+[tool.ruff.lint]
+# Errors that break code (pyflakes, syntax, comparisons). Style rules can be
+# added once the code base has been formatted with `ruff format`.
+select = ["E4", "E7", "E9", "F"]
 
 [tool.mypy]
-python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_configs = true
 # Strict flags deferred until the remaining type annotations are complete.

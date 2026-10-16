@@ -66,7 +66,7 @@ def test_validate_files_with_success():
     # Initialize logger and file operations
     lgg = logger.PrintLog()
     flops = flop.FileOps(logger=lgg)
-    
+
     # Validate that text and meta files have matching line counts
     num_lines_f1, num_lines_f2 = flops.validate_input_files_lines(
         path_txt="tests/data/file_valid.txt", path_meta="tests/data/file_valid.meta")
@@ -75,14 +75,14 @@ def test_validate_files_with_success():
     # Validate that meta file has correct column structure
     meta_validation = flops.validate_input_meta_columns(
         file_path="tests/data/file_valid.meta")
-    assert meta_validation == True
+    assert meta_validation
 
     # Perform complete file validation
-    message, status = flops.validate_files(path_txt="tests/data/file_valid.txt", 
+    message, status = flops.validate_files(path_txt="tests/data/file_valid.txt",
                                 path_meta="tests/data/file_valid.meta")
-    
+
     # Verify validation succeeded and message indicates success
-    assert status == True
+    assert status
     assert message == '[FILES VALIDATION] - [meta] Validated file - [corpus] Validated file'
 
 
@@ -91,7 +91,7 @@ def test_validate_files_fail_meta_missing_column():
     # Initialize logger and file operations
     lgg = logger.PrintLog()
     flops = flop.FileOps(logger=lgg)
-    
+
     # Validate line counts (should match even if columns are wrong)
     num_lines_f1, num_lines_f2 = flops.validate_input_files_lines(
         path_txt="tests/data/file_valid.txt", path_meta="tests/data/file_meta_2_cols.meta")
@@ -100,14 +100,14 @@ def test_validate_files_fail_meta_missing_column():
     # Validate meta columns - should fail because file has only 2 columns instead of expected format
     meta_validation = flops.validate_input_meta_columns(
         file_path="tests/data/file_meta_2_cols.meta")
-    assert meta_validation == False
+    assert not meta_validation
 
     # Perform complete file validation - should fail due to meta file structure
-    message, status = flops.validate_files(path_txt="tests/data/file_valid.txt", 
+    message, status = flops.validate_files(path_txt="tests/data/file_valid.txt",
                                 path_meta="tests/data/file_meta_2_cols.meta")
-    
+
     # Verify validation failed with appropriate error message
-    assert status == False
+    assert not status
     assert message == '[FILES VALIDATION] - [meta] The meta file does not correspond to standard - [corpus] Validated file'
 
 
@@ -116,11 +116,11 @@ def test_validate_files_fail_different_rows_count():
     # Initialize logger and file operations
     lgg = logger.PrintLog()
     flops = flop.FileOps(logger=lgg)
-    
+
     # Validate line counts - should detect mismatch (10 lines in txt vs 20 in meta)
     num_lines_f1, num_lines_f2 = flops.validate_input_files_lines(
         path_txt="tests/data/file_txt_10_lines.txt", path_meta="tests/data/file_valid.meta")
-    
+
     # Verify the mismatch is detected
     assert num_lines_f1 == 10
     assert num_lines_f2 == 20
@@ -129,14 +129,14 @@ def test_validate_files_fail_different_rows_count():
     # Meta file structure is valid, but line count doesn't match
     meta_validation = flops.validate_input_meta_columns(
         file_path="tests/data/file_valid.meta")
-    assert meta_validation == True
+    assert meta_validation
 
     # Perform complete file validation - should fail due to line count mismatch
-    message, status = flops.validate_files(path_txt="tests/data/file_txt_10_lines.txt", 
+    message, status = flops.validate_files(path_txt="tests/data/file_txt_10_lines.txt",
                                 path_meta="tests/data/file_valid.meta")
-    
+
     # Verify validation failed with appropriate error message
-    assert status == False
+    assert not status
     assert message == '[FILES VALIDATION] - [meta] Validated file - [corpus] Files do not have the same count of lines'
 
 

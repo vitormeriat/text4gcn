@@ -7,10 +7,10 @@ The canonical contributing guide lives at the repository root:
 Quick commands:
 
 ```bash
-poetry install
-poetry run pytest tests/ -q -o addopts=
-poetry run flake8 text4gcn --max-line-length=100 --count
-poetry run mypy text4gcn --ignore-missing-imports
+poetry install --with dev,docs
+make test        # pytest
+make lint        # ruff, as in CI
+make docs        # mkdocs build --strict
 ```
 
 For academic regression checks (DCAI 2022):

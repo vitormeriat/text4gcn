@@ -21,7 +21,7 @@ Thank you for your interest in contributing to Text4GCN! This document provides 
 
 3. Install dependencies:
    ```bash
-   poetry install
+   poetry install --with dev,docs
    ```
 
 4. Install pre-commit hooks:
@@ -38,15 +38,12 @@ Thank you for your interest in contributing to Text4GCN! This document provides 
 
 2. Make your changes and ensure tests pass:
    ```bash
-   poetry run pytest
+   make test
    ```
 
-3. Run linting and formatting:
+3. Run the linter (the same check as CI):
    ```bash
-   poetry run black text4gcn tests
-   poetry run isort text4gcn tests
-   poetry run flake8 text4gcn tests
-   poetry run mypy text4gcn
+   make lint
    ```
 
 4. Commit your changes:
@@ -64,29 +61,20 @@ Thank you for your interest in contributing to Text4GCN! This document provides 
 
 ## Code Style
 
-We follow these coding standards:
-
-- **Black** for code formatting (line length: 88)
-- **isort** for import sorting
-- **flake8** for linting
-- **mypy** for type checking
-- **Google-style** docstrings
+- **[Ruff](https://docs.astral.sh/ruff/)** for linting; its rules live in `pyproject.toml` and CI fails on any violation
+- **mypy** for type checking (runs in CI but does not block yet: annotations are incomplete)
+- Line length 100; NumPy-style docstrings in new code
 
 ### Running Quality Checks
 
 ```bash
-# Format code
-make format
-
-# Check formatting
-make format-check
-
-# Run linting
-make lint
-
-# Run all checks
-make all-checks
+make lint          # ruff check, as in CI
+make typecheck     # mypy
+make all-checks    # lint + tests, as in CI
 ```
+
+`make format` applies `ruff format`. The code base has not been formatted in one
+pass yet, so format only the files you change.
 
 ## Testing
 
@@ -118,28 +106,33 @@ poetry run pytest -m "not slow"
 
 ```
 tests/
-├── test_builder.py      # Builder module tests
-├── test_dataset.py      # Dataset module tests
-├── test_models.py       # Model tests
-├── test_integration.py  # Integration tests
-└── data/               # Test data files
+├── test_builder.py           # Builder classes and the Builder enum
+├── test_rwf_builders.py      # Word2Vec RWF, cosine similarity and LIWC edges
+├── test_graph_refinement.py  # RefinementConfig / apply_refinement
+├── test_graph_stats.py       # GraphBuildStats and the DCAI 2022 reproduction script
+├── test_training_protocol.py # Seeds, dropout, early stopping, RWF weights
+├── test_models.py            # GNN and data loading
+├── test_dataset.py           # Input files and datasets helpers
+├── test_device.py            # Device selection
+├── test_unicode_corpus.py    # Non-ASCII corpora end to end
+├── test_integration.py       # Public API and pipeline integration
+└── data/                     # Test data files
 ```
 
 ## Documentation
 
 ### Building Documentation
 
-```bash
-# Build documentation
-make docs
+The documentation is built with MkDocs (Material) and `mkdocs-jupyter`:
 
-# Serve documentation locally
-make docs-serve
+```bash
+make docs        # mkdocs build --strict, as in CI
+make docs-serve  # live preview at http://127.0.0.1:8000
 ```
 
 ### Documentation Standards
 
-- Use Google-style docstrings
+- Use NumPy-style docstrings (`Parameters` / `Returns` sections)
 - Include type hints
 - Provide examples in docstrings
 - Update README.md for user-facing changes
@@ -152,7 +145,7 @@ make docs-serve
 2. Run quality checks (formatting, linting, type checking)
 3. Update documentation if needed
 4. Add tests for new functionality
-5. Update CHANGELOG.md if applicable
+5. Update `docs/changelog.md` if applicable
 
 ### PR Description
 
@@ -174,13 +167,15 @@ Include:
 
 ### Version Bumping
 
-- Update version in `pyproject.toml` and `text4gcn/__init__.py`
-- Update CHANGELOG.md
-- Create a release tag
+- Update the version in `pyproject.toml` and `text4gcn/__init__.py` (a test checks that they match)
+- Update `docs/changelog.md`
+- Create a GitHub release with the tag `v<version>`, e.g. `v2.0.0`
 
 ### Publishing
 
-Releases are automatically published to PyPI when a GitHub release is created.
+Publishing a GitHub release whose tag starts with `v` runs `publish.yml`: it checks
+that the tag matches the version in `pyproject.toml`, runs the tests, builds the
+package and uploads it to PyPI with the `PYPI_API_TOKEN` secret.
 
 ## Issue Guidelines
 

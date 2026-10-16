@@ -24,7 +24,6 @@ def _make_toy_graph():
     adj = adj + adj.T
     adj = adj.multiply(adj > 0)
     features = sp.identity(n)
-    y = np.eye(2)  # 2 classes
     y_train = np.zeros((n, 2))
     y_train[0, 0] = 1
     y_train[1, 1] = 1

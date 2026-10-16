@@ -25,23 +25,23 @@ class TestLayerEnum:
 
 class TestGNNModel:
     """Test GNN model class."""
-    
+
     @pytest.fixture
     def temp_data_dir(self):
         """Create temporary directory with test data."""
         with tempfile.TemporaryDirectory() as temp_dir:
             data_path = Path(temp_dir) / "R8"
             data_path.mkdir()
-            
+
             # Create mock data files
             text_file = data_path / "R8.txt"
             text_file.write_text("This is a test document.\nAnother test document.")
-            
+
             meta_file = data_path / "R8.meta"
             meta_file.write_text("0\tcategory1\n1\tcategory2")
-            
+
             yield str(data_path)
-    
+
     def test_gnn_initialization(self, temp_data_dir):
         """Test GNN model initialization."""
         # Test basic initialization
@@ -53,7 +53,7 @@ class TestGNNModel:
             dropout=0.5,
         )
         assert model is not None
-    
+
     def test_gnn_initialization_with_defaults(self, temp_data_dir):
         """Test GNN model initialization with default parameters."""
         model = GNN(
@@ -61,7 +61,7 @@ class TestGNNModel:
             dataset_path=temp_data_dir,
         )
         assert model is not None
-    
+
     def test_gnn_initialization_with_custom_params(self, temp_data_dir):
         """Test GNN model initialization with custom parameters."""
         model = GNN(
@@ -90,7 +90,7 @@ class TestModelBuilder:
 
 class TestGNNErrorHandling:
     """Test error handling in GNN model."""
-    
+
     def test_gnn_initialization_with_invalid_dataset(self):
         """Test GNN initialization with invalid dataset."""
         with pytest.raises((ValueError, FileNotFoundError, AttributeError)):
@@ -111,22 +111,22 @@ class TestGNNErrorHandling:
 @pytest.mark.slow
 class TestGNNPerformance:
     """Performance tests for GNN model."""
-    
+
     def test_gnn_initialization_performance(self):
         """Test that GNN initialization is reasonably fast."""
         import time
-        
+
         with tempfile.TemporaryDirectory() as temp_dir:
             data_path = Path(temp_dir) / "R8"
             data_path.mkdir()
-            
+
             # Create minimal test data
             text_file = data_path / "R8.txt"
             text_file.write_text("Test document.")
-            
+
             meta_file = data_path / "R8.meta"
             meta_file.write_text("0\tcategory1")
-            
+
             start_time = time.time()
             for _ in range(10):
                 GNN(
@@ -135,21 +135,21 @@ class TestGNNPerformance:
                     epochs=1,
                 )
             end_time = time.time()
-            
+
             # Should initialize 10 models in less than 5 seconds
             assert (end_time - start_time) < 5.0
 
 
 class TestGNNIntegration:
     """Integration tests for GNN model."""
-    
+
     @pytest.fixture
     def complete_test_data(self):
         """Create complete test dataset."""
         with tempfile.TemporaryDirectory() as temp_dir:
             data_path = Path(temp_dir) / "R8"
             data_path.mkdir()
-            
+
             # Create more comprehensive test data
             text_file = data_path / "R8.txt"
             text_file.write_text(
@@ -157,16 +157,16 @@ class TestGNNIntegration:
                 "This is the second test document about science.\n"
                 "This is the third test document about sports."
             )
-            
+
             meta_file = data_path / "R8.meta"
             meta_file.write_text(
                 "0\ttechnology\n"
                 "1\tscience\n"
                 "2\tsports"
             )
-            
+
             yield str(data_path)
-    
+
     def test_gnn_with_complete_data(self, complete_test_data):
         """Test GNN with complete test data."""
         model = GNN(
@@ -176,7 +176,7 @@ class TestGNNIntegration:
             dropout=0.5,
         )
         assert model is not None
-        
+
         # Test that model can be created without errors
         # Note: Actual training would require more setup
         try:

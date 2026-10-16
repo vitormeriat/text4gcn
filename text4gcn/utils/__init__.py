@@ -16,7 +16,7 @@ from .device import (
 __all__ = [
     "DeviceManager",
     "get_device_manager",
-    "check_pytorch_installation", 
+    "check_pytorch_installation",
     "set_global_device",
     "get_global_device",
 ]

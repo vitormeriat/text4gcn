@@ -30,6 +30,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `Layer` is `str, Enum` with **only** `Layer.GCN` (GAT removed from the public API)
 - CoreNLP import is lazy; syntactic builders require the optional extra
 - Documentation CI uses MkDocs (replacing Sphinx)
+- Development tooling: Ruff replaces black / isort / flake8; one CI workflow lints, tests on Python 3.10–3.13 and builds the package; publishing to PyPI checks that the release tag matches the package version and runs the tests first
 - Corpus is read as UTF-8 by default (was Latin-1); all intermediate files are written/read as UTF-8 regardless of OS locale
 - `datasets.download(name, path)` replaces `data.R8()` / `R52()` / `AG_NEWS()`: R8, R52, Ohsumed and PubMed from the `datasets-v1` GitHub release, with SHA-256 verification (the old Azure storage is gone)
 

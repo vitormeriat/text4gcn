@@ -24,8 +24,8 @@ class FileOps():
 
         validate_lines = True
         if len(lines) > 0:
-            for i, l in enumerate(lines):
-                if len(l.split('\t')) != 3 and i < len(lines):
+            for i, line in enumerate(lines):
+                if len(line.split('\t')) != 3 and i < len(lines):
                     return False
             if validate_lines:
                 return True
@@ -50,7 +50,7 @@ class FileOps():
         else:
             status = False
             message += " - [meta] The meta file does not correspond to standard"
-            
+
 
         if n_lines_f1 == n_lines_f2:
             message += " - [corpus] Validated file"

@@ -9,7 +9,7 @@ import pickle
 
 class FrequencyAdjacency():
     """
-    Creates an heterogenous `doc-word` adjacency matrix based on TF-IDF. 
+    Creates an heterogenous `doc-word` adjacency matrix based on TF-IDF.
 
     This is the classic method to create a adjacency matrix.
 
@@ -89,7 +89,7 @@ class FrequencyAdjacency():
         self.logger.info(
             f"[INFO] ({len(weights)}, ({len(rows)}, {len(cols)})), shape=({adjacency_len}, {adjacency_len})")
 
-        adjacency_matrix = csr_matrix((weights, (rows, cols)), 
+        adjacency_matrix = csr_matrix((weights, (rows, cols)),
                                       shape=(adjacency_len, adjacency_len))
 
         adj_path = f"{corpus_path}.adjacency/ind.frequency.tfidf.{self.dataset_name}.adj"
