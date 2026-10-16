@@ -294,14 +294,11 @@ class GraphRefinement:
         val_mask_sub = val_mask[keep_indices]
         test_mask_sub = test_mask[keep_indices]
 
-        # train_size and test_size: count of train/test docs in the *original* indexing
-        # that are still present. For the trainer, train_size is used for indexing;
-        # after refinement the number of nodes is len(keep_indices). The trainer
-        # uses train_mask, val_mask, test_mask to know which rows are train/val/test.
-        # So we keep train_size and test_size as the *counts* of train and test samples
-        # in the refined set (so that metrics make sense).
-        train_size_sub = int(train_mask_sub.sum())
-        test_size_sub = int(test_mask_sub.sum())
+        # Node order is kept: [training docs (incl. validation) | words | test docs].
+        # train_size / test_size delimit those blocks in the refined graph, as in
+        # load_corpus(); the masks say which rows are train, validation and test.
+        train_size_sub = int((keep_indices < train_size).sum())
+        test_size_sub = int((keep_indices >= train_size + vocab_size_orig).sum())
 
         predata = (
             adj_sub,

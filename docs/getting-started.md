@@ -218,7 +218,7 @@ result = GNN(
     builder=Builder.Tfidf,
     refinement_config=RefinementConfig(
         min_doc_freq=2,              # drop words in fewer than 2 documents
-        min_word_degree=1.0,         # drop isolated word nodes
+        min_word_degree=1.0,         # drop words whose edge weights sum to < 1
         edge_weight_threshold=0.1,   # drop very weak edges
         keep_docs=True,              # always preserve document nodes
     ),

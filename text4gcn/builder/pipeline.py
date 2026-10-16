@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 from text4gcn.builder.cosine_similarity_adj import CosineSimilarityAdjacency
 from text4gcn.builder.dependency_parsing_adj import DependencyParsingAdjacency
@@ -21,15 +20,12 @@ class Frequency(Adjacency):
     def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
-    def tfidf(
-        self, window_size: int = 20, output_path: Optional[str] = None
-    ) -> GraphBuildStats:
+    def tfidf(self, window_size: int = 20) -> GraphBuildStats:
         """Build TF-IDF + PMI adjacency (Yao / Frequency baseline)."""
         adj = FrequencyAdjacency(
             dataset_name=self.dataset_name,
             dataset_path=self.dataset_path,
             window_size=window_size,
-            output_path=output_path,
         )
         return adj.build()
 
@@ -72,7 +68,6 @@ class Semantic(Adjacency):
         num_epochs: int,
         language: str = "english",
         threshold: float = 0.7,
-        output_path: Optional[str] = None,
         seed: int = 1234,
         workers: int = 1,
     ) -> GraphBuildStats:
@@ -91,7 +86,6 @@ class Semantic(Adjacency):
             num_epochs=num_epochs,
             language=language,
             threshold=threshold,
-            output_path=output_path,
             seed=seed,
             workers=workers,
         )
@@ -115,14 +109,11 @@ class Semantic(Adjacency):
         )
         return adj.build()
 
-    def cosine_similarity(
-        self, threshold: float = 0.95, output_path: Optional[str] = None
-    ) -> GraphBuildStats:
+    def cosine_similarity(self, threshold: float = 0.95) -> GraphBuildStats:
         """Build adjacency from precomputed word-vector cosine similarity."""
         adj = CosineSimilarityAdjacency(
             dataset_path=self.dataset_path,
             dataset_name=self.dataset_name,
             threshold=threshold,
-            output_path=output_path,
         )
         return adj.build()

@@ -9,7 +9,7 @@ import pickle
 
 class CosineSimilarityAdjacency():
 
-    def __init__(self, dataset_name: str, dataset_path: str, threshold: float = 0.9, output_path: str = None):
+    def __init__(self, dataset_name: str, dataset_path: str, threshold: float = 0.95):
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.threshold = threshold

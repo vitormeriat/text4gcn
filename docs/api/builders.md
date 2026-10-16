@@ -42,7 +42,7 @@ class Frequency:
 ### `tfidf()`
 
 ```python
-def tfidf(self, window_size: int = 20, output_path: str = None) -> GraphBuildStats
+def tfidf(self, window_size: int = 20) -> GraphBuildStats
 ```
 
 Computes word-word co-occurrence weights via PMI in a sliding window, and word-document weights via TF-IDF. Writes `ind.frequency.tfidf.{dataset_name}.adj` to `{dataset_path}/{dataset_name}.adjacency/`.
@@ -52,7 +52,6 @@ Computes word-word co-occurrence weights via PMI in a sliding window, and word-d
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `window_size` | `int` | `20` | Sliding window size for word-word co-occurrence. |
-| `output_path` | `str \| None` | `None` | Override output directory. Uses `{dataset_path}/{dataset_name}.adjacency/` by default. |
 
 #### Returns
 
@@ -92,7 +91,6 @@ def word2vec(
     num_epochs: int,
     language: str = "english",
     threshold: float = 0.7,
-    output_path: str = None,
     seed: int = 1234,
     workers: int = 1,
 ) -> GraphBuildStats
@@ -109,7 +107,6 @@ Trains Word2Vec embeddings on the corpus and connects words whose cosine similar
 | `num_epochs` | `int` | — | Word2Vec training epochs (the paper uses 20). |
 | `language` | `str` | `"english"` | NLTK stop-word list; stop words get no word–word edges. |
 | `threshold` | `float` | `0.7` | Minimum cosine similarity between two adjacent words' embeddings to create an edge. Calibrated on 20 Newsgroups: with 20 epochs, the paper's 0.95 leaves almost no word–word edges. |
-| `output_path` | `str \| None` | `None` | Override output directory. |
 | `seed` | `int` | `1234` | Seed of the Word2Vec initialisation. |
 | `workers` | `int` | `1` | Word2Vec threads. With `1` the graph is reproducible for a given `seed`; more threads train faster but vary between runs. |
 
@@ -163,7 +160,7 @@ Semantic(dataset_name="R8", dataset_path="data/").bert(threshold=0.95)
 ### `cosine_similarity()`
 
 ```python
-def cosine_similarity(self, threshold: float = 0.95, output_path: str = None) -> GraphBuildStats
+def cosine_similarity(self, threshold: float = 0.95) -> GraphBuildStats
 ```
 
 Connects words whose WordNet definitions are similar: the cosine similarity of the TF-IDF vectors of their glosses, saved by `TextPipeline`. Words without a WordNet definition get no word–word edges, so the builder is meaningful for English only.
@@ -173,7 +170,6 @@ Connects words whose WordNet definitions are similar: the cosine similarity of t
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `threshold` | `float` | `0.95` | Minimum similarity to create an edge. |
-| `output_path` | `str \| None` | `None` | Override output directory. |
 
 #### Example
 

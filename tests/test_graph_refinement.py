@@ -151,6 +151,15 @@ class TestRefinementSemantics:
         kept = self._kept(RefinementConfig(keep_word_indices={2}, min_doc_freq=10))
         assert [i for i in kept if 2 <= i <= 4] == [4]
 
+    def test_block_sizes_include_validation_documents(self):
+        """train_size delimits the [train + validation docs | words | test docs] blocks.
+
+        Regression: it counted only the train mask, so validation docs were sliced as words.
+        """
+        out, _ = apply_refinement(_make_toy_graph(), RefinementConfig())
+        train_size, test_size = out[8], out[9]
+        assert (train_size, test_size) == (2, 1)
+
     def test_top_k_keeps_original_weights(self):
         """An edge in the top-k of both endpoints used to be summed twice."""
         predata = _make_toy_graph()

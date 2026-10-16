@@ -83,13 +83,13 @@ For a corpus with `D` documents and vocabulary size `V`:
 | Word-doc edges | up to `D × V` (sparse in practice) |
 | Word-word edges | bounded by PMI window; typically `O(V)` |
 
-For the R8 benchmark (7,674 docs, ~7,000 words after filtering) the graph has ~14,700 nodes and ~300,000 edges.
+For the R8 benchmark, the DCAI 2022 paper reports 7,674 documents and 7,688 words after filtering, so 15,362 nodes, and about 3.2 M edges in the TextGCN graph: word–word PMI edges dominate.
 
 ---
 
 ## Inspecting the graph
 
-After building adjacency with `Frequency(...).tfidf()`, the matrix is stored as a `scipy.sparse` file. You can load and inspect it directly:
+After building adjacency with `Frequency(...).tfidf()`, the matrix is saved as a pickled `scipy.sparse` matrix. You can load and inspect it directly:
 
 ```python
 import pickle, scipy.sparse as sp
@@ -97,8 +97,8 @@ import pickle, scipy.sparse as sp
 with open("data/R8.adjacency/ind.frequency.tfidf.R8.adj", "rb") as f:
     adj = pickle.load(f)
 
-print(adj.shape)   # (14674, 14674)
-print(adj.nnz)     # number of edges × 2 (symmetric)
+print(adj.shape)   # (nodes, nodes): training docs, then words, then test docs
+print(adj.nnz)     # stored entries; GNN makes the graph symmetric when loading it
 ```
 
 Or via `apply_refinement` with `return_metadata=True` to get per-node type and degree information:

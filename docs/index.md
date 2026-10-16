@@ -73,6 +73,10 @@ python scripts/reproduce_dcai2022.py --data-dir data/ --dataset R8 --builders fr
 | 20NG    | 18,846 | 20 | 11,314 | 7,532 | 221.3 |
 | MR      | 10,662 | 2 | 7,108 | 3,554 | 20.4 |
 | Ohsumed | 7,400 | 23 | 3,357 | 4,043 | 135.8 |
+| PubMed  | 19,717 | 3 | 13,802 | 5,915 | — |
+
+Counts are those of the original benchmark files (Yao et al., 2019); `twenty_newsgroups()`
+drops posts left with fewer than 5 words, so its 20NG has slightly fewer documents.
 
 R8, R52, Ohsumed and PubMed: `text4gcn.datasets.download(name, path)`. 20NG: `twenty_newsgroups(path)`. Anything else: `save_corpus(...)`. See [Datasets](api/datasets.md).
 

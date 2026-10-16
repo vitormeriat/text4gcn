@@ -44,7 +44,7 @@ class GNN:
 | `epochs` | `int` | `200` | Maximum number of training epochs. |
 | `dropout` | `float` | `0.5` | Dropout rate applied between GCN layers. |
 | `layer` | `Layer` | `Layer.GCN` | GNN layer type. Only `Layer.GCN` is supported. |
-| `early_stopping` | `int` | `10` | Stop training if validation loss does not improve for this many consecutive epochs. |
+| `early_stopping` | `int` | `10` | Stop when the validation loss rises above its mean over this many previous epochs (the TextGCN criterion); the best validation weights are restored. |
 | `device` | `str \| None` | `None` | PyTorch device (`"cpu"`, `"cuda"`, `"cuda:1"`, …). Detected automatically when `None`. |
 | `refinement_config` | `RefinementConfig \| None` | `None` | Optional graph refinement applied after loading the corpus. |
 
@@ -145,14 +145,14 @@ result = GNN(dataset_name="R8", dataset_path="data/", device="cpu").fit()
 from text4gcn import TrainingResult
 ```
 
-Structured output of `GNN.fit()`. A frozen dataclass — all fields are set at construction and cannot be changed.
+Structured output of `GNN.fit()`. A frozen dataclass: its fields cannot be changed.
 
 ```python
-@dataclass
+@dataclass(frozen=True)
 class TrainingResult:
     test_accuracy: float
     test_loss: float
-    model_path: str | None
+    model_path: str
     epochs_trained: int
 ```
 
@@ -162,7 +162,7 @@ class TrainingResult:
 |---|---|---|
 | `test_accuracy` | `float` | Accuracy on the held-out test set (0–1). |
 | `test_loss` | `float` | Cross-entropy loss on the held-out test set. |
-| `model_path` | `str \| None` | Absolute path to the saved model checkpoint (`.pth`). Always set — saved at the end of training or on early stop. |
+| `model_path` | `str` | Path of the saved checkpoint (`.pth`) inside `log_dir`, holding the weights with the best validation loss. |
 | `epochs_trained` | `int` | Number of epochs that completed before stopping. |
 
 ### Example

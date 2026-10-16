@@ -66,7 +66,7 @@ Also drops words that appear in more than 90% of documents (equivalent to `max_d
 RefinementConfig(min_word_degree=1.0)
 ```
 
-Drops isolated word nodes (degree = 0 after symmetrisation) that have no edges in the graph.
+Drops word nodes whose **weighted** degree (the sum of their edge weights) is below 1.0, including isolated words.
 
 ```python
 RefinementConfig(max_word_degree=5000.0)

@@ -40,7 +40,7 @@ class NodeFeatures():
                 if word in w_vectors:
                     doc_vec += w_vectors[word]
 
-            mean_doc_vec = (doc_vec / len(words)).tolist()
+            mean_doc_vec = (doc_vec / max(len(words), 1)).tolist()   # empty after cleaning: zero vector
             data_x.extend(mean_doc_vec)
 
         row_indexes = np.array(
@@ -73,7 +73,7 @@ class NodeFeatures():
                 if word in w_vectors:
                     doc_vec += w_vectors[word]
 
-            mean_doc_vec = (doc_vec / len(words)).tolist()
+            mean_doc_vec = (doc_vec / max(len(words), 1)).tolist()   # empty after cleaning: zero vector
             data_tx.extend(mean_doc_vec)
 
         row_indexes = np.array(
@@ -110,7 +110,7 @@ class NodeFeatures():
                 if word in word_vectors:
                     doc_vec += word_vectors[word]
 
-            mean_doc_vec = (doc_vec / len(words)).tolist()
+            mean_doc_vec = (doc_vec / max(len(words), 1)).tolist()   # empty after cleaning: zero vector
             data_allx.extend(mean_doc_vec)
 
         data_allx.extend(word_vectors_arr.flatten())

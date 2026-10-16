@@ -4,7 +4,7 @@
 from text4gcn import TextPipeline
 ```
 
-Preprocesses raw text documents into the node feature matrices required by the GCN trainer.
+Cleans and shuffles the raw corpus, builds the vocabulary, and writes the label matrices and train / validation / test split that `GNN` loads. (It also writes node feature matrices for compatibility with the TextGCN file layout; the GCN itself uses one-hot node features.)
 
 ---
 
@@ -55,7 +55,7 @@ class TextPipeline:
 def execute(
     self,
     validation_ratio: float = 0.10,
-    use_predefined_word_vectors: bool = False,
+    seed: int | None = None,
 ) -> None
 ```
 
@@ -72,8 +72,8 @@ A processing log is written to `{dataset_path}/log/{dataset_name}_dataset.txt`.
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `validation_ratio` | `float` | `0.10` | Fraction of the training set held out for validation (DCAI 2022 / Yao et al. use `0.10`). This is the authoritative split; `GNN(val_ratio=…)` does not rebuild it. |
-| `use_predefined_word_vectors` | `bool` | `False` | Reserved for future use. |
+| `validation_ratio` | `float` | `0.10` | Fraction of the training set held out for validation (DCAI 2022 / Yao et al. use `0.10`). This is the only place where the validation split is set. |
+| `seed` | `int \| None` | `None` | Overrides the shuffle seed given to `TextPipeline(seed=…)` for this run. |
 
 ---
 

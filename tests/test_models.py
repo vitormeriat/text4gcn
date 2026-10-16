@@ -186,3 +186,25 @@ class TestGNNIntegration:
         except Exception as e:
             # If training fails due to missing dependencies, that's expected in tests
             assert "CUDA" in str(e) or "torch" in str(e) or "device" in str(e)
+
+
+def test_empty_document_gets_zero_features():
+    """A document left empty by cleaning must not produce NaN features."""
+    import numpy as np
+
+    from text4gcn.modules.logger import PrintLog
+    from text4gcn.modules.node_features import NodeFeatures
+
+    tx = NodeFeatures(logger=PrintLog()).compute_tx(
+        [["a"], []], test_size=1, real_train_size=1, word_emb_dim=3, w_vectors={"a": [1.0, 1.0, 1.0]})
+    assert not np.isnan(tx.toarray()).any()
+
+
+def test_training_result_is_frozen():
+    import dataclasses
+
+    from text4gcn import TrainingResult
+
+    result = TrainingResult(test_accuracy=0.9, test_loss=0.3, model_path="logs/m.pth", epochs_trained=10)
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        result.test_accuracy = 1.0

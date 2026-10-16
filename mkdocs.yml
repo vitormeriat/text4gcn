@@ -18,6 +18,8 @@ exclude_docs: |
   _includes/**
   _layouts/**
   assets/gitbook/**
+  tutorials/data/**
+  tutorials/logs/**
 
 theme:
   name: material
@@ -54,7 +56,7 @@ plugins:
       lang: en
   - mkdocs-jupyter:
       include: ["tutorials/*.ipynb"]
-      execute: false          # notebooks are stored without outputs
+      execute: false          # notebooks are stored with their outputs; the site shows them as is
       include_source: true    # "download notebook" button
       ignore_h1_titles: true  # page titles come from the nav
 

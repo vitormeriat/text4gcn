@@ -15,7 +15,7 @@ from text4gcn.models.utils import LoadData
 from text4gcn.utils.device import get_device_manager
 
 
-@dataclass
+@dataclass(frozen=True)
 class TrainingResult:
     """Results returned by :meth:`GNN.fit`.
 
@@ -25,16 +25,16 @@ class TrainingResult:
         Accuracy on the held-out test set.
     test_loss : float
         Cross-entropy loss on the held-out test set.
-    model_path : str or None
-        Path to the saved model checkpoint. ``None`` if early stopping was not
-        triggered and no checkpoint was written.
+    model_path : str
+        Path of the saved checkpoint (``.pth``) inside ``log_dir``: the weights with
+        the best validation loss.
     epochs_trained : int
         Number of epochs completed before stopping.
     """
 
     test_accuracy: float
     test_loss: float
-    model_path: Optional[str]
+    model_path: str
     epochs_trained: int
 
     def __str__(self) -> str:

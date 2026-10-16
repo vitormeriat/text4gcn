@@ -19,7 +19,6 @@ class Word2VecAdjacency():
                  num_epochs,
                  language: str = "english",
                  threshold: float = 0.7,
-                 output_path: str = None,
                  seed: int = 1234,
                  workers: int = 1):
         self.dataset_name = dataset_name
@@ -31,7 +30,6 @@ class Word2VecAdjacency():
         self.flop = flop.FileOps(logger=self.logger)
         self.language = language
         self.threshold = threshold
-        self.output_path = output_path
         self.seed = seed
         self.workers = workers
 

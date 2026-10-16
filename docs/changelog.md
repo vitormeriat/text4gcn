@@ -5,14 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [Unreleased]
+## [2.0.0] — unreleased
 
 ### Added
 - Tutorials: five notebooks in `docs/tutorials/` (text as a graph → first classifier on 20 Newsgroups → comparing graph builders → refining the graph → your own corpus), rendered in the docs with `mkdocs-jupyter`
 - `text4gcn.datasets.save_corpus()` writes any labelled corpus in the `.txt` / `.meta` input format, with validation
 - `text4gcn.datasets.twenty_newsgroups()` downloads 20 Newsgroups (scikit-learn) in the input format
 - `dataset_path` accepts `pathlib.Path` as well as `str` (`TextPipeline`, builders, `GNN`, datasets)
-- `GraphBuildStats` returned by Frequency / Word2Vec builders (nodes, nnz, density, file size)
+- `GraphBuildStats` returned by every builder method (nodes, nnz, density, file size)
 - `TextPipeline(seed=…)` for reproducible corpus shuffle
 - Optional `text4gcn[syntactic]` extra (Stanford CoreNLP Python wrapper) and `text4gcn[bert]` extra (transformers, for the experimental BERT builder)
 - `scripts/reproduce_dcai2022.py` for DCAI 2022 Tables 2/3 reference + local comparison
@@ -21,6 +21,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `GNN.fit()` returns `TrainingResult`; early-stop restores best validation weights
 
 ### Changed
+- `TrainingResult` is a frozen dataclass and `model_path` is always set; `Semantic.cosine_similarity()` and its builder class share the 0.95 default
+- `TextPipeline` downloads the NLTK resources only when they are missing, quietly
 - Requires PyTorch ≥ 2.3 (earlier builds cannot run with NumPy 2)
 - `transformers` is no longer installed by default: it is only needed by `Semantic.bert()`, via the `bert` extra
 - Training seed is deterministic (`GNN(seed=…)` seeds torch / NumPy / Python); no random offset
@@ -35,12 +37,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `datasets.download(name, path)` replaces `data.R8()` / `R52()` / `AG_NEWS()`: R8, R52, Ohsumed and PubMed from the `datasets-v1` GitHub release, with SHA-256 verification (the old Azure storage is gone)
 
 ### Migrating from 1.x
+- Requires Python ≥ 3.10 (1.x targeted Python 3.8)
 - No `argparse` is involved anymore: `GNN` works in notebooks/Colab (fixes #3)
 - `GNN(dataset=…, path=…, epoches=…)` → `GNN(dataset_name=…, dataset_path=…, epochs=…)`
 - `builder` is optional (default `Builder.Tfidf`) (fixes #2); `Builder.Embedding` / `Builder.Frequency` → `Builder.Word2Vec` / `Builder.Tfidf`
 - Import from the package root: `from text4gcn import GNN, TextPipeline, Builder, Layer`
+- `Builder` values changed (`'frequency'` → `'frequency.tfidf'`, `'embedding'` → `'embedding.word2vec'`, `'cosine'` → `'cosine.similarity'`, `'dependency'` → `'dependency.parsing'`), and so did the adjacency file names: graphs built with 1.x are not found; build them again
+- Graph files are no longer interchangeable with 1.x even for the same builder: Word2Vec, LIWC, cosine-similarity and RWF weights changed (see *Fixed*)
 
 ### Removed
+- `output_path` of `tfidf()`, `word2vec()` and `cosine_similarity()`, and `TextPipeline.execute(use_predefined_word_vectors=…)`: they were accepted but ignored
 - `GNN(val_ratio=…)`: it never changed the split; set it with `TextPipeline.execute(validation_ratio=…)`
 - `Syntactic.constituency_parsing()`, `Semantic.llm()` and `Builder.ConstituencyParsing`, which did nothing
 - `builder.list_available_adjacency_methods()` / `list_available_builders()` and the string constants `builder.Tfidf`, `builder.Word2Vec`, …: use the `Builder` enum. `text4gcn.builder.Builder` is now the same enum as `text4gcn.Builder` (they were two distinct classes); `rich` is no longer a dependency
@@ -49,10 +55,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `utils.recommend_installation()`, and the `torch_available` key of `check_pytorch_installation()` (PyTorch is a required dependency)
 - `data.AG_NEWS()` (no longer hosted)
 - Unused `models.utils.get_train_test()` / `read_file()`
-- Dead packages (`di/`, `optimization/`, `services/`) and orphan trainers
-- AsyncProcessor dead path
+- The unfinished baseline models (`models/baseline`: TF-IDF, LSTM)
 
 ### Fixed
+- After graph refinement, the train / test block sizes counted only the training mask, so validation documents were reported as words
+- A document left empty by cleaning produced NaN node features (and a `RuntimeWarning`); it now gets a zero vector
+- The training log's "Data statistics" table labelled the node count as "Edges"
 - `Semantic.word2vec(num_epochs=…)` was never passed to gensim, which always trained 5 epochs. Training is now also reproducible: `seed` (default 1234) and `workers` (default 1) are new parameters, and vector initialisation no longer depends on `PYTHONHASHSEED`. The code behind the DCAI 2022 paper had the same bug, so its SEMANTIC results were obtained with 5 epochs
 - `Syntactic.linguistic_inquiry()` looked words up in the LIWC dictionary letter by letter, so real words never matched; it now connects adjacent words that share at least one LIWC category. The code behind the DCAI 2022 paper had the same bug, so its LINGUISTIC results do not reflect LIWC categories
 - `Semantic.cosine_similarity()`: words without a WordNet definition all received the same placeholder vector and formed a clique (99% of the word–word edges on 20 Newsgroups); they now get no word–word edges
@@ -71,7 +79,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [1.0.0] — 2023-xx-xx
+## [1.0.0] — 2022-08-14
 
 ### Added
 - Initial public release

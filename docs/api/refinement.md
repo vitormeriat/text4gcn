@@ -178,7 +178,7 @@ predata_refined, info = apply_refinement(
 )
 
 print(info["stats"])
-# {'nodes_original': 12476, 'nodes_refined': 9831, 'nodes_removed': 2645, ...}
+# {'nodes_original': ..., 'nodes_refined': ..., 'nodes_removed': ..., 'edges_before': ..., 'edges_after': ..., ...}
 ```
 
 **Drop specific words by vocabulary index:**

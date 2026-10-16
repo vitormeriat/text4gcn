@@ -5,18 +5,21 @@ import unicodedata
 
 
 def config_nltk():
-    # temporary_nltk_folder = 'venv/nltk_data/'
-    # if not os.path.exists(temporary_nltk_folder):
-    #     from nltk import download
-    #     download(info_or_id='stopwords', download_dir=temporary_nltk_folder)
-    #     download(info_or_id='wordnet', download_dir=temporary_nltk_folder)
-    from nltk import download
+    """Download the NLTK resources the pipeline needs, only those not installed yet."""
+    import nltk
 
-    #from nltk.corpus import wordnet
-    #from nltk.corpus import stopwords
-    download(info_or_id='stopwords')
-    download(info_or_id='wordnet')
-    download(info_or_id='omw-1.4')
+    def installed(path: str) -> bool:
+        for candidate in (path, f"{path}.zip"):   # e.g. wordnet is often kept zipped
+            try:
+                nltk.data.find(candidate)
+                return True
+            except LookupError:
+                pass
+        return False
+
+    for resource in ("stopwords", "wordnet", "omw-1.4"):
+        if not installed(f"corpora/{resource}"):
+            nltk.download(resource, quiet=True)
 
 
 def create_title(title):

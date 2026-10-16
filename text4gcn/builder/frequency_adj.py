@@ -28,8 +28,7 @@ class FrequencyAdjacency():
         Builds the adjacency matrix and returns :class:`GraphBuildStats`.
     """
 
-    def __init__(self, dataset_name: str, dataset_path: str, window_size: int = 20, output_path: str = None):
-        self.output_path = output_path
+    def __init__(self, dataset_name: str, dataset_path: str, window_size: int = 20):
         self.window_size = window_size
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path

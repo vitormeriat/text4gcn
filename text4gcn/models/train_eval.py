@@ -126,7 +126,7 @@ class TextGCNTrainer:
         print("\nData statistics\n")
         print(tabulate(
             [
-                ["Edges", "Classes", "Train samples", "Val samples", "Test samples"],
+                ["Nodes", "Classes", "Train samples", "Val samples", "Test samples"],
                 [
                     self.features.shape[0],
                     self.y_train.shape[1],
@@ -206,7 +206,7 @@ class TextGCNTrainer:
         from pathlib import Path
 
         Path(self.log_dir).mkdir(parents=True, exist_ok=True)
-        path = f"{self.log_dir}/{unique_name()}.pth"
+        path = str(Path(self.log_dir) / f"{unique_name()}.pth")
         th.save(self.model.state_dict(), path)
         return path
 

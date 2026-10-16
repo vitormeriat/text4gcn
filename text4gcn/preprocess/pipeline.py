@@ -266,7 +266,7 @@ class TextPipeline():
         )
 
     @Process.log("EXTRACTED NODE FEATURES: x, y, tx, ty, allx, ally.")
-    def build_node_features(self, validation_ratio: float, use_predefined_word_vectors: bool):
+    def build_node_features(self, validation_ratio: float):
 
         ds_corpus = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.txt"
         ds_corpus_meta = f"{self.dataset_path}/{self.dataset_name}.shuffled/{self.dataset_name}.meta"
@@ -382,7 +382,6 @@ class TextPipeline():
     def execute(
         self,
         validation_ratio: float = 0.10,
-        use_predefined_word_vectors: bool = False,
         seed: int | None = None,
     ) -> None:
         """Run the full preprocessing pipeline.
@@ -393,8 +392,6 @@ class TextPipeline():
             Fraction of training data reserved for validation. This is the
             **only** place the train/val split is defined (DCAI 2022 / Yao et
             al. use ``0.10``). Default ``0.10``.
-        use_predefined_word_vectors : bool
-            Reserved for future use. Default ``False``.
         seed : int or None
             If provided, overrides :attr:`seed` for this run (document shuffle).
         """
@@ -410,10 +407,7 @@ class TextPipeline():
         self.clean_data()
         self.shuffle_data()
         self.prepare_words()
-        self.build_node_features(
-            validation_ratio=validation_ratio,
-            use_predefined_word_vectors=use_predefined_word_vectors,
-        )
+        self.build_node_features(validation_ratio=validation_ratio)
 
         hist = self.logger.log_history()
         self.save_history(hist)
