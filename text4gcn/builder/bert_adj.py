@@ -19,8 +19,13 @@ def _get_bert():
     """Load BERT tokenizer/model on first use (requires transformers + network/cache)."""
     global _tokenizer, _model
     if _tokenizer is None or _model is None:
-        import torch  # noqa: F401 — used by get_embeddings
-        from transformers import BertModel, BertTokenizer
+        try:
+            from transformers import BertModel, BertTokenizer
+        except ImportError as exc:
+            raise ImportError(
+                "transformers is required for Semantic.bert().\n"
+                "Install with: pip install 'text4gcn[bert]'"
+            ) from exc
 
         _tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
         _model = BertModel.from_pretrained("bert-base-uncased")

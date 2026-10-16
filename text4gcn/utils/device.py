@@ -8,12 +8,7 @@ supporting both CPU and GPU (CUDA) configurations.
 import logging
 from typing import Optional, Union
 
-try:
-    import torch
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
-    torch = None
+import torch
 
 logger = logging.getLogger(__name__)
 
@@ -28,13 +23,6 @@ class DeviceManager:
         Args:
             device: Specific device to use. If None, auto-detects best available device.
         """
-        if not TORCH_AVAILABLE:
-            raise ImportError(
-                "PyTorch is not installed. Please install PyTorch using:\n"
-                "pip install text4gcn[cpu]  # for CPU version\n"
-                "pip install text4gcn[gpu]  # for GPU version"
-            )
-        
         self._device = self._resolve_device(device)
         self._log_device_info()
     
@@ -141,36 +129,12 @@ def check_pytorch_installation() -> dict:
     Returns:
         Dictionary with installation information.
     """
-    info = {
-        "torch_available": TORCH_AVAILABLE,
-        "torch_version": None,
-        "cuda_available": False,
-        "cuda_version": None,
+    cuda_available = torch.cuda.is_available()
+    return {
+        "torch_version": torch.__version__,
+        "cuda_available": cuda_available,
+        "cuda_version": torch.version.cuda if cuda_available else None,
     }
-    
-    if TORCH_AVAILABLE:
-        info["torch_version"] = torch.__version__
-        info["cuda_available"] = torch.cuda.is_available()
-        if info["cuda_available"]:
-            info["cuda_version"] = torch.version.cuda
-    
-    return info
-
-
-def recommend_installation() -> str:
-    """
-    Recommend PyTorch installation based on system capabilities.
-    
-    Returns:
-        Installation command recommendation.
-    """
-    if not TORCH_AVAILABLE:
-        return "pip install text4gcn[cpu]  # for CPU version"
-    
-    if torch.cuda.is_available():
-        return "pip install text4gcn[gpu]  # for GPU version (recommended)"
-    else:
-        return "pip install text4gcn[cpu]  # for CPU version"
 
 
 # Global device manager instance

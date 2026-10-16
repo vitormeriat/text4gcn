@@ -13,7 +13,7 @@ from text4gcn.models.layers import Layer
 from text4gcn.models.model import GCN
 from text4gcn.models.train_eval import TextGCNTrainer
 from text4gcn.models.utils import LoadData
-from text4gcn.utils.device import check_pytorch_installation, get_device_manager
+from text4gcn.utils.device import get_device_manager
 
 
 @dataclass
@@ -144,14 +144,6 @@ class GNN:
         device: Optional[str] = None,
         refinement_config: Optional[RefinementConfig] = None,
     ) -> None:
-        pytorch_info = check_pytorch_installation()
-        if not pytorch_info["torch_available"]:
-            raise ImportError(
-                "PyTorch is not installed. Install it with:\n"
-                "  pip install text4gcn[cpu]   # CPU\n"
-                "  pip install text4gcn[gpu]   # GPU"
-            )
-
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.log_dir = log_dir

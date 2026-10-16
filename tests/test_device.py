@@ -8,7 +8,6 @@ from text4gcn.utils.device import (
     DeviceManager,
     get_device_manager,
     check_pytorch_installation,
-    recommend_installation,
     set_global_device,
     get_global_device,
 )
@@ -176,19 +175,6 @@ class TestDeviceManager:
             mock_torch.cuda.manual_seed.assert_not_called()
 
 
-class TestDeviceManagerErrorHandling:
-    """Test error handling in DeviceManager."""
-    
-    def test_no_torch_import(self):
-        """Test behavior when PyTorch is not available."""
-        with patch('text4gcn.utils.device.TORCH_AVAILABLE', False):
-            with pytest.raises(ImportError) as exc_info:
-                DeviceManager()
-            
-            assert "PyTorch is not installed" in str(exc_info.value)
-            assert "pip install text4gcn[cpu]" in str(exc_info.value)
-
-
 class TestUtilityFunctions:
     """Test utility functions."""
     
@@ -208,54 +194,15 @@ class TestUtilityFunctions:
     
     def test_check_pytorch_installation_available(self):
         """Test check_pytorch_installation when PyTorch is available."""
-        with patch('text4gcn.utils.device.TORCH_AVAILABLE', True):
-            with patch('text4gcn.utils.device.torch') as mock_torch:
-                mock_torch.__version__ = "2.1.2"
-                mock_torch.cuda.is_available.return_value = True
-                mock_torch.version.cuda = "12.1"
-                
-                info = check_pytorch_installation()
-                
-                assert info["torch_available"]
-                assert info["torch_version"] == "2.1.2"
-                assert info["cuda_available"]
-                assert info["cuda_version"] == "12.1"
-    
-    def test_check_pytorch_installation_unavailable(self):
-        """Test check_pytorch_installation when PyTorch is not available."""
-        with patch('text4gcn.utils.device.TORCH_AVAILABLE', False):
+        with patch('text4gcn.utils.device.torch') as mock_torch:
+            mock_torch.__version__ = "2.1.2"
+            mock_torch.cuda.is_available.return_value = True
+            mock_torch.version.cuda = "12.1"
+
             info = check_pytorch_installation()
-            
-            assert not info["torch_available"]
-            assert info["torch_version"] is None
-            assert not info["cuda_available"]
-            assert info["cuda_version"] is None
-    
-    def test_recommend_installation_no_torch(self):
-        """Test installation recommendation when PyTorch is not available."""
-        with patch('text4gcn.utils.device.TORCH_AVAILABLE', False):
-            recommendation = recommend_installation()
-            assert "pip install text4gcn[cpu]" in recommendation
-    
-    def test_recommend_installation_with_cuda(self):
-        """Test installation recommendation when CUDA is available."""
-        with patch('text4gcn.utils.device.TORCH_AVAILABLE', True):
-            with patch('text4gcn.utils.device.torch') as mock_torch:
-                mock_torch.cuda.is_available.return_value = True
-                
-                recommendation = recommend_installation()
-                assert "pip install text4gcn[gpu]" in recommendation
-    
-    def test_recommend_installation_cpu_only(self):
-        """Test installation recommendation when only CPU is available."""
-        with patch('text4gcn.utils.device.TORCH_AVAILABLE', True):
-            with patch('text4gcn.utils.device.torch') as mock_torch:
-                mock_torch.cuda.is_available.return_value = False
-                
-                recommendation = recommend_installation()
-                assert "pip install text4gcn[cpu]" in recommendation
 
-
+            assert info == {"torch_version": "2.1.2", "cuda_available": True, "cuda_version": "12.1"}
+    
 class TestGlobalDeviceManager:
     """Test global device manager functionality."""
     

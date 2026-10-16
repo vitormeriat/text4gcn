@@ -15,7 +15,7 @@ def _import_stanford_corenlp():
     except ImportError as exc:
         raise ImportError(
             "stanfordcorenlp is required for Syntactic.dependency_parsing().\n"
-            "Install with: pip install text4gcn[syntactic]\n"
+            "Install with: pip install 'text4gcn[syntactic]'\n"
             "Also download the Stanford CoreNLP jars and pass core_nlp_path."
         ) from exc
     return StanfordCoreNLP

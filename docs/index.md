@@ -32,9 +32,8 @@ The pipeline has three steps: preprocess text → build the graph → train the 
 ## Quick start
 
 ```bash
-pip install text4gcn[cpu]         # CPU
-pip install text4gcn[gpu]         # GPU / CUDA
-pip install text4gcn[syntactic]   # optional: Stanford CoreNLP wrapper (Java jars still required)
+pip install text4gcn
+pip install "text4gcn[syntactic]"   # optional: Stanford CoreNLP wrapper (Java jars still required)
 ```
 
 ```python

@@ -24,9 +24,8 @@ classifiers = [
 ]
 requires-python = ">=3.10,<3.14"
 dependencies = [
-    "torch>=2.0.0",
+    "torch>=2.3.0",
     "requests>=2.31.0",
-    "transformers>=4.41.1",
     "scikit-learn>=1.5.2",
     "numpy>=2.1.0",
     "scipy>=1.14.1",
@@ -40,19 +39,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-cpu = []
-gpu = []
 syntactic = [
     "stanfordcorenlp>=3.9.1.1",
 ]
-dev = [
-    "pytest>=7.4.3",
-    "pytest-cov>=4.1.0",
-    "black>=23.0.0",
-    "isort>=5.12.0",
-    "flake8>=6.0.0",
-    "mypy>=1.5.0",
+bert = [
+    "transformers>=4.41.1",
 ]
+
 [project.urls]
 Homepage = "https://github.com/vitormeriat/text4gcn"
 Repository = "https://github.com/vitormeriat/text4gcn"
@@ -60,15 +53,6 @@ Documentation = "https://vitormeriat.github.io/text4gcn/"
 
 [tool.poetry]
 packages = [{include = "text4gcn"}]
-
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-stanfordcorenlp = {version = ">=3.9.1.1", optional = true}
-
-[tool.poetry.extras]
-syntactic = ["stanfordcorenlp"]
-cpu = []
-gpu = []
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"

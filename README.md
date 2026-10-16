@@ -34,13 +34,15 @@ python scripts/reproduce_dcai2022.py --data-dir data/ --dataset R8 --builders fr
 ## Installation
 
 ```bash
-pip install text4gcn[cpu]         # CPU
-pip install text4gcn[gpu]         # GPU / CUDA
-pip install text4gcn[syntactic]   # optional: Stanford CoreNLP wrapper (Java jars still required)
+pip install text4gcn
+pip install "text4gcn[syntactic]"   # optional: Stanford CoreNLP wrapper (Java jars still required)
+pip install "text4gcn[bert]"        # optional: transformers, for the experimental BERT builder
 ```
 
-Requires Python ≥ 3.10 and PyTorch ≥ 2.0. The default install does **not** require Java;
-`Syntactic.dependency_parsing()` needs `pip install text4gcn[syntactic]` plus a local CoreNLP path.
+Requires Python ≥ 3.10 and PyTorch ≥ 2.3, installed from PyPI with the package (CUDA-enabled
+on Linux, CPU-only on Windows and macOS). For another build, install PyTorch first from
+[pytorch.org](https://pytorch.org/get-started/locally/). The default install does **not**
+require Java; `Syntactic.dependency_parsing()` needs the `syntactic` extra plus a local CoreNLP path.
 
 ---
 
@@ -162,7 +164,7 @@ result = GNN(
     dropout=0.5,
     val_ratio=0.1,
     early_stopping=10,
-    device=None,          # auto-detect CUDA / MPS / CPU
+    device=None,          # CUDA if available, else CPU
 ).fit()
 
 print(result.test_accuracy)   # e.g. 0.9712

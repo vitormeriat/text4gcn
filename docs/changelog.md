@@ -14,13 +14,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `dataset_path` accepts `pathlib.Path` as well as `str` (`TextPipeline`, builders, `GNN`, datasets)
 - `GraphBuildStats` returned by Frequency / Word2Vec builders (nodes, nnz, density, file size)
 - `TextPipeline(seed=…)` for reproducible corpus shuffle
-- Optional `text4gcn[syntactic]` extra (Stanford CoreNLP Python wrapper)
+- Optional `text4gcn[syntactic]` extra (Stanford CoreNLP Python wrapper) and `text4gcn[bert]` extra (transformers, for the experimental BERT builder)
 - `scripts/reproduce_dcai2022.py` for DCAI 2022 Tables 2/3 reference + local comparison
 - MkDocs + Material theme documentation; CI builds with `mkdocs build --strict`
 - Graph refinement (`RefinementConfig`, `apply_refinement`, `NodeMetadata`)
 - `GNN.fit()` returns `TrainingResult`; early-stop restores best validation weights
 
 ### Changed
+- Requires PyTorch ≥ 2.3 (earlier builds cannot run with NumPy 2)
+- `transformers` is no longer installed by default: it is only needed by `Semantic.bert()`, via the `bert` extra
 - Training seed is deterministic (`GNN(seed=…)` seeds torch / NumPy / Python); no random offset
 - Dropout from `GNN(dropout=…)` is passed into the GCN; `model.train()` after each eval epoch
 - `Semantic.word2vec(threshold=…)` defaults to 0.7 instead of 0.95: with the 20 epochs now actually applied, 0.95 left almost no word–word edges (79 on 20 Newsgroups, 4 categories)
@@ -41,6 +43,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `GNN(val_ratio=…)` does **not** rebuild train/val masks — use `TextPipeline.execute(validation_ratio=…)`
 
 ### Removed
+- The empty `cpu` and `gpu` extras: `pip install text4gcn` installs PyTorch from PyPI; for another build install PyTorch first from pytorch.org
+- `utils.recommend_installation()`, and the `torch_available` key of `check_pytorch_installation()` (PyTorch is a required dependency)
 - `data.AG_NEWS()` (no longer hosted)
 - Unused `models.utils.get_train_test()` / `read_file()`
 - Dead packages (`di/`, `optimization/`, `services/`) and orphan trainers

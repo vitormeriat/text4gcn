@@ -2,28 +2,31 @@
 
 ## Installation
 
-Text4GCN requires Python ≥ 3.10 and PyTorch ≥ 2.0. Install the version that matches your hardware:
+Text4GCN requires Python ≥ 3.10 and PyTorch ≥ 2.3. PyTorch comes from PyPI with the
+package: CUDA-enabled on Linux, CPU-only on Windows and macOS. For another build, install
+PyTorch first from [pytorch.org](https://pytorch.org/get-started/locally/); see
+[Device Management](guides/devices.md).
 
-=== "CPU"
+=== "pip"
     ```bash
-    pip install text4gcn[cpu]
-    ```
-
-=== "GPU (CUDA)"
-    ```bash
-    pip install text4gcn[gpu]
+    pip install text4gcn
     ```
 
 === "From source"
     ```bash
     git clone https://github.com/vitormeriat/text4gcn.git
     cd text4gcn
-    pip install -e .[cpu]   # or .[gpu]
+    pip install -e .
     ```
 
 === "Syntactic (CoreNLP)"
     ```bash
-    pip install text4gcn[syntactic]   # Python wrapper; Java CoreNLP jars still required
+    pip install "text4gcn[syntactic]"   # Python wrapper; Java CoreNLP jars still required
+    ```
+
+=== "BERT (experimental)"
+    ```bash
+    pip install "text4gcn[bert]"   # transformers
     ```
 
 === "Development"
