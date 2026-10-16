@@ -173,6 +173,9 @@ requirements.txt
 notebooks/
 examples/
 
+docs/tutorials/data
+docs/tutorials/logs
+
 # Benchmark corpora: distributed as assets of the `datasets-v1` GitHub release
 data/
 
