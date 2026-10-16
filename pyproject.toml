@@ -34,7 +34,6 @@ dependencies = [
     "gensim>=4.4.0",
     "matplotlib>=3.9.2",
     "tabulate>=0.9.0",
-    "rich>=13.0.0",
     "tqdm>=4.65.0",
 ]
 
@@ -100,7 +99,7 @@ known_first_party = ["text4gcn"]
 python_version = "3.11"
 ignore_missing_imports = true
 warn_unused_configs = true
-# Strict flags deferred until live-path annotations are complete (#10 baseline).
+# Strict flags deferred until the remaining type annotations are complete.
 check_untyped_defs = false
 disallow_untyped_defs = false
 

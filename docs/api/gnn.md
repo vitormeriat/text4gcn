@@ -23,7 +23,6 @@ class GNN:
         seed: int = 1234,
         epochs: int = 200,
         dropout: float = 0.5,
-        val_ratio: float = 0.1,
         layer: Layer = Layer.GCN,
         early_stopping: int = 10,
         device: str | None = None,
@@ -44,7 +43,6 @@ class GNN:
 | `seed` | `int` | `1234` | Random seed for PyTorch / NumPy / Python (reproducible training). |
 | `epochs` | `int` | `200` | Maximum number of training epochs. |
 | `dropout` | `float` | `0.5` | Dropout rate applied between GCN layers. |
-| `val_ratio` | `float` | `0.1` | **Deprecated for splitting.** Does not rebuild train/val masks. Set the split with `TextPipeline.execute(validation_ratio=…)`. A non-default value emits `DeprecationWarning`. |
 | `layer` | `Layer` | `Layer.GCN` | GNN layer type. Only `Layer.GCN` is supported. |
 | `early_stopping` | `int` | `10` | Stop training if validation loss does not improve for this many consecutive epochs. |
 | `device` | `str \| None` | `None` | PyTorch device (`"cpu"`, `"cuda"`, `"cuda:1"`, …). Detected automatically when `None`. |
@@ -54,11 +52,9 @@ class GNN:
 
 | Exception | When |
 |---|---|
-| `ImportError` | PyTorch is not installed. |
 | `FileNotFoundError` | Dataset path missing, or node feature / adjacency files missing (includes the command to fix it). |
 | `ValueError` | Empty `dataset_name`. |
 | `TypeError` | An unsupported `layer` type is requested. |
-| `DeprecationWarning` | Emitted when `val_ratio` differs from `0.1` (split is not rebuilt). |
 
 ---
 

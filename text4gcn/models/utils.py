@@ -1,11 +1,8 @@
-from datetime import timedelta, datetime
+from datetime import datetime, timezone
 from tabulate import tabulate
 import scipy.sparse as sp
 import pickle as pkl
-import torch as th
 import numpy as np
-import random
-import time
 
 
 class LoadData:
@@ -121,68 +118,7 @@ class LoadData:
 
 
 def unique_name():
-    return datetime.utcnow().strftime('%Y%m%d-%H%M%S%f')[:-3]
-
-
-def return_seed(nums=10):
-    return random.sample(range(100000), nums)
-
-
-def get_time_dif(start_time):
-    """Obter tempo decorrido"""
-    end_time = time.time()
-    time_dif = end_time - start_time
-    return timedelta(seconds=int(round(time_dif)))
-
-
-def macro_f1(pred, targ, num_classes=None):
-    pred = th.max(pred, 1)[1]
-    tp_out = []
-    fp_out = []
-    fn_out = []
-    if num_classes is None:
-        num_classes = sorted(set(targ.cpu().numpy().tolist()))
-    else:
-        num_classes = range(num_classes)
-    for i in num_classes:
-        # A previsão é i, e o rótulo é de fato i
-        tp = ((pred == i) & (targ == i)).sum().item()
-        # A previsão é i, mas o rótulo não é i
-        fp = ((pred == i) & (targ != i)).sum().item()
-        # A previsão não é i, mas o rótulo é i
-        fn = ((pred != i) & (targ == i)).sum().item()
-        tp_out.append(tp)
-        fp_out.append(fp)
-        fn_out.append(fn)
-
-    eval_tp = np.array(tp_out)
-    eval_fp = np.array(fp_out)
-    eval_fn = np.array(fn_out)
-
-    precision = eval_tp / (eval_tp + eval_fp)
-    precision[np.isnan(precision)] = 0
-    precision = np.mean(precision)
-
-    recall = eval_tp / (eval_tp + eval_fn)
-    recall[np.isnan(recall)] = 0
-    recall = np.mean(recall)
-
-    f1 = 2 * (precision * recall) / (precision + recall)
-    return f1, precision, recall
-
-
-def accuracy(pred, targ):
-    pred = th.max(pred, 1)[1]
-    return ((pred == targ).float()).sum().item() / targ.size()[0]
-
-
-def sparse_to_tensor(sparse_matrix):
-    values = sparse_matrix.data
-    indices = np.vstack((sparse_matrix.row, sparse_matrix.col))
-    i = th.LongTensor(indices)
-    v = th.FloatTensor(values)
-    shape = sparse_matrix.shape
-    return th.sparse.FloatTensor(i, v, th.Size(shape))
+    return datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S%f')[:-3]
 
 
 def preprocess_features(features):

@@ -1,9 +1,8 @@
-"""Unit tests for Fase A0 — academic rigor (seed, dropout, early-stop, RWF weights)."""
+"""Training protocol: seeds, dropout, early stopping with best-checkpoint restore, RWF edge weights."""
 
 from __future__ import annotations
 
 import argparse
-import warnings
 
 import numpy as np
 import pytest
@@ -27,16 +26,6 @@ class TestSeedWiring:
         assert args.seed == 4242
         assert args.dropout == 0.5
 
-    def test_val_ratio_mismatch_emits_deprecation(self, tmp_path):
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            GNN(
-                dataset_name="toy",
-                dataset_path=str(tmp_path),
-                val_ratio=0.25,
-                device="cpu",
-            )
-        assert any(issubclass(w.category, DeprecationWarning) for w in caught)
 
 
 class TestRwfWeights:
@@ -92,7 +81,6 @@ class TestEarlyStopBestCheckpoint:
         args = argparse.Namespace(
             early_stopping=50,
             seed=7,
-            val_ratio=0.1,
             max_epoch=3,
             dataset="toy",
             dropout=0.0,
@@ -180,7 +168,6 @@ class TestDropoutWiring:
         args = argparse.Namespace(
             early_stopping=10,
             seed=1,
-            val_ratio=0.1,
             max_epoch=1,
             dataset="toy",
             dropout=0.5,
@@ -229,7 +216,7 @@ class TestDevicePlacement:
                    y, y, y, mask, mask, mask, 2, 2)
         # "meta" stands in for CUDA: any tensor not explicitly moved stays on "cpu".
         args = argparse.Namespace(
-            early_stopping=10, seed=7, val_ratio=0.1, max_epoch=1, dataset="toy",
+            early_stopping=10, seed=7, max_epoch=1, dataset="toy",
             dropout=0.0, log_dir=str(tmp_path), layer="GCN", nhid=4, lr=0.02,
             device=th.device("meta"),
         )

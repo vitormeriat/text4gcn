@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 
 from text4gcn.builder import Frequency, Semantic, Syntactic, Builder
-from text4gcn.builder import list_available_adjacency_methods, list_available_builders
 
 
 class TestBuilderClasses:
@@ -52,7 +51,7 @@ class TestBuilderEnum:
         """Test Builder enum has expected values."""
         expected_values = {
             'liwc', 'cosine.similarity', 'dependency.parsing',
-            'constituency.parsing', 'embedding.word2vec', 'frequency.tfidf'
+            'embedding.word2vec', 'frequency.tfidf'
         }
         actual_values = {builder.value for builder in Builder}
         assert actual_values == expected_values
@@ -66,20 +65,11 @@ class TestBuilderEnum:
         assert builder == 'frequency.tfidf'
 
 
-class TestBuilderFunctions:
-    """Test builder utility functions."""
-    
-    def test_list_available_adjacency_methods(self, capsys):
-        """Test list_available_adjacency_methods function."""
-        list_available_adjacency_methods()
-        captured = capsys.readouterr()
-        assert "Text4GCN - ADJACENCY" in captured.out
-    
-    def test_list_available_builders(self, capsys):
-        """Test list_available_builders function."""
-        list_available_builders()
-        captured = capsys.readouterr()
-        assert "Text4GCN - BUILDERS" in captured.out
+    def test_builder_is_the_enum_gnn_uses(self):
+        """text4gcn.builder.Builder and text4gcn.Builder used to be two distinct enums."""
+        import text4gcn
+
+        assert Builder is text4gcn.Builder
 
 
 class TestBuilderIntegration:

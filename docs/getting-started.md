@@ -186,7 +186,7 @@ print(result)
 `fit()` prints per-epoch progress to stdout and saves accuracy/loss plots to `log_dir/`.
 
 !!! note "Validation ratio"
-    The train/val split is fixed by `TextPipeline.execute(validation_ratio=…)`. `GNN(val_ratio=…)` does not rebuild masks.
+    The train/val split is set by `TextPipeline.execute(validation_ratio=…)` (default 10% of the training documents).
 
 ---
 

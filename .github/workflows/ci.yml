@@ -52,21 +52,12 @@ jobs:
     - name: Type check (mypy)
       continue-on-error: true
       run: poetry run mypy text4gcn --ignore-missing-imports
-      # Soft gate: remaining annotation debt tracked as plan #10.
+      # Soft gate until the remaining type annotations are complete.
       # flake8 (F821) and pytest are the hard quality gates.
 
-    - name: Academic rigor + core tests
+    - name: Tests
       run: |
-        poetry run pytest \
-          tests/test_academic_rigor_a0.py \
-          tests/test_graph_refinement.py \
-          tests/test_graph_stats_a1.py \
-          tests/test_models.py \
-          tests/test_integration.py \
-          tests/test_builder.py \
-          tests/test_dataset.py \
-          tests/test_device.py \
-          tests/test_unicode_corpus.py \
+        poetry run pytest tests/ \
           -q -o addopts= --tb=short
 
     - name: Reproduce script smoke

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -74,12 +73,6 @@ class GNN:
         Maximum training epochs. Default ``200``.
     dropout : float
         Dropout rate. Default ``0.5``.
-    val_ratio : float
-        **Informational / deprecated for splitting.** The train/val split is
-        fixed when running :meth:`text4gcn.TextPipeline.execute` via
-        ``validation_ratio``. Passing a different value here does **not**
-        rebuild masks; a :class:`DeprecationWarning` is emitted. Default
-        ``0.1`` (matches DCAI 2022 / Yao et al. protocol).
     layer : Layer
         GNN layer type. Default ``Layer.GCN``.
     early_stopping : int
@@ -138,7 +131,6 @@ class GNN:
         seed: int = 1234,
         epochs: int = 200,
         dropout: float = 0.5,
-        val_ratio: float = 0.1,
         layer: Layer = Layer.GCN,
         early_stopping: int = 10,
         device: Optional[str] = None,
@@ -153,7 +145,6 @@ class GNN:
         self.seed = seed
         self.epochs = epochs
         self.dropout = dropout
-        self.val_ratio = val_ratio
         self.layer = layer
         self.early_stopping = early_stopping
         self.refinement_config = refinement_config
@@ -172,15 +163,6 @@ class GNN:
             raise TypeError(
                 f"Unsupported layer type '{layer}'. "
                 "Only Layer.GCN is supported in this version."
-            )
-
-        if abs(val_ratio - 0.1) > 1e-9:
-            warnings.warn(
-                "GNN(val_ratio=...) does not rebuild the train/val split. "
-                "Masks are fixed by TextPipeline.execute(validation_ratio=...). "
-                "Pass the desired ratio there (DCAI 2022 / Yao et al. use 0.10).",
-                DeprecationWarning,
-                stacklevel=2,
             )
 
         self.device_manager = get_device_manager(device)
@@ -225,7 +207,6 @@ class GNN:
         return argparse.Namespace(
             early_stopping=self.early_stopping,
             seed=self.seed,
-            val_ratio=self.val_ratio,
             max_epoch=self.epochs,
             dataset=self.dataset_name,
             dropout=self.dropout,

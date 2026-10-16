@@ -110,22 +110,21 @@ class TestModuleImports:
         assert hasattr(text4gcn, '__author__')
         assert hasattr(text4gcn, '__email__')
         
-        assert text4gcn.__version__ == "2.0.0rc2"
+        from importlib.metadata import version
+
+        assert text4gcn.__version__ == version("text4gcn")   # matches pyproject.toml
         assert text4gcn.__author__ == "Vitor Meriat"
         assert text4gcn.__email__ == "vitormeriat@gmail.com"
     
     def test_builder_module_imports(self):
         """Test builder module imports."""
         from text4gcn.builder import Frequency, Semantic, Syntactic, Builder
-        from text4gcn.builder import list_available_adjacency_methods, list_available_builders
         
         # Test that all expected classes and functions are available
         assert Frequency is not None
         assert Semantic is not None
         assert Syntactic is not None
         assert Builder is not None
-        assert list_available_adjacency_methods is not None
-        assert list_available_builders is not None
     
     def test_datasets_module_imports(self):
         """Test datasets module imports."""

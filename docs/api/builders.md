@@ -107,7 +107,7 @@ Trains Word2Vec embeddings on the corpus and connects words whose cosine similar
 | `training_algorithm` | `int` | — | `1` = skip-gram (as in the DCAI 2022 paper), `0` = CBOW. |
 | `embedding_dimension` | `int` | — | Embedding size (e.g. 300). |
 | `num_epochs` | `int` | — | Word2Vec training epochs (the paper uses 20). |
-| `language` | `str` | `"english"` | Language for tokenisation. |
+| `language` | `str` | `"english"` | NLTK stop-word list; stop words get no word–word edges. |
 | `threshold` | `float` | `0.7` | Minimum cosine similarity between two adjacent words' embeddings to create an edge. Calibrated on 20 Newsgroups: with 20 epochs, the paper's 0.95 leaves almost no word–word edges. |
 | `output_path` | `str \| None` | `None` | Override output directory. |
 | `seed` | `int` | `1234` | Seed of the Word2Vec initialisation. |
@@ -135,19 +135,19 @@ stats = Semantic(dataset_name="R8", dataset_path="data/").word2vec(
 ### `bert()`
 
 ```python
-def bert(self, language: str = "english", threshold: float = 0.95)
+def bert(self, language: str = "english", threshold: float = 0.95) -> GraphBuildStats
 ```
 
 Uses a pre-trained BERT model to embed words and connects similar words.
 
-!!! note "Working in Progress"
-    BERT adjacency is experimental and may require additional dependencies.
+!!! warning "Experimental"
+    `bert()` needs `pip install "text4gcn[bert]"` and always uses `bert-base-uncased`. Its graph is saved, but no `Builder` value selects it, so `GNN` cannot train on it yet.
 
 #### Parameters
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `language` | `str` | `"english"` | Language hint for the BERT tokeniser. |
+| `language` | `str` | `"english"` | NLTK stop-word list. The model is always `bert-base-uncased`. |
 | `threshold` | `float` | `0.95` | Minimum cosine similarity to create an edge. |
 
 #### Example
@@ -163,7 +163,7 @@ Semantic(dataset_name="R8", dataset_path="data/").bert(threshold=0.95)
 ### `cosine_similarity()`
 
 ```python
-def cosine_similarity(self, threshold: float = 0.95, output_path: str = None)
+def cosine_similarity(self, threshold: float = 0.95, output_path: str = None) -> GraphBuildStats
 ```
 
 Connects words whose WordNet definitions are similar: the cosine similarity of the TF-IDF vectors of their glosses, saved by `TextPipeline`. Words without a WordNet definition get no word–word edges, so the builder is meaningful for English only.
@@ -191,7 +191,7 @@ Semantic(dataset_name="R8", dataset_path="data/").cosine_similarity(threshold=0.
 from text4gcn.builder import Syntactic
 ```
 
-Builds edges from syntactic structure (dependency parsing, constituency parsing, LIWC categories).
+Builds edges from syntactic structure: dependency parsing or LIWC categories.
 
 ```python
 class Syntactic:
@@ -201,33 +201,33 @@ class Syntactic:
 ### `dependency_parsing()`
 
 ```python
-def dependency_parsing(self, core_nlp_path: str, language: str = "english")
+def dependency_parsing(self, core_nlp_path: str, language: str = "english") -> GraphBuildStats
 ```
 
 Connects words that have a syntactic dependency relation in the corpus, using Stanford CoreNLP.
 
-!!! note "Optional dependency"
-    Install `pip install text4gcn[syntactic]` and provide a local CoreNLP installation (Java jars). The Python wrapper is imported lazily.
+!!! warning "Experimental"
+    Needs `pip install "text4gcn[syntactic]"` and a local Stanford CoreNLP installation (Java jars), which CI does not run. CoreNLP always parses English; `language` only selects the stop words.
 
 #### Parameters
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `core_nlp_path` | `str` | — | Path to the CoreNLP installation directory. |
-| `language` | `str` | `"english"` | Language model to use. |
+| `language` | `str` | `"english"` | NLTK stop-word list. CoreNLP always parses English. |
 
 ---
 
 ### `linguistic_inquiry()`
 
 ```python
-def linguistic_inquiry(self, liwc_path: str)
+def linguistic_inquiry(self, liwc_path: str) -> GraphBuildStats
 ```
 
 Connects adjacent words that share at least one LIWC (Linguistic Inquiry and Word Count) category, gated by positive PMI. The edge weight is the pair count divided by the largest pair count.
 
-!!! note "Working in Progress"
-    Requires access to a LIWC dictionary file.
+!!! note "LIWC dictionary"
+    The LIWC dictionary is proprietary and not distributed with Text4GCN; pass the path to your own `.dic` file.
 
 #### Parameters
 
@@ -261,7 +261,7 @@ The adjacency file is a serialised `scipy.sparse` matrix. The `Builder` enum val
 from text4gcn import GraphBuildStats
 ```
 
-Frozen dataclass returned by `Frequency.tfidf()` and `Semantic.word2vec()` (and other builders that call `build()`).
+Frozen dataclass returned by every builder method (`tfidf()`, `word2vec()`, `cosine_similarity()`, `bert()`, `dependency_parsing()`, `linguistic_inquiry()`).
 
 | Field | Type | Description |
 |---|---|---|

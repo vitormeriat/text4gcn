@@ -179,7 +179,7 @@ docs/tutorials/logs
 # Benchmark corpora: distributed as assets of the `datasets-v1` GitHub release
 data/
 
-# Unfinished baseline models (also excluded in pyproject.toml)
+# Unfinished baseline models (kept out of the package by this ignore rule)
 text4gcn/models/baseline/
 
 # Dev helper scripts (only reproduce_dcai2022.py is used by CI / docs)

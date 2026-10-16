@@ -1,8 +1,8 @@
 from text4gcn.modules import adjacency as adjcy
 from text4gcn.modules import file_ops as flop
 from text4gcn.modules import logger as logger
-from text4gcn.modules.word_processor import *
 from text4gcn.modules.logger import Process
+from text4gcn.graph.stats import GraphBuildStats, compute_adjacency_stats, report_stats
 from scipy.sparse import csr_matrix
 from nltk.corpus import stopwords
 from tqdm import tqdm
@@ -104,9 +104,9 @@ class DependencyParsingAdjacency():
         )
 
         # doc word frequency
-        doc_word_freq = get_doc_word_freq(docs_of_words, word_id_map)
+        doc_word_freq = adjcy.get_doc_word_freq(docs_of_words, word_id_map)
 
-        weight_tfidf = get_weight_tfidf(
+        weight_tfidf = adjcy.get_weight_tfidf(
             docs_of_words,
             word_id_map,
             doc_word_freq,
@@ -127,7 +127,7 @@ class DependencyParsingAdjacency():
             my_file.writelines(hist)
 
     @Process.log("EXTRACTED ADJACENCY MATRIX: Heterogenous doc-word adjacency matrix.")
-    def build(self):
+    def build(self) -> GraphBuildStats:
 
         corpus_path = f"{self.dataset_path}/{self.dataset_name}"
         ds_corpus = f'{corpus_path}.shuffled/{self.dataset_name}.txt'
@@ -148,7 +148,7 @@ class DependencyParsingAdjacency():
         # Real test-size.
         test_size = len(open(ds_corpus_test_idx, encoding="utf-8").readlines())
 
-        word_doc_freq = define_word_doc_freq(docs_of_words)
+        word_doc_freq = adjcy.define_word_doc_freq(docs_of_words)
 
         vocab_size = len(vocab)
         word_id_map = {}
@@ -157,7 +157,7 @@ class DependencyParsingAdjacency():
             word_id_map[vocab[i]] = i
             id_word_map[i] = vocab[i]
 
-        word_window_freq = build_word_window_freq(docs_of_words)
+        word_window_freq = adjcy.build_word_window_freq(docs_of_words)
 
         rela_pair_count_str = self.build_relation_pair(docs_of_words)
 
@@ -182,9 +182,13 @@ class DependencyParsingAdjacency():
         adj = csr_matrix((weight, (row, col)), shape=(node_size, node_size))
         # =============================================================
 
-        # Dump Adjacency Matrix
-        with open(f"{corpus_path}.adjacency/ind.dependency.parsing.{self.dataset_name}.adj", 'wb') as f:
+        adj_path = f"{corpus_path}.adjacency/ind.dependency.parsing.{self.dataset_name}.adj"
+        with open(adj_path, 'wb') as f:
             pickle.dump(adj, f)
+
+        stats = compute_adjacency_stats(adj, path=adj_path, builder="dependency.parsing", dataset_name=self.dataset_name)
+        report_stats(stats, self.logger)
 
         hist = self.logger.log_history()
         self._save_history(hist)
+        return stats

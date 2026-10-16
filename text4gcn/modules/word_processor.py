@@ -1,7 +1,6 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from typing import List, Iterable
 from collections import OrderedDict
-from math import log
 import numpy as np
 
 
@@ -39,94 +38,3 @@ def extract_word_definitions(vocabulary: List[str]) -> List[str]:
 
     return [' '.join(synset.definition() for synset in wordnet.synsets(word.strip()))
             for word in vocabulary]
-
-
-def build_word_doc_list(docs_of_words):
-    word_doc_list = {}
-    for i in range(len(docs_of_words)):
-        words = docs_of_words[i]
-        appeared = set()
-        for word in words:
-            if word in appeared:
-                continue
-            if word in word_doc_list:
-                doc_list = word_doc_list[word]
-                doc_list.append(i)
-                word_doc_list[word] = doc_list
-            else:
-                word_doc_list[word] = [i]
-            appeared.add(word)
-    return word_doc_list
-
-
-def define_word_doc_freq(docs_of_words):
-    word_doc_list = build_word_doc_list(docs_of_words)
-    return {
-        word: len(doc_list) for word, doc_list in word_doc_list.items()
-    }
-
-
-def build_word_window_freq(docs_of_words):
-    word_window_freq = {}
-    for window in docs_of_words:
-        appeared = set()
-        for i in range(len(window)):
-            if window[i] in appeared:
-                continue
-            if window[i] in word_window_freq:
-                word_window_freq[window[i]] += 1
-            else:
-                word_window_freq[window[i]] = 1
-            appeared.add(window[i])
-    return word_window_freq
-
-
-def relation_pair_statitcs(rela_pair_count_str):
-    """Return min, max, mean, and sample std of RWF pair occurrence counts."""
-    if not rela_pair_count_str:
-        return 0.0, 0.0, 0.0, 1.0
-
-    count1 = list(rela_pair_count_str.values())
-    min_count1 = float(min(count1))
-    max_count1 = float(max(count1))
-    count_mean1 = float(np.mean(count1))
-    count_std1 = float(np.std(count1, ddof=1)) if len(count1) > 1 else 1.0
-    if count_std1 == 0.0:
-        count_std1 = 1.0
-    return min_count1, max_count1, count_mean1, count_std1
-
-
-def get_weight_tfidf(docs_of_words, word_id_map, doc_word_freq, train_size, vocab_size, word_doc_freq, vocab, row, col):
-    weight_tfidf = []
-    for i in range(len(docs_of_words)):
-        words = docs_of_words[i]
-        doc_word_set = set()
-        for word in words:
-            if word in doc_word_set:
-                continue
-            j = word_id_map[word]
-            key = f'{str(i)},{str(j)}'
-            freq = doc_word_freq[key]
-            if i < train_size:
-                row.append(i)
-            else:
-                row.append(i + vocab_size)
-            col.append(train_size + j)
-            idf = log(1.0 * len(docs_of_words) / word_doc_freq[vocab[j]])
-            weight_tfidf.append(freq * idf)
-            doc_word_set.add(word)
-    return weight_tfidf
-
-
-def get_doc_word_freq(docs_of_words, word_id_map):
-    doc_word_freq = {}
-    for doc_id in range(len(docs_of_words)):
-        words = docs_of_words[doc_id]
-        for word in words:
-            word_id = word_id_map[word]
-            doc_word_str = f'{str(doc_id)},{str(word_id)}'
-            if doc_word_str in doc_word_freq:
-                doc_word_freq[doc_word_str] += 1
-            else:
-                doc_word_freq[doc_word_str] = 1
-    return doc_word_freq

@@ -82,3 +82,26 @@ class TestLiwc:
     def test_pairs_are_counted_per_occurrence(self, builder):
         pairs = builder.build_relation_pair([["bread", "cake"], ["cake", "bread"], ["bread", "sad"]])
         assert pairs == {"bread,cake": 2, "cake,bread": 2}
+
+    def test_build_writes_word_word_edges(self, tmp_path):
+        import pickle as pkl
+
+        from text4gcn import GraphBuildStats, TextPipeline
+        from text4gcn.builder import Syntactic
+        from text4gcn.datasets import save_corpus
+
+        texts = ["happy joyful day", "bread cake oven", "happy joyful song", "bread cake shop"] * 3
+        save_corpus(tmp_path, "toy", texts=texts, labels=["mood", "food"] * 6,
+                    splits=["train"] * 8 + ["test"] * 4)
+        TextPipeline(dataset_name="toy", dataset_path=tmp_path, rare_count=1).execute()
+        dic = tmp_path / "toy.dic"
+        dic.write_text(LIWC_DIC, encoding="utf-8")
+
+        stats = Syntactic(dataset_name="toy", dataset_path=tmp_path).linguistic_inquiry(str(dic))
+
+        assert isinstance(stats, GraphBuildStats)
+        vocab = (tmp_path / "toy.shuffled" / "toy.vocab").read_text(encoding="utf-8").split()
+        with open(stats.path, "rb") as f:
+            adj = pkl.load(f).tocsr()
+        words = slice(8, 8 + len(vocab))
+        assert adj[words, words].nnz == 4   # happy–joyful and bread–cake, both directions

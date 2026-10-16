@@ -1,4 +1,4 @@
-"""Tests for A1 — graph stats API and DCAI reproduction helpers."""
+"""Tests for the graph stats API and the DCAI 2022 reproduction helpers."""
 
 from __future__ import annotations
 

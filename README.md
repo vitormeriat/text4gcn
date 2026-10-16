@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="70%" src="https://raw.githubusercontent.com/vitormeriat/text4gcn/main/imgs/logo.svg">
+  <img width="70%" src="https://raw.githubusercontent.com/vitormeriat/text4gcn/main/docs/assets/logo.svg">
   <h1 style="margin-bottom:40px; margin-top:20px">Text4GCN</h1>
   <p>A Python framework for text classification using Graph Neural Networks</p>
 </div>
@@ -125,8 +125,8 @@ Choose an edge-weighting strategy:
 | `Frequency` | `.tfidf()` | `Builder.Tfidf` |
 | `Semantic` | `.word2vec()` | `Builder.Word2Vec` |
 | `Semantic` | `.cosine_similarity()` | `Builder.CosineSimilarity` |
-| `Semantic` | `.bert()` | — (graph is built, but not yet selectable in `GNN`) |
-| `Syntactic` | `.dependency_parsing()` | `Builder.DependencyParsing` |
+| `Semantic` | `.bert()` | — experimental: graph is built, but not yet selectable in `GNN` |
+| `Syntactic` | `.dependency_parsing()` | `Builder.DependencyParsing` (experimental, needs CoreNLP) |
 | `Syntactic` | `.linguistic_inquiry()` | `Builder.Liwc` |
 
 ```python
@@ -162,7 +162,6 @@ result = GNN(
     lr=0.02,
     nhid=200,
     dropout=0.5,
-    val_ratio=0.1,
     early_stopping=10,
     device=None,          # CUDA if available, else CPU
 ).fit()

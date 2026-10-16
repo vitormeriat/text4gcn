@@ -38,7 +38,7 @@ class Syntactic(Adjacency):
     def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str]) -> None:
         super().__init__(dataset_name=dataset_name, dataset_path=dataset_path)
 
-    def dependency_parsing(self, core_nlp_path: str, language: str = "english"):
+    def dependency_parsing(self, core_nlp_path: str, language: str = "english") -> GraphBuildStats:
         """Build adjacency via Stanford CoreNLP dependency pairs (RWF syntactic).
 
         Requires ``pip install text4gcn[syntactic]`` and a local CoreNLP jar path.
@@ -51,11 +51,7 @@ class Syntactic(Adjacency):
         )
         return adj.build()
 
-    def constituency_parsing(self) -> None:
-        """Not implemented yet."""
-        return None
-
-    def linguistic_inquiry(self, liwc_path: str):
+    def linguistic_inquiry(self, liwc_path: str) -> GraphBuildStats:
         """Build adjacency via LIWC lexicon pairs (RWF linguistic)."""
         adj = LiwcAdjacency(
             dataset_name=self.dataset_name,
@@ -103,7 +99,7 @@ class Semantic(Adjacency):
 
     def bert(
         self, language: str = "english", threshold: float = 0.95
-    ):
+    ) -> GraphBuildStats:
         """Build adjacency from BERT pairwise similarities (edge construction).
 
         Lazily imports ``BERTAdjacency`` so HuggingFace models are only loaded
@@ -118,10 +114,6 @@ class Semantic(Adjacency):
             threshold=threshold,
         )
         return adj.build()
-
-    def llm(self) -> None:
-        """Not implemented yet."""
-        return None
 
     def cosine_similarity(
         self, threshold: float = 0.95, output_path: Optional[str] = None

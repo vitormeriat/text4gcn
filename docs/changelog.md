@@ -39,10 +39,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `builder` is optional (default `Builder.Tfidf`) (fixes #2); `Builder.Embedding` / `Builder.Frequency` → `Builder.Word2Vec` / `Builder.Tfidf`
 - Import from the package root: `from text4gcn import GNN, TextPipeline, Builder, Layer`
 
-### Deprecated
-- `GNN(val_ratio=…)` does **not** rebuild train/val masks — use `TextPipeline.execute(validation_ratio=…)`
-
 ### Removed
+- `GNN(val_ratio=…)`: it never changed the split; set it with `TextPipeline.execute(validation_ratio=…)`
+- `Syntactic.constituency_parsing()`, `Semantic.llm()` and `Builder.ConstituencyParsing`, which did nothing
+- `builder.list_available_adjacency_methods()` / `list_available_builders()` and the string constants `builder.Tfidf`, `builder.Word2Vec`, …: use the `Builder` enum. `text4gcn.builder.Builder` is now the same enum as `text4gcn.Builder` (they were two distinct classes); `rich` is no longer a dependency
+- Unused internal modules (`preprocess.DataShuffler`, `NodeFeatureBuilder`, `WordProcessor`, `modules.utils`, and empty or unreachable files); the `TextPipeline` covers what they did
 - The empty `cpu` and `gpu` extras: `pip install text4gcn` installs PyTorch from PyPI; for another build install PyTorch first from pytorch.org
 - `utils.recommend_installation()`, and the `torch_available` key of `check_pytorch_installation()` (PyTorch is a required dependency)
 - `data.AG_NEWS()` (no longer hosted)

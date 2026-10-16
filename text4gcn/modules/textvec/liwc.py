@@ -41,9 +41,6 @@ class Liwc():
 
         return cat_counter
 
-    def get_class(self, token):
-        return list(self.parse(token).elements())
-
     def _load_dict_file(self, filepath):
         liwc_file = open(filepath, encoding="utf-8")
 

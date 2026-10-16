@@ -77,12 +77,11 @@ from text4gcn.builder import Semantic
 Semantic(dataset_name="R8", dataset_path="data/").bert(threshold=0.95)
 ```
 
-!!! note "Working in Progress"
-    BERT adjacency may require additional dependencies and GPU time. Use TF-IDF or Word2Vec for quick experiments.
+!!! warning "Experimental"
+    `bert()` needs `pip install "text4gcn[bert]"` and always uses `bert-base-uncased`. Its graph is saved, but no `Builder` value selects it, so `GNN` cannot train on it yet.
 
 **Use when:**
 - Short texts where individual words carry strong contextual meaning
-- Domain-specific pre-trained BERT models are available
 
 ---
 
@@ -118,8 +117,8 @@ Syntactic(dataset_name="R8", dataset_path="data/").dependency_parsing(
 )
 ```
 
-!!! note "Optional dependency"
-    Install with `pip install text4gcn[syntactic]` and point `core_nlp_path` at a local Stanford CoreNLP installation (Java jars).
+!!! warning "Experimental"
+    Needs `pip install "text4gcn[syntactic]"` and a local Stanford CoreNLP installation (Java jars), which CI does not run. CoreNLP always parses English; `language` only selects the stop words.
 
 **Use when:**
 - Formal text where grammatical relations carry classification signal

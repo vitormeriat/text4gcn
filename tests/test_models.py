@@ -86,12 +86,6 @@ class TestModelBuilder:
         loader = LoadData(path="data", dataset="R8", builder=ModelBuilder.Tfidf)
         assert loader.builder == "frequency.tfidf"
         assert "Builder." not in loader.builder
-    
-    def test_model_builder_enum_values(self):
-        """Test ModelBuilder enum has expected values."""
-        # This test assumes ModelBuilder enum exists - adjust based on actual implementation
-        if hasattr(ModelBuilder, 'Embedding'):
-            assert ModelBuilder.Embedding is not None
 
 
 class TestGNNErrorHandling:

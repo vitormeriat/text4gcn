@@ -1,6 +1,5 @@
 from gensim.models import Word2Vec
 from typing import List
-import numpy as np
 import os
 import zlib
 
@@ -42,12 +41,3 @@ def train_word2vec(
         model.save(os.path.join(save_dir, 'word2vec.model'))
 
     return model
-
-
-def infer_word2vec_embeddings(model: Word2Vec, word_list: List[str]) -> np.ndarray:
-    """
-    NOTE: Inference is not deterministic therefore representations will vary between calls
-    Returns a 2D array with shape (num_words, embedding_dimension)
-    """
-    print('Infering word embeddings..')
-    return np.array([model[word] for word in word_list])

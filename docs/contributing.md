@@ -17,5 +17,5 @@ For academic regression checks (DCAI 2022):
 
 ```bash
 python scripts/reproduce_dcai2022.py --reference-only
-poetry run pytest tests/test_academic_rigor_a0.py tests/test_graph_refinement.py -q -o addopts=
+poetry run pytest tests/test_training_protocol.py tests/test_graph_refinement.py -q -o addopts=
 ```
