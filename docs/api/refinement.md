@@ -40,35 +40,35 @@ class RefinementConfig:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `min_degree` | `float \| None` | `None` | Drop any node with total weighted degree below this. |
-| `max_degree` | `float \| None` | `None` | Drop any node with total weighted degree above this (hub pruning). |
+| `min_degree` | `float \| None` | `None` | Drop any node with total weighted degree below this (word nodes only when `keep_docs=True`). Applied first. |
+| `max_degree` | `float \| None` | `None` | Drop any node with total weighted degree above this (hub pruning; word nodes only when `keep_docs=True`). Applied first. |
 | `min_word_degree` | `float \| None` | `None` | Drop **word** nodes with degree below this. |
 | `max_word_degree` | `float \| None` | `None` | Drop **word** nodes with degree above this. |
 | `min_doc_freq` | `int \| None` | `None` | Drop word nodes that appear in fewer than this many documents (equivalent to sklearn's `min_df`). |
 | `max_doc_freq_ratio` | `float \| None` | `None` | Drop word nodes that appear in more than this fraction of documents (equivalent to `max_df`). |
 | `keep_docs` | `bool` | `True` | When `True`, document nodes are never removed: every node filter, including `min_degree` / `max_degree`, applies to word nodes only. |
 | `drop_word_indices` | `set[int] \| None` | `None` | Explicit set of vocabulary indices to drop. |
-| `keep_word_indices` | `set[int] \| None` | `None` | When set, only these vocabulary indices are kept (overrides other word filters). |
+| `keep_word_indices` | `set[int] \| None` | `None` | When set, only these vocabulary indices are kept: it decides alone for word nodes and the other word filters are skipped. It does not override `min_degree` / `max_degree`, which apply first. |
 
 ### Edge pruning fields
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `edge_weight_threshold` | `float \| None` | `None` | Drop edges with weight strictly below this value. |
+| `edge_weight_threshold` | `float \| None` | `None` | Drop edges with weight strictly below this value — whatever weight the builder stored: TF-IDF (document–word), PMI (`tfidf()`), count / max count (RWF builders) or cosine similarity (`cosine_similarity()`). |
 | `top_k_edges_per_node` | `int \| None` | `None` | Keep only the top-k heaviest edges per node. An edge survives if it is in the top-k of either endpoint, with its original weight. |
 
 ### Vocabulary fields
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `vocab_path` | `str \| None` | `None` | Path to vocabulary file (one word per line). Required for `stopwords` filtering. If `None`, the vocab is auto-located from `dataset_path`. |
-| `stopwords` | `set[str] \| None` | `None` | Set of word strings to drop. Only effective when a vocabulary is available. |
+| `vocab_path` | `str \| None` | `None` | Path to vocabulary file (one word per line), used by `stopwords` and for `NodeMetadata.word`. Optional: if `None`, the vocabulary is read from `{dataset_path}/{dataset_name}.shuffled/{dataset_name}.vocab` when `apply_refinement` gets `dataset_path` and `dataset_name` (`GNN` always passes them). |
+| `stopwords` | `set[str] \| None` | `None` | Set of word strings to drop. Only effective when a vocabulary is available: without `vocab_path` and without `dataset_path` / `dataset_name`, it silently does nothing. |
 
 ### Output fields
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `build_metadata` | `bool` | `True` | Whether to populate the `metadata` list in the refinement output. |
+| `build_metadata` | `bool` | `True` | Whether to populate the `metadata` list in the refinement output; when `False`, `info["metadata"]` is `None`. |
 
 ---
 
@@ -103,8 +103,16 @@ Applies graph refinement to the output of `LoadData.load_corpus()` (`text4gcn.mo
 `(predata_refined, info)` where:
 - `predata_refined` — same tuple structure as `predata`, with the refined graph.
 - `info` — `None` if `return_metadata=False`; otherwise a dict with:
-  - `"metadata"` — `list[NodeMetadata]`, one entry per node in the refined graph.
-  - `"stats"` — dict with `nodes_original`, `nodes_refined`, `nodes_removed`, `edges_before`, `edges_after`, `train_docs_kept`, `test_docs_kept`.
+  - `"metadata"` — `list[NodeMetadata]`, one entry per node in the refined graph; `None` when `build_metadata=False`.
+  - `"stats"` — dict with:
+
+| Key | Meaning |
+|---|---|
+| `nodes_original` / `nodes_refined` / `nodes_removed` | Node counts before and after node filtering. |
+| `edges_before` | Stored edges after node filtering, before edge pruning. |
+| `edges_after` | Stored edges after edge pruning. |
+| `train_docs_kept` | Kept training documents (`train_mask`; validation documents are not counted). |
+| `test_docs_kept` | Kept test documents. |
 
 ### Raises
 
@@ -128,12 +136,12 @@ class NodeMetadata:
     node_type: str          # 'train_doc', 'word', 'test_doc'
     original_index: int     # index in the un-refined graph
     degree: float           # weighted degree in the refined graph
-    word_id: int | None     # vocabulary index (word nodes only)
-    word: str | None        # word string (word nodes only, if vocab available)
-    doc_id: int | None      # document index (doc nodes only)
+    word_id: int | None = None   # vocabulary index (word nodes only)
+    word: str | None = None      # word string (word nodes only, if vocab available)
+    doc_id: int | None = None    # document index (doc nodes only)
 ```
 
-`NodeMetadata.to_dict()` exports the fields as a plain dictionary for serialisation or Pandas ingestion.
+For test documents, `doc_id` counts from 0 within the test block. `NodeMetadata.to_dict()` exports the fields as a plain dictionary for serialisation or Pandas ingestion.
 
 ---
 
@@ -190,7 +198,7 @@ RefinementConfig(
 )
 ```
 
-**String-based stopword filtering (requires vocab_path):**
+**String-based stopword filtering (needs a vocabulary: `vocab_path`, or `dataset_path` / `dataset_name`):**
 
 ```python
 RefinementConfig(

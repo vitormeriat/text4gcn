@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import argparse
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
 from text4gcn.graph import RefinementConfig, apply_refinement
@@ -14,6 +14,17 @@ from text4gcn.models.train_eval import TextGCNTrainer
 from text4gcn.models.utils import LoadData, load_class_names
 from text4gcn.utils.device import get_device_manager
 from text4gcn.utils.reporting import Reporter, check_verbose, format_count
+
+
+# Builder value -> the builder call that writes its adjacency file (for error hints).
+_BUILDER_METHODS = {
+    Builder.Tfidf.value: ("Frequency", "tfidf()"),
+    Builder.Word2Vec.value: ("Semantic", "word2vec(training_algorithm=1, embedding_dimension=300, num_epochs=20)"),
+    Builder.Bert.value: ("Semantic", "bert()"),
+    Builder.CosineSimilarity.value: ("Semantic", "cosine_similarity()"),
+    Builder.DependencyParsing.value: ("Syntactic", "dependency_parsing(core_nlp_path=...)"),
+    Builder.Liwc.value: ("Syntactic", "linguistic_inquiry(liwc_path=...)"),
+}
 
 
 @dataclass(frozen=True)
@@ -211,19 +222,22 @@ class GNN:
                 f"  ).execute()\n"
             )
 
-        if not adj_dir.exists():
+        builder = getattr(self.builder, "value", self.builder)
+        adj_file = adj_dir / f"ind.{builder}.{self.dataset_name}.adj"
+        if not adj_file.exists():
+            cls, method = _BUILDER_METHODS.get(builder, ("Frequency", "tfidf()"))
             raise FileNotFoundError(
-                f"Adjacency files not found at '{adj_dir}'.\n\n"
-                f"Run the graph builder step after preprocessing:\n\n"
-                f"  from text4gcn.builder import Frequency\n"
-                f"  Frequency(\n"
+                f"Adjacency file not found at '{adj_file}'.\n\n"
+                f"Build the '{builder}' graph after preprocessing:\n\n"
+                f"  from text4gcn.builder import {cls}\n"
+                f"  {cls}(\n"
                 f"      dataset_name='{self.dataset_name}',\n"
                 f"      dataset_path='{self.dataset_path}',\n"
-                f"  ).tfidf()  # or .word2vec(), .cosine_similarity(), ...\n"
+                f"  ).{method}\n"
             )
 
-    def _build_args(self) -> argparse.Namespace:
-        return argparse.Namespace(
+    def _build_args(self) -> SimpleNamespace:
+        return SimpleNamespace(
             early_stopping=self.early_stopping,
             seed=self.seed,
             max_epoch=self.epochs,

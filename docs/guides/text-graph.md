@@ -29,14 +29,24 @@ After preprocessing, the nodes are ordered as:
 
 | Edge | Direction | Weight | Meaning |
 |---|---|---|---|
-| **Word ↔ Word** | Undirected | PMI score | Two words tend to co-occur in the same sliding window |
+| **Word ↔ Word** | Undirected | Depends on the builder (PMI for `tfidf()`) | Two words are related |
 | **Word ↔ Document** | Undirected | TF-IDF score | A word appears in a document with that importance |
 
 There are **no document-document edges** in the default graph (documents only connect through shared words).
 
+Every builder writes the same TF-IDF word–document edges; they differ only in the word–word edges:
+
+| Builder | Word–word weight |
+|---|---|
+| `Frequency.tfidf()` | PMI over a sliding window (below) |
+| `Semantic.word2vec()`, `Semantic.bert()`, `Syntactic.linguistic_inquiry()`, `Syntactic.dependency_parsing()` (RWF) | Pair count divided by the largest pair count; positive PMI is only a gate |
+| `Semantic.cosine_similarity()` | Cosine similarity of the two word vectors |
+
+See [Graph builders](builders.md).
+
 ### Word-word edges (PMI)
 
-Pointwise Mutual Information is computed over a sliding window of size `window_size`:
+For `Frequency.tfidf()`, Pointwise Mutual Information is computed over a sliding window of size `window_size`:
 
 ```
 PMI(w_i, w_j) = log( p(w_i, w_j) / (p(w_i) * p(w_j)) )
@@ -81,7 +91,7 @@ For a corpus with `D` documents and vocabulary size `V`:
 |---|---|
 | Nodes | `D + V` |
 | Word-doc edges | up to `D × V` (sparse in practice) |
-| Word-word edges | bounded by PMI window; typically `O(V)` |
+| Word-word edges | up to `V × V`; depends on the builder (and on `window_size` for PMI) |
 
 For the R8 benchmark, the DCAI 2022 paper reports 7,674 documents and 7,688 words after filtering, so 15,362 nodes, and about 3.2 M edges in the TextGCN graph: word–word PMI edges dominate.
 
@@ -101,13 +111,21 @@ print(adj.shape)   # (nodes, nodes): training docs, then words, then test docs
 print(adj.nnz)     # stored entries; GNN makes the graph symmetric when loading it
 ```
 
-Or via `apply_refinement` with `return_metadata=True` to get per-node type and degree information:
+Or load the corpus and pass it through `apply_refinement` with `return_metadata=True` to get per-node type and degree information:
 
 ```python
-from text4gcn import RefinementConfig, apply_refinement
+from text4gcn import Builder, RefinementConfig, apply_refinement
+from text4gcn.models.utils import LoadData
 
-_, info = apply_refinement(predata, RefinementConfig(), return_metadata=True)
-stats = info["stats"]
-print(stats)
-# {'nodes_original': 14674, 'nodes_refined': 14674, ...}
+predata = LoadData(path="data/", dataset="R8", builder=Builder.Tfidf).load_corpus()
+_, info = apply_refinement(
+    predata, RefinementConfig(), dataset_path="data/", dataset_name="R8", return_metadata=True
+)
+
+node = info["metadata"][0]   # one NodeMetadata per node
+print(node.node_type, node.degree)
+print(info["stats"])
+# {'nodes_original': …, 'nodes_refined': …, 'nodes_removed': 0, ...}
 ```
+
+An empty `RefinementConfig()` removes nothing; `info["metadata"]` is `None` when `build_metadata=False`.

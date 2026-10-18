@@ -15,9 +15,9 @@ flowchart LR
 | # | Tutorial | You will learn | Runtime |
 |---|---|---|---|
 | 1 | [Text as a graph](01_text_as_a_graph.ipynb) | What nodes and edges Text4GCN builds, and why an unlabelled document can be classified from its place in the graph | seconds, CPU |
-| 2 | [Your first classifier](02_first_classifier.ipynb) | The full pipeline on the 20 Newsgroups benchmark: download, `TextPipeline`, `Frequency.tfidf()`, `GNN.fit()` | ~2 min GPU / ~6 min CPU |
-| 3 | [Choosing a graph builder](03_choosing_a_graph_builder.ipynb) | TF-IDF + PMI vs. Word2Vec RWF vs. cosine similarity: edges, build time and accuracy side by side | ~25 min CPU |
-| 4 | [Refining the graph](04_refining_the_graph.ipynb) | Measuring and pruning a built graph with `RefinementConfig`, and what it does to accuracy | ~30 min CPU |
+| 2 | [Your first classifier](02_first_classifier.ipynb) | The full pipeline on the 20 Newsgroups benchmark: download, `TextPipeline`, `Frequency.tfidf()`, `GNN.fit()` | ~2.5 min GPU |
+| 3 | [Choosing a graph builder](03_choosing_a_graph_builder.ipynb) | TF-IDF + PMI vs. Word2Vec RWF vs. cosine similarity: edges, build time and accuracy side by side | ~4.5 min GPU |
+| 4 | [Refining the graph](04_refining_the_graph.ipynb) | Measuring and pruning a built graph with `RefinementConfig`, and what it does to accuracy | ~2.5 min GPU |
 | 5 | [Bring your own corpus](05_bring_your_own_corpus.ipynb) | From a DataFrame to the input files, non-English text, encodings and memory sizing | seconds, CPU |
 
 ## The story in one paragraph

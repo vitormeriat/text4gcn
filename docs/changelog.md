@@ -15,9 +15,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `text4gcn.datasets.save_corpus()` writes any labelled corpus in the `.txt` / `.meta` input format, with validation
 - `text4gcn.datasets.twenty_newsgroups()` downloads 20 Newsgroups (scikit-learn) in the input format
 - `dataset_path` accepts `pathlib.Path` as well as `str` (`TextPipeline`, builders, `GNN`, datasets)
+- `Builder.Bert` selects the `Semantic.bert()` graph in `GNN`
 - `GraphBuildStats` returned by every builder method (nodes, nnz, density, file size)
 - `TextPipeline(seed=…)` for reproducible corpus shuffle
-- Optional `text4gcn[syntactic]` extra (Stanford CoreNLP Python wrapper) and `text4gcn[bert]` extra (transformers, for the experimental BERT builder)
+- Optional `text4gcn[syntactic]` extra (Stanford CoreNLP Python wrapper) and `text4gcn[bert]` extra (transformers, for the BERT builder)
 - `scripts/reproduce_dcai2022.py` for DCAI 2022 Tables 2/3 reference + local comparison
 - MkDocs + Material theme documentation; CI builds with `mkdocs build --strict`
 - Graph refinement (`RefinementConfig`, `apply_refinement`, `NodeMetadata`)
@@ -78,7 +79,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Non-ASCII corpora: `TextPipeline(encoding=…, ascii_only=False)` keeps words of any script, e.g. Arabic with diacritics (fixes #1)
 - Dataset downloads no longer save HTTP error pages as data
 - `apply_refinement` CSR conversion before fancy indexing (`dia_matrix` safe)
-- Early path validation when `dataset_path` / `dataset_name` are missing or empty
+- Early path validation when `dataset_path` / `dataset_name` are missing or empty, in `TextPipeline`, the builders and `GNN`
+- Builders: the constructors raise `ValueError` for an empty `dataset_name` and `FileNotFoundError` for a missing `dataset_path`; every builder method raises `FileNotFoundError` with the `TextPipeline` command when `{dataset_name}.shuffled/` is missing
+- `GNN.fit()` checks the adjacency file of the selected builder (`ind.<builder>.<dataset>.adj`), not only the `.adjacency/` directory, and its error names the builder call that writes it
+- Labels containing spaces in `.meta`: label columns are split on tabs only, so a label like `"real estate"` is no longer truncated
+- `Syntactic.dependency_parsing()` did not filter stop words: words are now read from the token indices of each dependency relation (`ROOT` skipped), so `language` selects the stop-word list
 - `np.bool` → `bool` (NumPy ≥ 1.24)
 
 ---

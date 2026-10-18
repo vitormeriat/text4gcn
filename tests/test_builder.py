@@ -50,7 +50,7 @@ class TestBuilderEnum:
         """Test Builder enum has expected values."""
         expected_values = {
             'liwc', 'cosine.similarity', 'dependency.parsing',
-            'embedding.word2vec', 'frequency.tfidf'
+            'embedding.word2vec', 'embedding.bert', 'frequency.tfidf'
         }
         actual_values = {builder.value for builder in Builder}
         assert actual_values == expected_values

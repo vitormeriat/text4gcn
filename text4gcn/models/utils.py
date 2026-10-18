@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 def load_class_names(path, dataset: str) -> list:
     """Class labels in the order of the one-hot label columns (first appearance in the shuffled meta)."""
     with open(f"{path}/{dataset}.shuffled/{dataset}.meta", encoding="utf-8") as meta:
-        return list(OrderedDict.fromkeys(line.split()[2] for line in meta if line.strip()))
+        return list(OrderedDict.fromkeys(line.strip().split('\t')[2] for line in meta if line.strip()))
 
 
 class LoadData:

@@ -15,7 +15,7 @@ class NodeFeatures():
     def extract_doc_labels(self, ds_corpus_meta_file: str) -> List[str]:
         with open(ds_corpus_meta_file, encoding="utf-8") as ds_corpus_meta:
             doc_labels = list(OrderedDict.fromkeys(
-                doc_meta.split()[2] for doc_meta in ds_corpus_meta))
+                doc_meta.strip().split('\t')[2] for doc_meta in ds_corpus_meta if doc_meta.strip()))
         return doc_labels
 
     def compute_x(self, docs_of_words: List[List[str]], tr_size: int, emb_dim: int, w_vectors: WORD_VECTORS_TYPE) -> csr_matrix:
