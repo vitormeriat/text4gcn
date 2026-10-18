@@ -1,0 +1,127 @@
+<svg viewBox="0 0 780 420" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, sans-serif">
+
+  <rect width="780" height="420" fill="#fafafa" rx="12"/>
+
+  <!-- Title -->
+  <text x="390" y="30" text-anchor="middle" fill="#263238" font-size="15" font-weight="700">Word-Document Heterogeneous Graph</text>
+
+  <!-- ══════════════════════════════════════
+       EDGES (draw before nodes so nodes sit on top)
+       ══════════════════════════════════════ -->
+
+  <!-- Doc0 (train) ↔ words -->
+  <!-- Doc0 → "graph" -->
+  <line x1="130" y1="150" x2="330" y2="135" stroke="#5c6bc0" stroke-width="2.5" stroke-opacity="0.7"/>
+  <!-- Doc0 → "neural" -->
+  <line x1="130" y1="150" x2="330" y2="205" stroke="#5c6bc0" stroke-width="1.8" stroke-opacity="0.5"/>
+  <!-- Doc0 → "network" -->
+  <line x1="130" y1="150" x2="330" y2="275" stroke="#5c6bc0" stroke-width="1.2" stroke-opacity="0.35"/>
+
+  <!-- Doc1 (train) ↔ words -->
+  <!-- Doc1 → "text" -->
+  <line x1="130" y1="230" x2="330" y2="345" stroke="#5c6bc0" stroke-width="2.5" stroke-opacity="0.7"/>
+  <!-- Doc1 → "neural" -->
+  <line x1="130" y1="230" x2="330" y2="205" stroke="#5c6bc0" stroke-width="1.5" stroke-opacity="0.45"/>
+  <!-- Doc1 → "graph" -->
+  <line x1="130" y1="230" x2="330" y2="135" stroke="#5c6bc0" stroke-width="0.9" stroke-opacity="0.28"/>
+
+  <!-- Doc2 (test) ↔ words -->
+  <!-- Doc2 → "network" -->
+  <line x1="640" y1="160" x2="440" y2="275" stroke="#ef5350" stroke-width="2.2" stroke-opacity="0.65"/>
+  <!-- Doc2 → "graph" -->
+  <line x1="640" y1="160" x2="440" y2="135" stroke="#ef5350" stroke-width="1.5" stroke-opacity="0.45"/>
+
+  <!-- Doc3 (test) ↔ words -->
+  <!-- Doc3 → "text" -->
+  <line x1="640" y1="265" x2="440" y2="345" stroke="#ef5350" stroke-width="2.5" stroke-opacity="0.7"/>
+  <!-- Doc3 → "neural" -->
+  <line x1="640" y1="265" x2="440" y2="205" stroke="#ef5350" stroke-width="1.2" stroke-opacity="0.38"/>
+
+  <!-- Word ↔ Word (PMI co-occurrence) -->
+  <!-- "graph" ↔ "neural" -->
+  <line x1="385" y1="148" x2="385" y2="192" stroke="#ff8f00" stroke-width="2.5" stroke-opacity="0.8" stroke-dasharray="6,3"/>
+  <!-- "neural" ↔ "network" -->
+  <line x1="385" y1="218" x2="385" y2="262" stroke="#ff8f00" stroke-width="2" stroke-opacity="0.7" stroke-dasharray="6,3"/>
+  <!-- "graph" ↔ "network" (curved) -->
+  <path d="M 410 140 Q 460 207 410 275" fill="none" stroke="#ff8f00" stroke-width="1.2" stroke-opacity="0.45" stroke-dasharray="5,4"/>
+  <!-- "network" ↔ "text" -->
+  <line x1="385" y1="288" x2="385" y2="332" stroke="#ff8f00" stroke-width="1.2" stroke-opacity="0.45" stroke-dasharray="6,3"/>
+
+  <!-- ══════════════════════════════════════
+       WORD NODES (centre column)
+       ══════════════════════════════════════ -->
+  <!-- "graph" -->
+  <circle cx="385" cy="135" r="32" fill="#fff3e0" stroke="#ff8f00" stroke-width="2"/>
+  <text x="385" y="130" text-anchor="middle" fill="#e65100" font-size="12" font-weight="700">graph</text>
+  <text x="385" y="147" text-anchor="middle" fill="#bf360c" font-size="9">w₀</text>
+
+  <!-- "neural" -->
+  <circle cx="385" cy="205" r="32" fill="#fff3e0" stroke="#ff8f00" stroke-width="2"/>
+  <text x="385" y="200" text-anchor="middle" fill="#e65100" font-size="12" font-weight="700">neural</text>
+  <text x="385" y="217" text-anchor="middle" fill="#bf360c" font-size="9">w₁</text>
+
+  <!-- "network" -->
+  <circle cx="385" cy="275" r="32" fill="#fff3e0" stroke="#ff8f00" stroke-width="2"/>
+  <text x="385" y="270" text-anchor="middle" fill="#e65100" font-size="11" font-weight="700">network</text>
+  <text x="385" y="287" text-anchor="middle" fill="#bf360c" font-size="9">w₂</text>
+
+  <!-- "text" -->
+  <circle cx="385" cy="345" r="32" fill="#fff3e0" stroke="#ff8f00" stroke-width="2"/>
+  <text x="385" y="340" text-anchor="middle" fill="#e65100" font-size="12" font-weight="700">text</text>
+  <text x="385" y="357" text-anchor="middle" fill="#bf360c" font-size="9">w₃</text>
+
+  <!-- ══════════════════════════════════════
+       TRAIN DOC NODES (left)
+       ══════════════════════════════════════ -->
+  <!-- Doc0 -->
+  <rect x="62" y="118" width="136" height="64" rx="10" fill="#e8eaf6" stroke="#3949ab" stroke-width="2"/>
+  <text x="130" y="142" text-anchor="middle" fill="#1a237e" font-size="11" font-weight="700">Doc 0</text>
+  <text x="130" y="158" text-anchor="middle" fill="#37474f" font-size="9.5">GCN for text class.</text>
+  <text x="130" y="172" text-anchor="middle" fill="#7986cb" font-size="9">train · label: tech</text>
+
+  <!-- Doc1 -->
+  <rect x="62" y="198" width="136" height="64" rx="10" fill="#e8eaf6" stroke="#3949ab" stroke-width="2"/>
+  <text x="130" y="222" text-anchor="middle" fill="#1a237e" font-size="11" font-weight="700">Doc 1</text>
+  <text x="130" y="238" text-anchor="middle" fill="#37474f" font-size="9.5">Neural graph models</text>
+  <text x="130" y="252" text-anchor="middle" fill="#7986cb" font-size="9">train · label: ai</text>
+
+  <!-- ══════════════════════════════════════
+       TEST DOC NODES (right)
+       ══════════════════════════════════════ -->
+  <!-- Doc2 -->
+  <rect x="572" y="128" width="136" height="64" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+  <text x="640" y="152" text-anchor="middle" fill="#b71c1c" font-size="11" font-weight="700">Doc 2</text>
+  <text x="640" y="168" text-anchor="middle" fill="#37474f" font-size="9.5">Deep graph networks</text>
+  <text x="640" y="182" text-anchor="middle" fill="#e57373" font-size="9">test · label: ?</text>
+
+  <!-- Doc3 -->
+  <rect x="572" y="233" width="136" height="64" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+  <text x="640" y="257" text-anchor="middle" fill="#b71c1c" font-size="11" font-weight="700">Doc 3</text>
+  <text x="640" y="273" text-anchor="middle" fill="#37474f" font-size="9.5">NLP text analysis</text>
+  <text x="640" y="287" text-anchor="middle" fill="#e57373" font-size="9">test · label: ?</text>
+
+  <!-- ══════════════════════════════════════
+       LEGEND
+       ══════════════════════════════════════ -->
+  <rect x="30" y="368" width="720" height="40" rx="8" fill="#eceff1" stroke="#b0bec5" stroke-width="1"/>
+
+  <!-- train doc legend -->
+  <rect x="50" y="381" width="16" height="16" rx="3" fill="#e8eaf6" stroke="#3949ab" stroke-width="1.5"/>
+  <text x="72" y="393" fill="#37474f" font-size="11">Train document node</text>
+
+  <!-- test doc legend -->
+  <rect x="220" y="381" width="16" height="16" rx="3" fill="#ffebee" stroke="#c62828" stroke-width="1.5"/>
+  <text x="242" y="393" fill="#37474f" font-size="11">Test document node</text>
+
+  <!-- word node legend -->
+  <circle cx="408" cy="389" r="8" fill="#fff3e0" stroke="#ff8f00" stroke-width="1.5"/>
+  <text x="422" y="393" fill="#37474f" font-size="11">Word node</text>
+
+  <!-- word-doc edge legend -->
+  <line x1="510" y1="389" x2="535" y2="389" stroke="#5c6bc0" stroke-width="2.5"/>
+  <text x="541" y="393" fill="#37474f" font-size="11">TF-IDF edge</text>
+
+  <!-- word-word edge legend -->
+  <line x1="623" y1="389" x2="648" y2="389" stroke="#ff8f00" stroke-width="2" stroke-dasharray="5,3"/>
+  <text x="654" y="393" fill="#37474f" font-size="11">PMI edge</text>
+</svg>
