@@ -44,6 +44,7 @@ The RWF keeps the accuracy of TextGCN with a fraction of its edges. On 20 Newsgr
 pip install text4gcn
 pip install "text4gcn[syntactic]"   # optional: Stanford CoreNLP wrapper (Java jars still required)
 pip install "text4gcn[bert]"        # optional: transformers, for the BERT builder
+pip install "text4gcn[bert]"        # optional: transformers, for the BERT builder
 ```
 
 Requires Python ≥ 3.10 and PyTorch ≥ 2.3, installed from PyPI with the package (CUDA-enabled
