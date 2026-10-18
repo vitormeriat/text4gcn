@@ -8,14 +8,16 @@ Text4GCN provides three families of adjacency builders. This guide helps you cho
 
 ## Quick comparison
 
-| Builder | Method | Speed | Accuracy | Requires |
+| Builder | Method | Speed | Word–word edges | Requires |
 |---|---|---|---|---|
-| `Frequency` | `tfidf()` | Fast | Good baseline | Nothing extra |
-| `Semantic` | `word2vec()` | Medium | Better on large corpora | Training time |
-| `Semantic` | `bert()` | Slow | Best on short texts | BERT model |
-| `Semantic` | `cosine_similarity()` | Medium | Good for document similarity | Nothing extra |
-| `Syntactic` | `dependency_parsing()` | Slow | Best on formal text | `text4gcn[syntactic]` + CoreNLP jars |
-| `Syntactic` | `linguistic_inquiry()` | Fast | Psycholinguistic signal | LIWC dictionary |
+| `Frequency` | `tfidf()` | Fast | Positive PMI over a sliding window | Nothing extra |
+| `Semantic` | `word2vec()` | Medium | Adjacent words with similar Word2Vec vectors (trained on the corpus) | Training time |
+| `Semantic` | `bert()` | Slow | Adjacent words with similar BERT vectors | `text4gcn[bert]`; downloads `bert-base-uncased` on first use |
+| `Semantic` | `cosine_similarity()` | Medium | Words with similar WordNet definitions (English only) | NLTK WordNet (`TextPipeline` downloads it) |
+| `Syntactic` | `dependency_parsing()` | Slow | Words linked by a dependency relation | `text4gcn[syntactic]` + CoreNLP jars |
+| `Syntactic` | `linguistic_inquiry()` | Fast | Adjacent words sharing a LIWC category | LIWC dictionary |
+
+Every builder also writes the same TF-IDF document–word edges.
 
 ---
 
@@ -42,7 +44,7 @@ print(stats)  # GraphBuildStats: nodes, edges(nnz), density, file size
 
 ## Semantic — Word2Vec
 
-Word2Vec trains embeddings on your corpus from scratch. Words are connected if their embedding cosine similarity exceeds `threshold`. Better than TF-IDF when the corpus is large enough to train meaningful embeddings (tens of thousands of documents or more).
+Word2Vec trains embeddings on your corpus from scratch. Two adjacent non-stop-word words in a document are connected when the cosine similarity of their embeddings is at least `threshold` and their PMI is positive; the edge weight is the pair count divided by the largest pair count. Embeddings need a corpus large enough to train them.
 
 ```python
 from text4gcn.builder import Semantic
@@ -69,7 +71,7 @@ Semantic(dataset_name="R8", dataset_path="data/").word2vec(
 
 ## Semantic — BERT
 
-BERT embeds words using a pre-trained contextual model. Most useful for short, semantically dense texts (news headlines, tweets, biomedical abstracts).
+Like Word2Vec RWF, but each vocabulary word is embedded with a pre-trained BERT model (`bert-base-uncased`, the `[CLS]` vector of the word encoded on its own, out of sentence context) instead of a model trained on the corpus. Adjacent words in a document are linked when their cosine similarity is at least `threshold` and their PMI is positive.
 
 ```python
 from text4gcn.builder import Semantic
@@ -77,11 +79,11 @@ from text4gcn.builder import Semantic
 Semantic(dataset_name="R8", dataset_path="data/").bert(threshold=0.95)
 ```
 
-!!! warning "Experimental"
-    `bert()` needs `pip install "text4gcn[bert]"` and always uses `bert-base-uncased`. Its graph is saved, but no `Builder` value selects it, so `GNN` cannot train on it yet.
+!!! note "Requirements"
+    `bert()` needs `pip install "text4gcn[bert]"` and always uses `bert-base-uncased`. Train on its graph with `GNN(..., builder=Builder.Bert)`.
 
 **Use when:**
-- Short texts where individual words carry strong contextual meaning
+- The corpus is too small to train useful Word2Vec embeddings
 
 ---
 
@@ -106,7 +108,7 @@ Semantic(dataset_name="R8", dataset_path="data/").cosine_similarity(threshold=0.
 
 ## Syntactic — Dependency Parsing
 
-Edges between syntactically related words (subject-verb, adjective-noun, etc.) using Stanford CoreNLP.
+Edges between syntactically related words (subject-verb, adjective-noun, etc.) using Stanford CoreNLP. Each dependency relation (except `ROOT`) between two non-stop-word words counts as a pair; like the other RWF builders, a pair needs positive PMI, and its weight is its pair count divided by the largest pair count.
 
 ```python
 from text4gcn.builder import Syntactic
@@ -118,7 +120,7 @@ Syntactic(dataset_name="R8", dataset_path="data/").dependency_parsing(
 ```
 
 !!! warning "Experimental"
-    Needs `pip install "text4gcn[syntactic]"` and a local Stanford CoreNLP installation (Java jars), which CI does not run. CoreNLP always parses English; `language` only selects the stop words.
+    Needs `pip install "text4gcn[syntactic]"` and a local Stanford CoreNLP installation (Java jars), which CI does not run. CoreNLP always parses English; `language` selects the NLTK stop-word list whose words get no edges.
 
 **Use when:**
 - Formal text where grammatical relations carry classification signal
@@ -178,6 +180,7 @@ from text4gcn import GNN, Builder
 
 GNN(..., builder=Builder.Tfidf)           # reads ind.frequency.tfidf.R8.adj
 GNN(..., builder=Builder.Word2Vec)        # reads ind.embedding.word2vec.R8.adj
+GNN(..., builder=Builder.Bert)            # reads ind.embedding.bert.R8.adj
 GNN(..., builder=Builder.CosineSimilarity) # reads ind.cosine.similarity.R8.adj
 GNN(..., builder=Builder.DependencyParsing) # reads ind.dependency.parsing.R8.adj
 GNN(..., builder=Builder.Liwc)            # reads ind.liwc.R8.adj

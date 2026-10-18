@@ -36,7 +36,7 @@ the smaller graphs of the **Related Word Filter (RWF)** of Pereira & de Castro
 ```bash
 pip install text4gcn
 pip install "text4gcn[syntactic]"   # optional: Stanford CoreNLP wrapper (Java jars still required)
-pip install "text4gcn[bert]"        # optional: transformers, for the experimental BERT builder
+pip install "text4gcn[bert]"        # optional: transformers, for the BERT builder
 ```
 
 Requires Python ≥ 3.10 and PyTorch ≥ 2.3, installed from PyPI with the package (CUDA-enabled
@@ -130,7 +130,7 @@ TextPipeline(
 | `Semantic` | `.cosine_similarity()` | words with similar WordNet definitions (English only) | `Builder.CosineSimilarity` |
 | `Syntactic` | `.linguistic_inquiry()` | RWF: adjacent words sharing a LIWC category (needs a LIWC dictionary) | `Builder.Liwc` |
 | `Syntactic` | `.dependency_parsing()` | RWF: words linked by a dependency relation (experimental, needs CoreNLP) | `Builder.DependencyParsing` |
-| `Semantic` | `.bert()` | adjacent words with similar BERT embeddings (experimental) | — not selectable in `GNN` yet |
+| `Semantic` | `.bert()` | adjacent words with similar BERT embeddings (needs `text4gcn[bert]`) | `Builder.Bert` |
 
 Every builder keeps the TF-IDF document–word edges and returns `GraphBuildStats`:
 

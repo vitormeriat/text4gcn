@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from text4gcn.builder.cosine_similarity_adj import CosineSimilarityAdjacency
 from text4gcn.builder.dependency_parsing_adj import DependencyParsingAdjacency
@@ -19,6 +20,10 @@ class Adjacency:
     """
 
     def __init__(self, dataset_name: str, dataset_path: str | os.PathLike[str], verbose: int = 1) -> None:
+        if not dataset_name or not str(dataset_name).strip():
+            raise ValueError("dataset_name must be a non-empty string.")
+        if not Path(dataset_path).exists():
+            raise FileNotFoundError(f"dataset_path does not exist: {dataset_path}")
         self.dataset_name = dataset_name
         self.dataset_path = dataset_path
         self.verbose = check_verbose(verbose)

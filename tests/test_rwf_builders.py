@@ -105,3 +105,34 @@ class TestLiwc:
             adj = pkl.load(f).tocsr()
         words = slice(8, 8 + len(vocab))
         assert adj[words, words].nnz == 4   # happy–joyful and bread–cake, both directions
+
+
+class FakeCoreNLP:
+    """CoreNLP stand-in: relations are (label, governor index, dependent index), 1-based."""
+
+    def __init__(self, path, lang):
+        pass
+
+    def word_tokenize(self, sentence):
+        return sentence.split()
+
+    def dependency_parse(self, sentence):
+        # "the cat eats fish": det(cat, the), nsubj(eats, cat), ROOT, obj(eats, fish)
+        return [("det", 2, 1), ("nsubj", 3, 2), ("ROOT", 0, 3), ("obj", 3, 4)]
+
+    def close(self):
+        pass
+
+
+class TestDependencyParsing:
+    def test_related_words_are_paired_without_stop_words(self, monkeypatch, tmp_path):
+        """Regression: labels and token indices were compared instead of the words."""
+        from text4gcn.builder import dependency_parsing_adj
+
+        monkeypatch.setattr(dependency_parsing_adj, "_import_stanford_corenlp", lambda: FakeCoreNLP)
+        builder = dependency_parsing_adj.DependencyParsingAdjacency(
+            dataset_name="toy", dataset_path=str(tmp_path), core_nlp_path="unused")
+
+        pairs = builder.build_relation_pair([["the", "cat", "eats", "fish"]])
+
+        assert pairs == {"eats,cat": 1, "cat,eats": 1, "eats,fish": 1, "fish,eats": 1}

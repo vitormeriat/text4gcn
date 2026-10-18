@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pickle
+from pathlib import Path
 
 import scipy.sparse as sp
 
@@ -26,6 +27,17 @@ def save_graph(adj: sp.spmatrix, path: str, builder: str, dataset_name: str,
 
 def run_build(build, header: str, verbose: int, dataset_path, dataset_name: str) -> GraphBuildStats:
     """Run ``build(report)`` under a header and one summary line, then log it."""
+    shuffled = Path(dataset_path) / f"{dataset_name}.shuffled"
+    if not shuffled.exists():
+        raise FileNotFoundError(
+            f"Preprocessed corpus not found at '{shuffled}'.\n\n"
+            f"Run the preprocessing step first:\n\n"
+            f"  from text4gcn import TextPipeline\n"
+            f"  TextPipeline(\n"
+            f"      dataset_name='{dataset_name}',\n"
+            f"      dataset_path='{dataset_path}',\n"
+            f"  ).execute()\n"
+        )
     report = Reporter(verbose)
     report.header(header)
     with report.step("graph") as step:

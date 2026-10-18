@@ -15,7 +15,7 @@ class GNN:
     def __init__(
         self,
         dataset_name: str,
-        dataset_path: str,
+        dataset_path: str | os.PathLike[str],
         log_dir: str = ".",
         builder: Builder = Builder.Tfidf,
         lr: float = 0.02,
@@ -36,9 +36,9 @@ class GNN:
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `dataset_name` | `str` | — | Dataset name. Must match the prefix of `.txt`, `.meta`, and preprocessed files on disk. |
-| `dataset_path` | `str` | — | Directory containing the dataset files. |
+| `dataset_path` | `str \| os.PathLike[str]` | — | Directory containing the dataset files. |
 | `log_dir` | `str` | `"."` | Directory where model checkpoints (`.pth`) and training plots are saved. |
-| `builder` | `Builder` | `Builder.Tfidf` | Adjacency strategy used to build the graph. Must match the adjacency files already on disk. |
+| `builder` | `Builder \| str` | `Builder.Tfidf` | Adjacency strategy used to build the graph: a `Builder` or its string value (e.g. `"embedding.word2vec"`). Must match the adjacency files already on disk. |
 | `lr` | `float` | `0.02` | Learning rate for the Adam optimiser. |
 | `nhid` | `int` | `200` | Hidden layer dimension. |
 | `seed` | `int` | `1234` | Random seed for PyTorch / NumPy / Python (reproducible training). |
@@ -52,11 +52,20 @@ class GNN:
 
 ### Raises
 
+The constructor raises:
+
 | Exception | When |
 |---|---|
-| `FileNotFoundError` | Dataset path missing, or node feature / adjacency files missing (includes the command to fix it). |
-| `ValueError` | Empty `dataset_name`. |
+| `FileNotFoundError` | `dataset_path` does not exist. |
+| `ValueError` | Empty `dataset_name`, or `verbose` not `0`, `1` or `2`. |
 | `TypeError` | An unsupported `layer` type is requested. |
+
+`fit()` raises `FileNotFoundError` when a previous step has not run; the message includes the command to fix it:
+
+| Missing | Message names |
+|---|---|
+| `{dataset_name}.node_features/` | The `TextPipeline(...).execute()` call. |
+| `{dataset_name}.adjacency/ind.{builder}.{dataset_name}.adj` | The builder call that writes that file, e.g. `Semantic(...).word2vec(...)` for `Builder.Word2Vec`. |
 
 ---
 
@@ -202,6 +211,32 @@ result.metrics["macro_f1"]    # 0.9301
 result.history[["loss", "val_loss"]].plot()   # learning curves
 result.confusion_matrix       # true × predicted, with class names
 ```
+
+---
+
+## TextGCNTrainer
+
+```python
+from text4gcn import TextGCNTrainer
+```
+
+The lower-level training loop that `GNN.fit()` runs. Use it only to train on data you prepared yourself; `GNN` is the supported entry point.
+
+```python
+class TextGCNTrainer:
+    def __init__(
+        self,
+        model,                      # model class, e.g. text4gcn.models.model.GCN
+        args,                       # namespace of training settings (below)
+        pre_data,                   # tuple returned by LoadData(...).load_corpus() / apply_refinement()
+        report: Reporter | None = None,
+        class_names: Sequence[str] | None = None,
+    ) -> None
+
+    def fit(self) -> dict
+```
+
+`args` is any object with the attributes `device`, `max_epoch`, `nhid`, `lr`, `dropout` (default `0.5`), `early_stopping`, `seed`, `dataset`, `log_dir` and, when `report` is `None`, `verbose` (default `1`) — e.g. a `types.SimpleNamespace`. `fit()` returns a dict with the fields of [`TrainingResult`](#trainingresult) (`TrainingResult(**trainer.fit())` builds one).
 
 ---
 

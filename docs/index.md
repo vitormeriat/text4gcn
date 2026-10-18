@@ -26,7 +26,7 @@ The pipeline has three steps: preprocess text → build the graph → train the 
 - **Three adjacency strategies** — frequency (TF-IDF/PMI), semantic (Word2Vec, BERT, cosine similarity), syntactic (dependency parsing, LIWC)
 - **Graph refinement** — filter low-frequency words, prune weak edges, attach node metadata
 - **Automatic device selection** — detects CUDA, falls back to CPU transparently
-- **Structured results** — `GNN.fit()` returns a `TrainingResult` dataclass with accuracy, loss, model path and epoch count
+- **Structured results** — `GNN.fit()` returns a `TrainingResult` with test accuracy and loss, macro/weighted metrics, the best epoch and checkpoint path, the per-epoch history, a per-class report and the confusion matrix
 - **Informative errors** — if a pipeline step is missing, the error shows the exact command to fix it
 
 ## Quick start
@@ -37,7 +37,7 @@ pip install "text4gcn[syntactic]"   # optional: Stanford CoreNLP wrapper (Java j
 ```
 
 ```python
-from text4gcn import GNN, TextPipeline, Builder, GraphBuildStats
+from text4gcn import GNN, TextPipeline
 from text4gcn.builder import Frequency
 
 # Step 1 — preprocess raw text (validation split + shuffle seed live here)
@@ -82,6 +82,6 @@ R8, R52, Ohsumed and PubMed: `text4gcn.datasets.download(name, path)`. 20NG: `tw
 
 ## References
 
-- Pereira & de Castro (2022) — *Natural Language Processing Based on a Text Graph Convolutional Network* (DCAI). See `papers/`.
+- Pereira & de Castro (2023) — *Natural Language Processing Based on a Text Graph Convolutional Network*, DCAI 2022 (LNNS 583, Springer). [doi:10.1007/978-3-031-20859-1_1](https://doi.org/10.1007/978-3-031-20859-1_1). See `papers/`.
 - Yao, Mao & Luo (2019) — *Graph Convolutional Networks for Text Classification* (AAAI)
 - Kipf & Welling (2017) — *Semi-supervised Classification with Graph Convolutional Networks*

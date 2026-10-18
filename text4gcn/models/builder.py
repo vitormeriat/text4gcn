@@ -8,4 +8,5 @@ class Builder(str, Enum):
     CosineSimilarity = "cosine.similarity"
     DependencyParsing = "dependency.parsing"
     Word2Vec = "embedding.word2vec"
+    Bert = "embedding.bert"
     Tfidf = "frequency.tfidf"

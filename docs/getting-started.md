@@ -24,7 +24,7 @@ PyTorch first from [pytorch.org](https://pytorch.org/get-started/locally/); see
     pip install "text4gcn[syntactic]"   # Python wrapper; Java CoreNLP jars still required
     ```
 
-=== "BERT (experimental)"
+=== "BERT"
     ```bash
     pip install "text4gcn[bert]"   # transformers
     ```
@@ -53,13 +53,13 @@ print(f"PyTorch {info['torch_version']} — CUDA: {info['cuda_available']}")
 
 Each dataset needs two files in the same directory:
 
-**`{dataset_name}.txt`** — one document per line, UTF-8 or Latin-1:
+**`{dataset_name}.txt`** — one document per line, UTF-8 by default (pass `TextPipeline(encoding="latin1")`, or another encoding, for other files):
 ```
 computer software engineering systems design
 natural language processing machine learning algorithms
 ```
 
-**`{dataset_name}.meta`** — tab-separated: `index  split  label`:
+**`{dataset_name}.meta`** — tab-separated: `index  split  label` (labels may contain spaces, not tabs):
 ```
 0	train	technology
 1	train	science
@@ -67,6 +67,8 @@ natural language processing machine learning algorithms
 ```
 
 Supported split values: `train`, `training`, `20news-bydate-train`, anything else is treated as `test`.
+
+Cleaning keeps only ASCII letters and digits by default, as in the original TextGCN; pass `TextPipeline(ascii_only=False)` to keep non-ASCII letters (accented Latin, Cyrillic, Arabic, …).
 
 ### Get a dataset
 
@@ -205,7 +207,7 @@ result = GNN(dataset_name="R8", dataset_path="data/", seed=1234).fit()
 print(f"accuracy={result.test_accuracy:.4f}")
 ```
 
-Defaults: `builder=Builder.Tfidf`, `log_dir="."`, `epochs=200`, `lr=0.02`, `nhid=200`, `dropout=0.5`, `seed=1234`, `device=None` (auto-detect).
+Defaults: `builder=Builder.Tfidf`, `log_dir="."`, `epochs=200`, `lr=0.02`, `nhid=200`, `dropout=0.5`, `early_stopping=10`, `layer=Layer.GCN`, `seed=1234`, `device=None` (auto-detect), `verbose=1`.
 
 ---
 
@@ -248,3 +250,19 @@ Run the preprocessing step first:
       dataset_path='data/',
   ).execute()
 ```
+
+A missing graph names the builder call that writes it:
+
+```
+FileNotFoundError: Adjacency file not found at 'data/R8.adjacency/ind.embedding.word2vec.R8.adj'.
+
+Build the 'embedding.word2vec' graph after preprocessing:
+
+  from text4gcn.builder import Semantic
+  Semantic(
+      dataset_name='R8',
+      dataset_path='data/',
+  ).word2vec(training_algorithm=1, embedding_dimension=300, num_epochs=20)
+```
+
+The builders raise the same kind of error, with the `TextPipeline` command, when `{dataset_path}/{dataset_name}.shuffled/` is missing.

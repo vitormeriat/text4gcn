@@ -15,7 +15,7 @@ class TextPipeline:
     def __init__(
         self,
         dataset_name: str,
-        dataset_path: str,
+        dataset_path: str | os.PathLike[str],
         rare_count: int = 5,
         language: str = "english",
         seed: int = 1234,
@@ -30,7 +30,7 @@ class TextPipeline:
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `dataset_name` | `str` | — | Dataset name. Must match the `.txt` and `.meta` file prefixes. |
-| `dataset_path` | `str` | — | Directory containing the raw dataset files. Must exist at construction time. |
+| `dataset_path` | `str \| os.PathLike[str]` | — | Directory containing the raw dataset files. Must exist at construction time. |
 | `rare_count` | `int` | `5` | Words appearing fewer than this many times across the corpus are dropped. |
 | `language` | `str` | `"english"` | Language for stop-word removal (NLTK stop-word list). |
 | `seed` | `int` | `1234` | Random seed for document shuffle (reproducible train/test order). |
@@ -49,6 +49,14 @@ class TextPipeline:
     ).execute()
     ```
 
+### Raises
+
+| Exception | When |
+|---|---|
+| `ValueError` | Empty `dataset_name`, or `verbose` not `0`, `1` or `2` (constructor). |
+| `FileNotFoundError` | `dataset_path` does not exist (constructor). |
+| `UnicodeDecodeError` | `execute()`: the `.txt` corpus is not valid in `encoding`; the message suggests `TextPipeline(encoding=...)`, e.g. `encoding='latin1'`. |
+
 ---
 
 ### `execute()`
@@ -65,7 +73,7 @@ Runs the complete preprocessing pipeline. Stages execute in order:
 
 1. **Clean** — remove stop words and rare words, write to `{dataset_name}.cleaned/`
 2. **Shuffle** — randomise train/test order, write to `{dataset_name}.shuffled/`
-3. **Prepare words** — build vocabulary and TF-IDF word vectors
+3. **Prepare words** — build the vocabulary and, for each word, the TF-IDF vector of its WordNet definitions (at most 1,000 features; used by `Semantic.cosine_similarity()`)
 4. **Build node features** — compute x, y, tx, ty, allx, ally matrices, write to `{dataset_name}.node_features/`
 
 Each stage prints one line, for example:
@@ -86,7 +94,7 @@ The same lines, with a timestamp, are written to the processing log
 | Parameter | Type | Default | Description |
 |---|---|---|---|
 | `validation_ratio` | `float` | `0.10` | Fraction of the training set held out for validation (DCAI 2022 / Yao et al. use `0.10`). This is the only place where the validation split is set. |
-| `seed` | `int \| None` | `None` | Overrides the shuffle seed given to `TextPipeline(seed=…)` for this run. |
+| `seed` | `int \| None` | `None` | If given, replaces the instance's shuffle seed (`TextPipeline(seed=…)`): it is stored on the instance, so later `execute()` calls without `seed` reuse it. |
 
 ---
 
@@ -106,7 +114,7 @@ data/
     R8.train                 ← training document indices
     R8.test                  ← test document indices
     R8.vocab                 ← vocabulary (one word per line)
-    R8.word_vectors          ← TF-IDF word vectors (pickle)
+    R8.word_vectors          ← TF-IDF vectors of WordNet definitions (pickle)
   R8.node_features/
     ind.R8.x                 ← train doc feature matrix
     ind.R8.y                 ← train doc one-hot labels
@@ -169,7 +177,7 @@ computer software programming algorithm data structures
 natural language processing text classification neural
 ```
 
-**`{dataset_name}.meta`** — tab-separated `index  split  label`:
+**`{dataset_name}.meta`** — tab-separated `index  split  label` (labels may contain spaces, not tabs):
 
 ```
 0	train	technology

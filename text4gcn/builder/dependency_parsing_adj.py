@@ -47,28 +47,16 @@ class DependencyParsingAdjacency():
                 errors += 1
                 res = []
 
-            for pair in list(res):
-                #pair=pair.split(", ")
-                if pair[0] == 'ROOT' or pair[1] == 'ROOT':
+            # Each relation is (label, governor index, dependent index); indices are
+            # 1-based into the tokens and governor 0 is the ROOT.
+            for relation, governor, dependent in res:
+                if relation == 'ROOT' or governor == 0:
                     continue
-                if pair[0] == pair[1]:
+                word_i, word_j = tokenized[governor - 1], tokenized[dependent - 1]
+                if word_i == word_j or word_i in stop_words or word_j in stop_words:
                     continue
-                # if pair[0] in string.punctuation or pair[1] in string.punctuation:
-                #    continue
-                if pair[0] in stop_words or pair[1] in stop_words:
-                    continue
-
-                word_pair_str = f'{tokenized[pair[2]-1]},{tokenized[pair[1]-1]}'
-                if word_pair_str in rela_pair_count_str:
-                    rela_pair_count_str[word_pair_str] += 1
-                else:
-                    rela_pair_count_str[word_pair_str] = 1
-                # two orders
-                word_pair_str = f'{tokenized[pair[1]-1]},{tokenized[pair[2]-1]}'
-                if word_pair_str in rela_pair_count_str:
-                    rela_pair_count_str[word_pair_str] += 1
-                else:
-                    rela_pair_count_str[word_pair_str] = 1
+                for pair in (f'{word_i},{word_j}', f'{word_j},{word_i}'):
+                    rela_pair_count_str[pair] = rela_pair_count_str.get(pair, 0) + 1
         if errors:
             logger.warning("CoreNLP could not parse %d documents; they get no word-word edges.", errors)
         nlp.close()

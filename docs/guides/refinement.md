@@ -74,6 +74,12 @@ RefinementConfig(max_word_degree=5000.0)
 
 Drops hub word nodes with degree above 5000 — extremely connected words that dilute neighbourhood information.
 
+```python
+RefinementConfig(min_degree=1.0, max_degree=5000.0)
+```
+
+Same test on every node's weighted degree. With `keep_docs=True` (default) document nodes are exempt, so it only drops words; with `keep_docs=False` it can drop documents too.
+
 ---
 
 ### Edge pruning
@@ -82,7 +88,7 @@ Drops hub word nodes with degree above 5000 — extremely connected words that d
 RefinementConfig(edge_weight_threshold=0.05)
 ```
 
-Removes all edges with TF-IDF or PMI weight below 0.05.
+Removes all edges whose stored weight is below 0.05 — whatever the builder stored: TF-IDF for word–document edges; PMI (`tfidf()`), count / max count (RWF builders) or cosine similarity (`cosine_similarity()`) for word–word edges.
 
 ```python
 RefinementConfig(top_k_edges_per_node=10)
@@ -101,7 +107,7 @@ RefinementConfig(
 )
 ```
 
-Drops word nodes for any word in `stopwords`. Requires `vocab_path` to map word strings to vocabulary indices. If `vocab_path` is `None`, the vocabulary is auto-located from `dataset_path` and `dataset_name` when using `GNN`.
+Drops word nodes for any word in `stopwords`. The vocabulary maps word strings to vocabulary indices: `vocab_path` is optional — when it is `None`, the vocabulary is read from `<dataset_path>/<dataset_name>.shuffled/<dataset_name>.vocab`. `GNN` always passes `dataset_path` and `dataset_name`; with `apply_refinement`, pass them (or `vocab_path`) yourself, otherwise `stopwords` silently does nothing.
 
 ---
 
@@ -111,6 +117,8 @@ Drops word nodes for any word in `stopwords`. Requires `vocab_path` to map word 
 RefinementConfig(drop_word_indices={0, 1, 5, 100})
 RefinementConfig(keep_word_indices={10, 20, 30})  # whitelist; all others dropped
 ```
+
+`keep_word_indices` decides alone for word nodes: the other word filters are ignored. `min_degree` / `max_degree` still apply first.
 
 ---
 
@@ -129,13 +137,14 @@ When `True`, document nodes (train and test) are never removed regardless of oth
 All filters are applied together. Order of application:
 
 1. Global degree filters (`min_degree`, `max_degree`)
-2. Word-only degree filters (`min_word_degree`, `max_word_degree`)
-3. Document frequency filters (`min_doc_freq`, `max_doc_freq_ratio`)
-4. Explicit index filters (`keep_word_indices`, `drop_word_indices`)
-5. Stopword filter (`stopwords`)
-6. Edge pruning (`edge_weight_threshold`, `top_k_edges_per_node`)
+2. Whitelist (`keep_word_indices`) — if set, it alone decides which word nodes stay and steps 3–6 are skipped
+3. Word-only degree filters (`min_word_degree`, `max_word_degree`)
+4. Document frequency filters (`min_doc_freq`, `max_doc_freq_ratio`)
+5. Index filter (`drop_word_indices`)
+6. Stopword filter (`stopwords`)
+7. Edge pruning (`edge_weight_threshold`, `top_k_edges_per_node`), on the graph left after node filtering
 
-Document nodes pass all filters when `keep_docs=True`.
+Document nodes pass all node filters when `keep_docs=True`.
 
 ---
 
@@ -166,6 +175,10 @@ stats = info["stats"]
 print(f"Nodes: {stats['nodes_original']} → {stats['nodes_refined']} ({stats['nodes_removed']} removed)")
 print(f"Edges: {stats['edges_before']} → {stats['edges_after']}")
 ```
+
+`edges_before` counts the edges left after node filtering, before edge pruning; `edges_after` counts them after pruning.
+
+`info["metadata"]` holds one [`NodeMetadata`](../api/refinement.md#nodemetadata) per kept node (type, original index, degree, word or document id). Pass `build_metadata=False` to skip it; `info["metadata"]` is then `None`.
 
 ---
 

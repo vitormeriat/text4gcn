@@ -90,7 +90,11 @@ twenty_newsgroups("data", name="20NG4",
 def download(name: str, path: str | os.PathLike[str]) -> tuple[Path, Path]
 ```
 
-Downloads a benchmark corpus into `path` as `<name>.txt` / `<name>.meta`. Each file is verified against a SHA-256 checksum; a corrupted or tampered file is deleted and raises `ValueError`.
+Downloads a benchmark corpus into `path` (created if missing; `~` is expanded) as `<name>.txt` / `<name>.meta`. Each file is downloaded to a temporary `.part` file and verified against a SHA-256 checksum before it replaces `<name>.txt` / `<name>.meta`.
+
+**Returns** the paths of the `.txt` and `.meta` files.
+
+**Raises** `ValueError` for a `name` not in `list()`, or on a checksum mismatch (only the failing `.part` file is deleted; a `.txt` already verified stays); `requests.HTTPError` when the download fails with an HTTP error.
 
 | `name` | Corpus | Documents | Train | Test | Classes |
 |---|---|---|---|---|---|
