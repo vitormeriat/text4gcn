@@ -2,82 +2,82 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/changelog/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/contributing/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/getting-started/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/api/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/api/builders/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/api/datasets/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/api/gnn/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/api/pipeline/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/api/refinement/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/guides/builders/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/guides/devices/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/guides/refinement/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/guides/text-graph/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/tutorials/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/tutorials/01_text_as_a_graph/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/tutorials/02_first_classifier/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/tutorials/03_choosing_a_graph_builder/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/tutorials/04_refining_the_graph/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
     <url>
          <loc>https://vitormeriat.github.io/text4gcn/tutorials/05_bring_your_own_corpus/</loc>
-         <lastmod>2026-10-18</lastmod>
+         <lastmod>2026-10-19</lastmod>
     </url>
 </urlset>
