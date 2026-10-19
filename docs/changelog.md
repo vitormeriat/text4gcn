@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [2.0.0] — unreleased
+## [2.0.0] — 2026-10-19
 
 ### Added
 - Console output redesigned: one summary line per stage, a progress bar while training and on the slow graph-building steps, and a per-class table at the end; `verbose=0/1/2` on `TextPipeline`, the builders and `GNN`

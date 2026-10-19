@@ -1,6 +1,6 @@
 [project]
 name = "text4gcn"
-version = "2.0.0rc2"
+version = "2.0.0"
 description = "A Python framework for text classification using Graph Neural Networks (GNNs)"
 authors = [
     {name = "Vitor Meriat", email = "vitormeriat@gmail.com"}
