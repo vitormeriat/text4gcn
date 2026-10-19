@@ -1,18 +1,9 @@
 from typing import List, Dict, MutableMapping, Tuple, Union
 from collections import OrderedDict
 from scipy.sparse import csr_matrix
-#from ..modules import logger
-from text4gcn.modules import logger
 import pickle as pkl
 import numpy as np
 
-
-#from preprocessors.configs import PreProcessingConfigs
-#from utils.file_ops import check_paths, create_dir
-#from utils.common import check_data_set
-#from utils.logger import PrintLog
-#from time import time
-#from math import ceil
 
 
 # word -> word-vector, words are ordered with respect to vocabulary
@@ -21,13 +12,10 @@ WORD_VECTORS_TYPE = MutableMapping[str, np.ndarray]
 
 class NodeFeatures():
 
-    def __init__(self, logger: logger.PrintLog):
-        self.logger = logger
-
     def extract_doc_labels(self, ds_corpus_meta_file: str) -> List[str]:
-        with open(ds_corpus_meta_file) as ds_corpus_meta:
+        with open(ds_corpus_meta_file, encoding="utf-8") as ds_corpus_meta:
             doc_labels = list(OrderedDict.fromkeys(
-                doc_meta.split()[2] for doc_meta in ds_corpus_meta))
+                doc_meta.strip().split('\t')[2] for doc_meta in ds_corpus_meta if doc_meta.strip()))
         return doc_labels
 
     def compute_x(self, docs_of_words: List[List[str]], tr_size: int, emb_dim: int, w_vectors: WORD_VECTORS_TYPE) -> csr_matrix:
@@ -40,7 +28,7 @@ class NodeFeatures():
                 if word in w_vectors:
                     doc_vec += w_vectors[word]
 
-            mean_doc_vec = (doc_vec / len(words)).tolist()
+            mean_doc_vec = (doc_vec / max(len(words), 1)).tolist()   # empty after cleaning: zero vector
             data_x.extend(mean_doc_vec)
 
         row_indexes = np.array(
@@ -62,8 +50,8 @@ class NodeFeatures():
 
     def compute_tx(self, docs_of_words: List[List[str]], test_size: int, real_train_size: int, word_emb_dim: int,
                    w_vectors: WORD_VECTORS_TYPE) -> csr_matrix:
-        """ 
-        tx: feature vectors of test docs, no initial features 
+        """
+        tx: feature vectors of test docs, no initial features
         """
         data_tx = []
         for i in range(test_size):
@@ -73,7 +61,7 @@ class NodeFeatures():
                 if word in w_vectors:
                     doc_vec += w_vectors[word]
 
-            mean_doc_vec = (doc_vec / len(words)).tolist()
+            mean_doc_vec = (doc_vec / max(len(words), 1)).tolist()   # empty after cleaning: zero vector
             data_tx.extend(mean_doc_vec)
 
         row_indexes = np.array(
@@ -110,7 +98,7 @@ class NodeFeatures():
                 if word in word_vectors:
                     doc_vec += word_vectors[word]
 
-            mean_doc_vec = (doc_vec / len(words)).tolist()
+            mean_doc_vec = (doc_vec / max(len(words), 1)).tolist()   # empty after cleaning: zero vector
             data_allx.extend(mean_doc_vec)
 
         data_allx.extend(word_vectors_arr.flatten())

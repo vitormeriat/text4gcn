@@ -20,6 +20,8 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -38,12 +40,14 @@ pip-delete-this-directory.txt
 # Unit test / coverage reports
 htmlcov/
 .tox/
+.nox/
 .coverage
 .coverage.*
 .cache
 nosetests.xml
 coverage.xml
 *.cover
+*.py,cover
 .hypothesis/
 .pytest_cache/
 
@@ -55,6 +59,7 @@ coverage.xml
 *.log
 local_settings.py
 db.sqlite3
+db.sqlite3-journal
 
 # Flask stuff:
 instance/
@@ -72,11 +77,26 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# IPython
+profile_default/
+ipython_config.py
+
 # pyenv
 .python-version
 
-# celery beat schedule file
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or not
+#   install all needed dependencies.
+#Pipfile.lock
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
 celerybeat-schedule
+celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
@@ -102,7 +122,87 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+.dmypy.json
+dmypy.json
 
+# Pyre type checker
+.pyre/
+
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+examples/log/
+*.adj
+*.meta
+*.txt
+*.vocab
+*.word_vectors
+*.allx
+*.ally
+*.tx
+*.ty
+*.x
+*.y
+*.test
+*.train
+*.shuffled/
+*.cleaned/
+*.node_features/
+*.adjacency/
+
+docs/.jekyll-cache/
+
+# Test fixtures (override the *.txt / *.meta patterns above)
+!tests/data/
+!tests/data/**
+
+# ---------------------------------------------------------------------------
+# Not yet validated — kept local only, out of GitHub and the PyPI package
+# ---------------------------------------------------------------------------
+PLANO_MELHORIAS.md
+requirements.txt
+notebooks/
 examples/
-LIWC2007_English100131.dic
+
+docs/tutorials/data
+docs/tutorials/logs
+
+# Benchmark corpora: distributed as assets of the `datasets-v1` GitHub release
+data/
+
+# Unfinished baseline models (kept out of the package by this ignore rule)
+text4gcn/models/baseline/
+
+# Dev helper scripts (only reproduce_dcai2022.py is used by CI / docs)
+scripts/*
+!scripts/reproduce_dcai2022.py
+
+# Legacy Jekyll / Sphinx docs (MkDocs is the current docs build)
+docs/_site/
+docs/_includes/
+docs/_layouts/
+docs/_pages/
+docs/_posts/
+docs/_config.yml
+docs/Gemfile
+docs/Gemfile.lock
+docs/404.html
+docs/LICENSE
+docs/README.md
+docs/conf.py
+docs/index.rst
+docs/assets/*
+!docs/assets/logo.svg
+!docs/assets/images/
+
+# Local tooling
+.claude/

@@ -1,0 +1,48 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    # Only version releases (v2.0.0, ...) publish; data releases such as `datasets-v1` do not.
+    if: startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: poetry
+
+      - name: Release tag must match the package version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="v$(poetry version --short)"
+          if [ "$TAG" != "$version" ]; then
+            echo "::error::Release tag $TAG does not match pyproject.toml version $version"
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with dev
+
+      - name: Tests
+        run: poetry run pytest tests/ -q -o addopts= --tb=short
+
+      - name: Build package
+        run: poetry build
+
+      - name: Check package metadata
+        run: pipx run twine check --strict dist/*
+
+      - name: Publish to PyPI
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_API_TOKEN }}
+        run: poetry publish

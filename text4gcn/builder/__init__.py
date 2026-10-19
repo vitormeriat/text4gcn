@@ -1,6 +1,13 @@
-from .frequency_adj import FrequencyAdjacency
-from .embedding_adj import EmbeddingAdjacency
-from .linguistic_inquiry_adj import LiwcAdjacency
-from .cosine_similarity_adj import CosineSimilarityAdjacency
-from .dependency_parsing_adj import DependencyParsingAdjacency
-from .constituency_parsing_adj import ConstituencyParsingAdjacency
+"""
+Builder module for Text4GCN.
+
+Classes that build the word-document adjacency matrix with frequency-based,
+semantic or syntactic word-word edges. ``Builder`` selects which saved graph
+``GNN`` trains on.
+"""
+
+from text4gcn.models.builder import Builder
+
+from .pipeline import Frequency, Semantic, Syntactic
+
+__all__ = ["Frequency", "Semantic", "Syntactic", "Builder"]

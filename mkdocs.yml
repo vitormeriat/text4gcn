@@ -1,0 +1,120 @@
+site_name: Text4GCN
+site_description: A Python framework for text classification using Graph Neural Networks
+site_author: Vitor Meriat
+site_url: https://vitormeriat.github.io/text4gcn/
+repo_url: https://github.com/vitormeriat/text4gcn
+repo_name: vitormeriat/text4gcn
+copyright: Copyright &copy; 2024–2026 Vitor Meriat — MIT License
+
+# Exclude legacy Jekyll / Sphinx trees so MkDocs --strict stays clean
+exclude_docs: |
+  README.md
+  conf.py
+  index.rst
+  _config.yml
+  _pages/**
+  _posts/**
+  _site/**
+  _includes/**
+  _layouts/**
+  assets/gitbook/**
+  tutorials/data/**
+  tutorials/logs/**
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.path
+    - navigation.top
+    - toc.follow
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tooltips
+
+plugins:
+  - search:
+      lang: en
+  - mkdocs-jupyter:
+      include: ["tutorials/*.ipynb"]
+      execute: false          # notebooks are stored with their outputs; the site shows them as is
+      include_source: true    # "download notebook" button
+      ignore_h1_titles: true  # page titles come from the nav
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Tutorials:
+    - Overview: tutorials/index.md
+    - 1 · Text as a graph: tutorials/01_text_as_a_graph.ipynb
+    - 2 · Your first classifier: tutorials/02_first_classifier.ipynb
+    - 3 · Choosing a graph builder: tutorials/03_choosing_a_graph_builder.ipynb
+    - 4 · Refining the graph: tutorials/04_refining_the_graph.ipynb
+    - 5 · Bring your own corpus: tutorials/05_bring_your_own_corpus.ipynb
+  - User Guide:
+    - Understanding Text Graphs: guides/text-graph.md
+    - Choosing a Builder: guides/builders.md
+    - Graph Refinement: guides/refinement.md
+    - Device Management: guides/devices.md
+  - API Reference:
+    - Overview: api/index.md
+    - GNN: api/gnn.md
+    - TextPipeline: api/pipeline.md
+    - Builders: api/builders.md
+    - Graph Refinement: api/refinement.md
+    - Datasets: api/datasets.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/vitormeriat/text4gcn
+      name: GitHub
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/text4gcn/
+      name: PyPI

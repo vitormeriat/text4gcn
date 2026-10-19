@@ -1,11 +1,16 @@
-from typing import List, Dict, Tuple, Iterable, Any
-from scipy.spatial.distance import cosine
+from typing import List, Dict, Tuple, Iterable, Any, Callable
 from collections import Counter
-from tqdm import tqdm
 from math import log
 import numpy as np
-import itertools
 import pickle
+
+
+def no_progress(iterable, desc: str = "", total=None, unit: str = "it"):
+    """Default progress hook: iterate silently (see ``Reporter.progress``)."""
+    return iterable
+
+
+Progress = Callable[..., Iterable]
 
 
 def flatten_nested_iterables(iterables_of_iterables: Iterable[Iterable[Any]]) -> Iterable[Any]:
@@ -53,9 +58,10 @@ def extract_word_counts_in_windows(windows_of_words: List[List[str]]) -> Dict[st
     return Counter(flatten_nested_iterables(bags_of_words))
 
 
-def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_id: Dict[str, int]) -> Dict[str, int]:
+def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_id: Dict[str, int],
+                                    progress: Progress = no_progress) -> Dict[str, int]:
     word_ids_pair_to_counts = Counter()
-    for window in windows_of_words:
+    for window in progress(windows_of_words, desc="PMI", total=len(windows_of_words), unit="window"):
         for i in range(1, len(window)):
             try:
                 word_id_i = word_to_id[window[i]]
@@ -68,14 +74,14 @@ def extract_word_ids_pair_to_counts(windows_of_words: List[List[str]], word_to_i
                                 f'{word_id_j},{word_id_i}',
                             ]
                         )
-            except:
+            except Exception:
                 pass
 
     return dict(word_ids_pair_to_counts)
 
 
 def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict[str, int], vocab: List[str],
-                             train_size: int) -> Tuple[List[int], List[int], List[float]]:
+                             train_size: int, progress: Progress = no_progress) -> Tuple[List[int], List[int], List[float]]:
     """Calculate PMI as weights"""
     weight_rows = []  # type: List[int]
     weight_cols = []  # type: List[int]
@@ -85,7 +91,7 @@ def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict
     word_counts_in_windows = extract_word_counts_in_windows(
         windows_of_words=windows_of_words)
     word_ids_pair_to_counts = extract_word_ids_pair_to_counts(
-        windows_of_words, word_to_id)
+        windows_of_words, word_to_id, progress=progress)
 
     for word_id_pair, count in word_ids_pair_to_counts.items():
         word_ids_in_str = word_id_pair.split(',')
@@ -108,31 +114,36 @@ def extract_pmi_word_weights(windows_of_words: List[List[str]], word_to_id: Dict
     return weight_rows, weight_cols, pmi_weights
 
 
-def extract_cosine_similarity_word_weights(vocab: List[str], train_size: int,
-                                           word_vec_path: str) -> Tuple[List[int], List[int], List[float]]:
-    """Calculate Cosine Similarity of Word Vectors as weights"""
-    word_vectors = pickle.load(
-        file=open(word_vec_path, 'rb'))  # type: Dict[str,List[float]]
+def extract_cosine_similarity_word_weights(vocab: List[str],
+                                           train_size: int,
+                                           word_vec_path: str,
+                                           threshold: float,
+                                           chunk_size: int = 1024,
+                                           progress: Progress = no_progress) -> Tuple[List[int], List[int], List[float]]:
+    """Word-word edges between words whose vectors have cosine similarity > threshold.
 
-    weight_rows = []  # type: List[int]
-    weight_cols = []  # type: List[int]
-    cos_sim_weights = []  # type: List[float]
+    Pairs are compared in row chunks of `chunk_size` words (vectorised), so memory
+    stays at O(chunk_size * vocab) instead of O(vocab²). Words without a vector,
+    or with an all-zero vector, get no edges.
+    """
+    with open(word_vec_path, 'rb') as f:
+        word_vectors = pickle.load(f)  # type: Dict[str,List[float]]
 
-    #len_vocab = len(vocab)
-    #pbar = tqdm(len_vocab)
+    ids = np.array([i for i, word in enumerate(vocab) if word in word_vectors], dtype=np.int64)
+    if ids.size == 0:
+        return [], [], []
+    vectors = np.array([word_vectors[vocab[i]] for i in ids], dtype=np.float64)
+    norms = np.linalg.norm(vectors, axis=1)
+    ids, vectors = ids[norms > 0], vectors[norms > 0] / norms[norms > 0, None]
 
-    for (i, word_i), (j, word_j) in tqdm(itertools.product(enumerate(vocab), enumerate(vocab))):
-        # pbar.update(1)
-        if word_i in word_vectors and word_j in word_vectors:
-            vector_i = np.array(word_vectors[word_i])
-            vector_j = np.array(word_vectors[word_j])
-            similarity = 1.0 - cosine(vector_i, vector_j)
-            if similarity > 0.9:
-                #print(word_i, word_j, similarity)
-                weight_rows.append(train_size + i)
-                weight_cols.append(train_size + j)
-                cos_sim_weights.append(similarity)
-    # pbar.close()
+    weight_rows, weight_cols, cos_sim_weights = [], [], []  # type: List[int], List[int], List[float]
+    starts = range(0, len(ids), chunk_size)
+    for start in progress(starts, desc="cosine", total=len(starts), unit="chunk"):
+        similarity = vectors[start:start + chunk_size] @ vectors.T
+        rows, cols = np.nonzero(similarity > threshold)
+        weight_rows.extend((train_size + ids[start + rows]).tolist())
+        weight_cols.extend((train_size + ids[cols]).tolist())
+        cos_sim_weights.extend(similarity[rows, cols].tolist())
     return weight_rows, weight_cols, cos_sim_weights
 
 
@@ -143,7 +154,7 @@ def extract_doc_word_ids_pair_to_counts(docs_of_words: List[List[str]], word_to_
             try:
                 word_id = word_to_id[word]
                 doc_word_freq.update([f'{str(doc_id)},{str(word_id)}'])
-            except:
+            except Exception:
                 pass
     return dict(doc_word_freq)
 
@@ -152,11 +163,9 @@ def extract_tf_idf_doc_word_weights(
         adj_rows: List[int], adj_cols: List[int], adj_weights: List[float], vocab: List[str], train_size: int,
         docs_of_words: List[List[str]], word_to_id: Dict[str, int]) -> Tuple[List[int], List[int], List[float]]:
     """Extract Doc-Word weights with TF-IDF"""
-    doc_word_ids_pair_to_counts = extract_doc_word_ids_pair_to_counts(
-        docs_of_words, word_to_id)
+    doc_word_ids_pair_to_counts = extract_doc_word_ids_pair_to_counts(docs_of_words, word_to_id)
     word_to_doc_ids = extract_word_to_doc_ids(docs_of_words=docs_of_words)
-    word_to_doc_counts = extract_word_to_doc_counts(
-        word_to_doc_ids=word_to_doc_ids)
+    word_to_doc_counts = extract_word_to_doc_counts(word_to_doc_ids=word_to_doc_ids)
 
     vocab_len = len(vocab)
     num_docs = len(docs_of_words)
@@ -168,15 +177,10 @@ def extract_tf_idf_doc_word_weights(
             # se a palavra ainda não foi calculada...
             if word not in doc_word_set:
                 word_id = word_to_id[word]
-                word_ids_pair_count = doc_word_ids_pair_to_counts[str(
-                    doc_id) + ',' + str(word_id)]
-
-                adj_rows.append(doc_id if doc_id <
-                                train_size else doc_id + vocab_len)
+                word_ids_pair_count = doc_word_ids_pair_to_counts[str(doc_id) + ',' + str(word_id)]
+                adj_rows.append(doc_id if doc_id < train_size else doc_id + vocab_len)
                 adj_cols.append(train_size + word_id)
-
-                doc_word_idf = log(
-                    1.0 * num_docs / word_to_doc_counts[vocab[word_id]])
+                doc_word_idf = log(1.0 * num_docs / word_to_doc_counts[vocab[word_id]])
                 adj_weights.append(word_ids_pair_count * doc_word_idf)
                 doc_word_set.add(word)
     return adj_rows, adj_cols, adj_weights
@@ -222,22 +226,6 @@ def build_word_window_freq(docs_of_words):
     return word_window_freq
 
 
-def relation_pair_statitcs(rela_pair_count_str):
-    max_count1 = 0.0
-    min_count1 = 0.0
-    count1 = []
-    for key, value in rela_pair_count_str.items():
-        if rela_pair_count_str[key] > max_count1:
-            max_count1 = rela_pair_count_str[key]
-        if value < min_count1:
-            min_count1 = rela_pair_count_str[key]
-        count1.append(rela_pair_count_str[key])
-
-    count_mean1 = np.mean(count1)
-    count_std1 = np.std(count1, ddof=1)
-    return min_count1, max_count1, count_mean1, count_std1
-
-
 def get_doc_word_freq(docs_of_words, word_id_map):
     doc_word_freq = {}
     for doc_id in range(len(docs_of_words)):
@@ -274,37 +262,43 @@ def get_weight_tfidf(docs_of_words, word_id_map, doc_word_freq, train_size, voca
     return weight_tfidf
 
 
-def compute_weights_with_PMI(docs_of_words, rela_pair_count_str, word_window_freq, train_size, word_id_map, min_count1, max_count1, count_mean1, count_std1, row, col):
+def compute_weights_with_PMI(
+    docs_of_words,
+    rela_pair_count_str,
+    word_window_freq,
+    train_size,
+    word_id_map,
+    row,
+    col,
+):
+    """Build word–word edge weights for RWF builders (DCAI 2022 Eq. 6–8).
+
+    PMI is used only as a gate (``Rdep``: keep edge iff PMI > 0). The weight is
+    the RWF pair count ``O(wi, wj)`` divided by the largest count, so weights lie
+    in (0, 1] and every pair that passes the filter keeps a non-zero edge (a
+    Max–Min scaling would give the least frequent pairs weight 0, deleting them).
+    """
     weight = []
-    errors = 0
+    if not rela_pair_count_str:
+        return weight
     num_window = len(docs_of_words)
+    max_count = max(rela_pair_count_str.values())
+
     for key, count in rela_pair_count_str.items():
-        try:
-            temp = key.split(',')
-            i = temp[0]
-            j = temp[1]
+        i, j = key.split(',')
+        if i not in word_window_freq or j not in word_window_freq:
+            continue
 
-            if i in word_window_freq and j in word_window_freq:
-                word_freq_i = word_window_freq[i]
-                word_freq_j = word_window_freq[j]
-                pmi = log(
-                    1.0
-                    * count
-                    / num_window
-                    / (1.0 * word_freq_i * word_freq_j / num_window ** 2)
-                )
-                if pmi <= 0:
-                    continue
+        pmi = log(
+            1.0
+            * count
+            / num_window
+            / (1.0 * word_window_freq[i] * word_window_freq[j] / num_window ** 2)
+        )
+        if pmi <= 0:
+            continue
 
-                row.append(train_size + word_id_map[i])
-                col.append(train_size + word_id_map[j])
-                if key in rela_pair_count_str:
-                    wei = (rela_pair_count_str[key] -
-                           min_count1) / (max_count1 - min_count1)
-                    wei = (rela_pair_count_str[key]-count_mean1) / count_std1
-                    weight.append(wei)
-        except:
-            errors += 1
-
-    print(f'[INFO] Error in Compute Weights: {errors}')
+        row.append(train_size + word_id_map[i])
+        col.append(train_size + word_id_map[j])
+        weight.append(count / max_count)
     return weight

@@ -1,0 +1,104 @@
+[project]
+name = "text4gcn"
+version = "2.0.0"
+description = "A Python framework for text classification using Graph Neural Networks (GNNs)"
+authors = [
+    {name = "Vitor Meriat", email = "vitormeriat@gmail.com"}
+]
+readme = "README.md"
+license = "MIT"
+keywords = ["graph-neural-networks", "text-classification", "nlp", "machine-learning", "deep-learning", "gcn", "gnn"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Linguistic",
+    "Topic :: Scientific/Engineering :: Information Analysis"
+]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "torch>=2.3.0",
+    "requests>=2.31.0",
+    "scikit-learn>=1.5.2",
+    "numpy>=2.1.0",
+    "scipy>=1.14.1",
+    "pandas>=2.2.3",
+    "nltk>=3.8.1",
+    "gensim>=4.4.0",
+    "matplotlib>=3.9.2",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+syntactic = [
+    "stanfordcorenlp>=3.9.1.1",
+]
+bert = [
+    "transformers>=4.41.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/vitormeriat/text4gcn"
+Repository = "https://github.com/vitormeriat/text4gcn"
+Documentation = "https://vitormeriat.github.io/text4gcn/"
+
+[tool.poetry]
+packages = [{include = "text4gcn"}]
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+pytest-cov = "^4.1.0"
+mypy = "^1.5.0"
+pre-commit = "^3.4.0"
+ruff = ">=0.6"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.0"
+mkdocs-material = "^9.5.0"
+mkdocs-jupyter = ">=0.24.0,<1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# Errors that break code (pyflakes, syntax, comparisons). Style rules can be
+# added once the code base has been formatted with `ruff format`.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.mypy]
+ignore_missing_imports = true
+warn_unused_configs = true
+# Strict flags deferred until the remaining type annotations are complete.
+check_untyped_defs = false
+disallow_untyped_defs = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--cov=text4gcn",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml"
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests"
+]

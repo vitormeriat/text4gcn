@@ -1,34 +1,46 @@
 from collections import Counter
 from typing import List, Set
 import re
+import unicodedata
 
 
 def config_nltk():
-    # temporary_nltk_folder = 'venv/nltk_data/'
-    # if not os.path.exists(temporary_nltk_folder):
-    #     from nltk import download
-    #     download(info_or_id='stopwords', download_dir=temporary_nltk_folder)
-    #     download(info_or_id='wordnet', download_dir=temporary_nltk_folder)
-    from nltk import download
+    """Download the NLTK resources the pipeline needs, only those not installed yet."""
+    import nltk
 
-    #from nltk.corpus import wordnet
-    #from nltk.corpus import stopwords
-    download(info_or_id='stopwords')
-    download(info_or_id='wordnet')
-    download(info_or_id='omw-1.4')
+    def installed(path: str) -> bool:
+        for candidate in (path, f"{path}.zip"):   # e.g. wordnet is often kept zipped
+            try:
+                nltk.data.find(candidate)
+                return True
+            except LookupError:
+                pass
+        return False
 
-
-def create_title(title):
-    txt = f" {title} "
-    return txt.center(100, "=")
+    for resource in ("stopwords", "wordnet", "omw-1.4"):
+        if not installed(f"corpora/{resource}"):
+            nltk.download(resource, quiet=True)
 
 
-def clean_str(a_str: str) -> str:
+
+
+def _is_word_char(ch: str) -> bool:
+    """Letters/digits of any script, combining marks (e.g. Arabic harakat) and kept punctuation."""
+    return ch.isalnum() or unicodedata.category(ch).startswith("M") or ch in "(),!?'`"
+
+
+def clean_str(a_str: str, ascii_only: bool = True) -> str:
     """
     Tokenizing/string cleaning for all data-sets except for SST.
     Original taken from https://github.com/yoonkim/CNN_sentence/blob/master/process_data.py
+
+    With ``ascii_only=False`` letters and digits of any script are kept
+    (e.g. Arabic), instead of only ``A-Za-z0-9``.
     """
-    string = re.sub(r"[^A-Za-z0-9(),!?\'`]", " ", a_str)
+    if ascii_only:
+        string = re.sub(r"[^A-Za-z0-9(),!?\'`]", " ", a_str)
+    else:
+        string = "".join(ch if _is_word_char(ch) else " " for ch in a_str)
     string = re.sub(r"\'s", " \'s", string)
     string = re.sub(r"\'ve", " \'ve", string)
     string = re.sub(r"n\'t", " n\'t", string)

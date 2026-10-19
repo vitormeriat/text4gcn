@@ -1,0 +1,146 @@
+<svg viewBox="0 0 820 370" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', system-ui, sans-serif">
+
+  <rect width="820" height="370" fill="#fafafa" rx="12"/>
+  <text x="410" y="30" text-anchor="middle" fill="#263238" font-size="15" font-weight="700">Adjacency Builder Strategies</text>
+
+  <!-- ═══════════════════════
+       CARD: Frequency / TF-IDF
+       ═══════════════════════ -->
+  <rect x="20" y="50" width="240" height="290" rx="10" fill="white" stroke="#43a047" stroke-width="1.8"/>
+  <rect x="20" y="50" width="240" height="40" rx="10" fill="#43a047"/>
+  <rect x="20" y="78" width="240" height="12" fill="#43a047"/>
+  <text x="140" y="76" text-anchor="middle" fill="white" font-size="13" font-weight="700">Frequency</text>
+  <text x="140" y="106" text-anchor="middle" fill="#1b5e20" font-size="11">TF-IDF · PMI</text>
+
+  <!-- mini graph: word-doc with TF-IDF weights -->
+  <g transform="translate(140, 180)">
+    <!-- edges with thickness = weight -->
+    <line x1="-50" y1="-30" x2="40" y2="-40" stroke="#43a047" stroke-width="4" stroke-opacity="0.8"/>
+    <line x1="-50" y1="-30" x2="40" y2="10"  stroke="#43a047" stroke-width="2" stroke-opacity="0.5"/>
+    <line x1="-50" y1="30"  x2="40" y2="-40" stroke="#43a047" stroke-width="1.5" stroke-opacity="0.4"/>
+    <line x1="-50" y1="30"  x2="40" y2="40"  stroke="#43a047" stroke-width="3" stroke-opacity="0.7"/>
+    <!-- word-word PMI -->
+    <line x1="40" y1="-40" x2="40" y2="10"   stroke="#ff8f00" stroke-width="2" stroke-dasharray="4,3"/>
+    <line x1="40" y1="10"  x2="40" y2="40"   stroke="#ff8f00" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <!-- doc nodes -->
+    <rect x="-80" y="-45" width="60" height="30" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="-50" y="-26" text-anchor="middle" fill="#1b5e20" font-size="9">Doc 0</text>
+    <rect x="-80" y="15" width="60" height="30" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="-50" y="34" text-anchor="middle" fill="#1b5e20" font-size="9">Doc 1</text>
+    <!-- word nodes -->
+    <circle cx="40" cy="-40" r="16" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5"/>
+    <text x="40" y="-36" text-anchor="middle" fill="#e65100" font-size="8">graph</text>
+    <circle cx="40" cy="10" r="16" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5"/>
+    <text x="40" y="14" text-anchor="middle" fill="#e65100" font-size="8">neural</text>
+    <circle cx="40" cy="40" r="16" fill="#fff8e1" stroke="#f9a825" stroke-width="1.5"/>
+    <text x="40" y="44" text-anchor="middle" fill="#e65100" font-size="8">text</text>
+    <!-- weight label -->
+    <text x="-5" y="-48" fill="#2e7d32" font-size="8">tf-idf=0.8</text>
+    <text x="-5" y="8" fill="#ff8f00" font-size="8" font-style="italic">PMI edges</text>
+  </g>
+
+  <text x="140" y="286" text-anchor="middle" fill="#37474f" font-size="10">Edge weight = TF-IDF score</text>
+  <text x="140" y="300" text-anchor="middle" fill="#37474f" font-size="10">Word-word: PMI in window</text>
+
+  <!-- badges -->
+  <rect x="30" y="316" width="55" height="17" rx="8" fill="#c8e6c9"/>
+  <text x="57" y="328" text-anchor="middle" fill="#1b5e20" font-size="9" font-weight="600">Fast</text>
+  <rect x="92" y="316" width="75" height="17" rx="8" fill="#c8e6c9"/>
+  <text x="129" y="328" text-anchor="middle" fill="#1b5e20" font-size="9" font-weight="600">No extras</text>
+  <rect x="174" y="316" width="75" height="17" rx="8" fill="#c8e6c9"/>
+  <text x="211" y="328" text-anchor="middle" fill="#1b5e20" font-size="9" font-weight="600">Recommended</text>
+
+  <!-- ═══════════════════════
+       CARD: Semantic (Word2Vec)
+       ═══════════════════════ -->
+  <rect x="290" y="50" width="240" height="290" rx="10" fill="white" stroke="#1e88e5" stroke-width="1.8"/>
+  <rect x="290" y="50" width="240" height="40" rx="10" fill="#1e88e5"/>
+  <rect x="290" y="78" width="240" height="12" fill="#1e88e5"/>
+  <text x="410" y="76" text-anchor="middle" fill="white" font-size="13" font-weight="700">Semantic</text>
+  <text x="410" y="106" text-anchor="middle" fill="#0d47a1" font-size="11">Word2Vec · BERT · Cosine</text>
+
+  <!-- mini embedding space illustration -->
+  <g transform="translate(410, 185)">
+    <!-- coordinate axes -->
+    <line x1="-70" y1="50" x2="70" y2="50"  stroke="#e0e0e0" stroke-width="1"/>
+    <line x1="-70" y1="50" x2="-70" y2="-60" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="72"  y="54" fill="#b0bec5" font-size="8">dim₁</text>
+    <text x="-76" y="-62" fill="#b0bec5" font-size="8">dim₂</text>
+    <!-- word embeddings as dots in 2D space -->
+    <circle cx="-30" cy="-30" r="5" fill="#1565c0"/>
+    <text x="-30" y="-36" text-anchor="middle" fill="#1565c0" font-size="8">graph</text>
+    <circle cx="-15" cy="-20" r="5" fill="#1565c0"/>
+    <text x="-15" y="-26" text-anchor="middle" fill="#1565c0" font-size="8">network</text>
+    <circle cx="-22" cy="-12" r="5" fill="#1565c0"/>
+    <text x="-22" y="-18" text-anchor="middle" fill="#1565c0" font-size="8">neural</text>
+    <!-- similarity arc between close words -->
+    <path d="M -30 -30 Q -5 -35 -15 -20" fill="none" stroke="#42a5f5" stroke-width="2"/>
+    <text x="5" y="-35" fill="#1976d2" font-size="8">cos≥0.95</text>
+    <!-- distant word -->
+    <circle cx="40" cy="20" r="5" fill="#90a4ae"/>
+    <text x="40" y="14" text-anchor="middle" fill="#90a4ae" font-size="8">politics</text>
+    <line x1="40" y1="20" x2="-22" y2="-12" stroke="#ef9a9a" stroke-width="1" stroke-dasharray="4,3"/>
+    <text x="12" y="10" fill="#e53935" font-size="8">no edge</text>
+  </g>
+
+  <text x="410" y="286" text-anchor="middle" fill="#37474f" font-size="10">Edge weight = cosine similarity</text>
+  <text x="410" y="300" text-anchor="middle" fill="#37474f" font-size="10">Only pairs above threshold</text>
+
+  <!-- badges -->
+  <rect x="300" y="316" width="65" height="17" rx="8" fill="#bbdefb"/>
+  <text x="332" y="328" text-anchor="middle" fill="#0d47a1" font-size="9" font-weight="600">Medium</text>
+  <rect x="372" y="316" width="75" height="17" rx="8" fill="#bbdefb"/>
+  <text x="409" y="328" text-anchor="middle" fill="#0d47a1" font-size="9" font-weight="600">Large corpus</text>
+  <rect x="454" y="316" width="65" height="17" rx="8" fill="#bbdefb"/>
+  <text x="487" y="328" text-anchor="middle" fill="#0d47a1" font-size="9" font-weight="600">Semantic</text>
+
+  <!-- ═══════════════════════
+       CARD: Syntactic
+       ═══════════════════════ -->
+  <rect x="560" y="50" width="240" height="290" rx="10" fill="white" stroke="#8e24aa" stroke-width="1.8"/>
+  <rect x="560" y="50" width="240" height="40" rx="10" fill="#8e24aa"/>
+  <rect x="560" y="78" width="240" height="12" fill="#8e24aa"/>
+  <text x="680" y="76" text-anchor="middle" fill="white" font-size="13" font-weight="700">Syntactic</text>
+  <text x="680" y="106" text-anchor="middle" fill="#4a148c" font-size="11">Dependency · LIWC</text>
+
+  <!-- mini dependency tree -->
+  <g transform="translate(680, 185)">
+    <!-- dependency tree -->
+    <!-- root: "trains" -->
+    <circle cx="0" cy="-50" r="22" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.8"/>
+    <text x="0" y="-46" text-anchor="middle" fill="#4a148c" font-size="10" font-weight="700">trains</text>
+    <text x="0" y="-38" text-anchor="middle" fill="#6a1b9a" font-size="8">VERB</text>
+
+    <!-- nsubj: "GCN" -->
+    <line x1="-30" y1="-30" x2="-45" y2="10" stroke="#9c27b0" stroke-width="2"/>
+    <text x="-38" y="-5" fill="#9c27b0" font-size="8">nsubj</text>
+    <circle cx="-45" cy="25" r="18" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+    <text x="-45" y="21" text-anchor="middle" fill="#4a148c" font-size="9" font-weight="700">GCN</text>
+    <text x="-45" y="31" text-anchor="middle" fill="#6a1b9a" font-size="8">NOUN</text>
+
+    <!-- dobj: "model" -->
+    <line x1="30" y1="-30" x2="45" y2="10" stroke="#9c27b0" stroke-width="2"/>
+    <text x="42" y="-5" fill="#9c27b0" font-size="8">dobj</text>
+    <circle cx="45" cy="25" r="18" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+    <text x="45" y="21" text-anchor="middle" fill="#4a148c" font-size="9" font-weight="700">model</text>
+    <text x="45" y="31" text-anchor="middle" fill="#6a1b9a" font-size="8">NOUN</text>
+
+    <!-- edge between subjects (syntactic relation) -->
+    <path d="M -45 42 Q 0 65 45 42" fill="none" stroke="#ce93d8" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="0" y="60" text-anchor="middle" fill="#9c27b0" font-size="8">syntactic edge</text>
+  </g>
+
+  <text x="680" y="286" text-anchor="middle" fill="#37474f" font-size="10">Edges from syntactic relations</text>
+  <text x="680" y="300" text-anchor="middle" fill="#37474f" font-size="10">Requires CoreNLP / LIWC dict</text>
+
+  <!-- badges -->
+  <rect x="570" y="316" width="55" height="17" rx="8" fill="#e1bee7"/>
+  <text x="597" y="328" text-anchor="middle" fill="#4a148c" font-size="9" font-weight="600">Slow</text>
+  <rect x="632" y="316" width="75" height="17" rx="8" fill="#e1bee7"/>
+  <text x="669" y="328" text-anchor="middle" fill="#4a148c" font-size="9" font-weight="600">Formal text</text>
+  <rect x="714" y="316" width="75" height="17" rx="8" fill="#e1bee7"/>
+  <text x="751" y="328" text-anchor="middle" fill="#4a148c" font-size="9" font-weight="600">Linguistics</text>
+
+  <!-- bottom hint -->
+  <text x="410" y="358" text-anchor="middle" fill="#90a4ae" font-size="10">Start with Frequency.tfidf() — switch to Semantic/Syntactic when you need richer signal</text>
+</svg>
